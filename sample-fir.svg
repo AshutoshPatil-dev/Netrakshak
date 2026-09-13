@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="white"/>
+  <text x="40" y="70" font-family="Arial" font-size="28" fill="#102746">FIRST INFORMATION REPORT</text>
+  <text x="40" y="120" font-family="Arial" font-size="18" fill="#162b47">Pimpri Police Station • FIR/2024/01983</text>
+  <text x="40" y="170" font-family="Arial" font-size="16" fill="#64748b">Synthetic test document for SHA-256 fingerprint verification.</text>
+  <text x="40" y="220" font-family="Arial" font-size="16" fill="#64748b">This file contains no real person or police information.</text>
+</svg>
