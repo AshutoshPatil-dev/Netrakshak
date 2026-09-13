@@ -8,6 +8,7 @@ import { renderFIR } from './views/FIRView.js';
 import { renderOfficers } from './views/OfficersView.js';
 import { renderAuditLogs } from './views/AuditLogsView.js';
 import { renderSources } from './views/DataIntegrityView.js';
+import { renderAIAnalysis } from './views/AIAnalysisView.js';
 
 // Ensure zoom is normalized
 document.body.style.zoom = '1';
@@ -15,14 +16,15 @@ document.body.style.zoom = '1';
 
 function getViewRenderer() {
   switch (state.view) {
-    case 'overview':   return renderOverview;
-    case 'network':    return renderNetwork;
-    case 'fir':        return renderFIR;
-    case 'officers':   return renderOfficers;
-    case 'audit_logs': return renderAuditLogs;
-    case 'sources':    return renderSources;
+    case 'overview':    return renderOverview;
+    case 'network':     return renderNetwork;
+    case 'fir':         return renderFIR;
+    case 'ai_analysis': return renderAIAnalysis;
+    case 'officers':    return renderOfficers;
+    case 'audit_logs':  return renderAuditLogs;
+    case 'sources':     return renderSources;
 
-    default:           return renderOverview;
+    default:            return renderOverview;
   }
 }
 

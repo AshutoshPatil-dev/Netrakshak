@@ -31,12 +31,295 @@ export function loadSavedAuditLogs() {
   }
 }
 
-export let entities = [];
+export const DEFAULT_ENTITIES = [
+  // Persons
+  {
+    id: 'ent_sameer',
+    name: 'Sameer Khan',
+    local: 'Baba Bhai, Sammy',
+    type: 'Person',
+    category: 'person',
+    role: 'Syndicate Kingpin / Caller',
+    risk: 'high',
+    city: 'Pune City (Shivajinagar)',
+    phone: '+91 98811 55421',
+    identifiers: { alias: 'Baba Bhai, Sammy', aadhar: 'XXXX-XXXX-4912', status: 'Accused in 2 FIRs' },
+    events: 4,
+    recent: 92,
+    x: 350,
+    y: 260
+  },
+  {
+    id: 'ent_vikram',
+    name: 'Vikram Rathi',
+    local: 'Vicky',
+    type: 'Person',
+    category: 'person',
+    role: 'Technical Mule Manager',
+    risk: 'high',
+    city: 'Mumbai / Pune',
+    phone: '+91 98199 44312',
+    identifiers: { alias: 'Vicky', role: 'Forged bond creator' },
+    events: 3,
+    recent: 84,
+    x: 480,
+    y: 190
+  },
+  {
+    id: 'ent_ajay',
+    name: 'Ajay Deshmukh',
+    local: 'Ajju',
+    type: 'Person',
+    category: 'person',
+    role: 'Cash Courier / ATM Mule',
+    risk: 'medium',
+    city: 'Pune (Deccan)',
+    phone: '+91 97655 88910',
+    identifiers: { role: 'Cash withdrawal handler' },
+    events: 2,
+    recent: 76,
+    x: 490,
+    y: 350
+  },
+  {
+    id: 'ent_arjun',
+    name: 'Arjun Pawar',
+    local: 'Pawar',
+    type: 'Person',
+    category: 'person',
+    role: 'Mule Account Recruiter',
+    risk: 'medium',
+    city: 'Pune (Swargate)',
+    phone: '+91 99230 44102',
+    identifiers: { role: 'Student bank account recruiter' },
+    events: 3,
+    recent: 70,
+    x: 180,
+    y: 380
+  },
+  {
+    id: 'ent_suresh',
+    name: 'Suresh Shinde',
+    local: 'Shinde Seth',
+    type: 'Person',
+    category: 'person',
+    role: 'Hawala Operator',
+    risk: 'high',
+    city: 'Pune (Camp)',
+    phone: '+91 98224 55119',
+    identifiers: { role: 'Off-ledger settlement' },
+    events: 2,
+    recent: 65,
+    x: 120,
+    y: 280
+  },
+  {
+    id: 'ent_rajesh',
+    name: 'Rajesh Kulkarni',
+    local: 'Complainant',
+    type: 'Person',
+    category: 'person',
+    role: 'Complainant / Victim',
+    risk: 'low',
+    city: 'Pune (Kothrud)',
+    phone: '+91 98220 11984',
+    identifiers: { role: 'Defrauded investor (INR 14.5L)' },
+    events: 1,
+    recent: 40,
+    x: 520,
+    y: 450
+  },
+
+  // Phones / SIMs
+  {
+    id: 'ent_phone1',
+    name: '+91 98811 55421',
+    local: 'Burner SIM (Jio 5G)',
+    type: 'Phone',
+    category: 'phone',
+    role: 'Primary Suspect Burner Phone',
+    risk: 'high',
+    city: 'Shivajinagar Tower Sector',
+    phone: '+91 98811 55421',
+    identifiers: { imei: '864291048821902', carrier: 'Reliance Jio 5G', activeLocation: 'FC Road Commercial Sector' },
+    events: 142,
+    recent: 98,
+    x: 270,
+    y: 190
+  },
+  {
+    id: 'ent_phone2',
+    name: '+91 98220 11984',
+    local: 'Complainant Contact',
+    type: 'Phone',
+    category: 'phone',
+    role: 'Victim Registered Mobile',
+    risk: 'low',
+    city: 'Kothrud Sector',
+    phone: '+91 98220 11984',
+    identifiers: { carrier: 'Airtel Postpaid' },
+    events: 12,
+    recent: 30,
+    x: 430,
+    y: 470
+  },
+
+  // Vehicles
+  {
+    id: 'ent_veh1',
+    name: 'MH-12-PQ-9081',
+    local: 'White Swift',
+    type: 'Vehicle',
+    category: 'vehicle',
+    role: 'Suspect Mobility / Logistics Asset',
+    risk: 'medium',
+    city: 'Pune City',
+    identifiers: { make: 'Maruti Suzuki Swift', color: 'Pearl White', chasis: 'MA3EW2S00G128914', anprHits: '6 ATM cash-out clusters' },
+    events: 6,
+    recent: 88,
+    x: 390,
+    y: 380
+  },
+  {
+    id: 'ent_veh2',
+    name: 'MH-14-AB-3390',
+    local: 'Black Pulsar 150',
+    type: 'Vehicle',
+    category: 'vehicle',
+    role: 'Cash Courier Motorbike',
+    risk: 'medium',
+    city: 'Swargate / Camp',
+    identifiers: { make: 'Bajaj Pulsar', color: 'Black', regDistrict: 'Pimpri-Chinchwad' },
+    events: 3,
+    recent: 60,
+    x: 140,
+    y: 440
+  },
+
+  // Bank & Mule Accounts
+  {
+    id: 'ent_bank1',
+    name: 'HDFC-50100492817291',
+    local: 'Primary Mule Account',
+    type: 'Bank',
+    category: 'bank',
+    role: 'Layering Mule Account (INR 14.50L)',
+    risk: 'high',
+    city: 'Shivajinagar Branch',
+    identifiers: { bankName: 'HDFC Bank', ifsc: 'HDFC0000052', status: 'Freeze Recommended under PMLA' },
+    events: 6,
+    recent: 95,
+    x: 440,
+    y: 280
+  },
+  {
+    id: 'ent_bank2',
+    name: 'ICICI-0021948102',
+    local: 'Split Mule Account',
+    type: 'Bank',
+    category: 'bank',
+    role: 'Split Layering Account (INR 6.50L)',
+    risk: 'high',
+    city: 'Deccan Gymkhana Branch',
+    identifiers: { bankName: 'ICICI Bank', ifsc: 'ICIC0000021', status: 'Flagged for Intercept' },
+    events: 4,
+    recent: 85,
+    x: 560,
+    y: 280
+  },
+  {
+    id: 'ent_bank3',
+    name: 'Account •• 9130',
+    local: 'Mule Aggregator',
+    type: 'Bank',
+    category: 'bank',
+    role: 'Hawala Mule Pool (INR 22.40L)',
+    risk: 'high',
+    city: 'Swargate Branch',
+    identifiers: { turnover: '> 40 UPI transactions/day', handler: 'Arjun Pawar' },
+    events: 48,
+    recent: 78,
+    x: 190,
+    y: 270
+  },
+
+  // FIR Cases
+  {
+    id: 'ent_fir1',
+    name: 'FIR-MH-2026-4821',
+    local: 'Cyber Crime PS Case',
+    type: 'FIR Case',
+    category: 'fir',
+    role: 'Registered FIR Dossier',
+    risk: 'high',
+    city: 'Cyber Crime PS, Shivajinagar',
+    identifiers: { sections: 'IPC 420, 468, 471, IT Act 66D', date: '2026-08-14', defraudedAmount: 'INR 14,50,000' },
+    events: 8,
+    recent: 96,
+    x: 340,
+    y: 110
+  },
+  {
+    id: 'ent_fir2',
+    name: 'FIR-MH-2026-1940',
+    local: 'Kothrud Case',
+    type: 'FIR Case',
+    category: 'fir',
+    role: 'Linked Cross-Case Dossier',
+    risk: 'medium',
+    city: 'Kothrud Police Station',
+    identifiers: { sections: 'IPC 420, 120B', date: '2026-07-22' },
+    events: 4,
+    recent: 70,
+    x: 580,
+    y: 380
+  },
+
+  // Location / Cell Towers
+  {
+    id: 'ent_tower1',
+    name: 'Cell Tower PN-CY-482',
+    local: 'FC Road Sector',
+    type: 'Location',
+    category: 'location',
+    role: 'Triangulated Telecom Cell Tower',
+    risk: 'low',
+    city: 'FC Road Commercial Complex, Pune',
+    identifiers: { cellId: 'PN-CY-482', latLong: '18.5283° N, 73.8428° E', callersIdentified: 142 },
+    events: 142,
+    recent: 90,
+    x: 240,
+    y: 100
+  }
+];
+
+export const DEFAULT_EDGES = [
+  ['ent_sameer', 'ent_phone1', 'Primary SIM User'],
+  ['ent_sameer', 'ent_veh1', 'Registered Driver / User'],
+  ['ent_sameer', 'ent_bank1', 'Controls Mule Transfers'],
+  ['ent_sameer', 'ent_fir1', 'Named Primary Accused'],
+  ['ent_sameer', 'ent_vikram', 'Co-Conspirator (Technical)'],
+  ['ent_sameer', 'ent_ajay', 'Cash Withdrawal Handler'],
+  ['ent_vikram', 'ent_fir1', 'Co-Accused in Case'],
+  ['ent_ajay', 'ent_veh1', 'ATM Cash-Out Courier'],
+  ['ent_ajay', 'ent_bank2', 'Withdrew INR 3.8L via ATM'],
+  ['ent_phone1', 'ent_tower1', 'Triangulated Tower Link'],
+  ['ent_rajesh', 'ent_fir1', 'Complainant / Informant'],
+  ['ent_rajesh', 'ent_phone2', 'Complainant Mobile'],
+  ['ent_rajesh', 'ent_bank1', 'Transferred INR 14.5L'],
+  ['ent_bank1', 'ent_bank2', 'Split Layering Transfer (INR 6.5L)'],
+  ['ent_sameer', 'ent_fir2', 'Linked Accused in Cross-Case'],
+  ['ent_arjun', 'ent_bank3', 'Mule Recruiter & Handler'],
+  ['ent_arjun', 'ent_veh2', 'Courier Motorbike'],
+  ['ent_suresh', 'ent_bank3', 'Hawala Settlement Channel']
+];
+
+export let entities = [...DEFAULT_ENTITIES];
 export function setEntities(val) {
   entities = val;
 }
 
-export let edges = [];
+export let edges = [...DEFAULT_EDGES];
 export function setEdges(val) {
   edges = val;
 }
@@ -56,7 +339,7 @@ export const state = {
   query: '',
   sort: 'risk',
   type: 'all',
-  selected: null,
+  selected: 'ent_sameer',
   file: null,
   fileHash: '',
   filePath: '',

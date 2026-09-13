@@ -1,4 +1,4 @@
-# Netrakshak — Criminal Network Analysis
+# Netrakshak · Criminal Network Analysis
 
 Indian-context Smart India Hackathon prototype for NCRB-style FIR and multi-source linkage analysis.
 

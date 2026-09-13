@@ -30,6 +30,7 @@ export function renderSidebar() {
     navItem('overview', t('command'), 'grid'),
     navItem('network', t('network'), 'network'),
     navItem('fir', t('fir'), 'file'),
+    navItem('ai_analysis', t('aiAnalysis'), 'sparkle'),
     ...(activeOfficer.isAdmin ? [
       navItem('officers', t('officers'), 'users'),
       navItem('audit_logs', t('auditLogs'), 'database')

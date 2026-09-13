@@ -18,5 +18,5 @@ export const icon = (name) => ({
   shield: '◈', search: '⌕', grid: '▦', network: '◎', file: '▤',
   database: '◫', settings: '⚙', arrow: '→', check: '✓', lock: '▣',
   upload: '↑', expand: '⤢', close: '×', alert: '!', pulse: '◉',
-  users: '👥', plus: '+', audit: '≡'
+  users: '👥', plus: '+', audit: '≡', sparkle: '✦', user: '👤'
 }[name] || '•');

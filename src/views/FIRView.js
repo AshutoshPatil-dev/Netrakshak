@@ -1,11 +1,12 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, firCases, recordAudit, loadSupabaseData, notifyStateChange } from '../state.js';
+import { state, entities, edges, firCases, recordAudit, loadSupabaseData, notifyStateChange } from '../state.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { uploadPrivateEvidence } from '../lib/storage.js';
 import { hashText, sha256File } from '../lib/crypto.js';
 import { showToast } from '../components/Toast.js';
 import { openFilePreview } from '../components/FilePreviewModal.js';
+import { performAIAnalysis } from './AIAnalysisView.js';
 
 // Default / active draft state
 if (!state.firDraft) {
@@ -323,11 +324,138 @@ export async function saveFirstInformationReport() {
       console.error('FIR registration exception:', e);
     }
   } else {
-    // Offline / demo state
+    // Offline / prototype state: dynamically add FIR and its objects to the network
+    const firEntityId = 'fir_' + Date.now();
+    const subjectEntityId = 'accused_' + Date.now();
+
+    // 1. Add FIR case record
+    firCases.unshift({
+      id: firEntityId,
+      firNumber,
+      policeStation,
+      district,
+      incidentDate,
+      incidentTime,
+      sections: sectionsText,
+      complainantName,
+      subjectName,
+      alias,
+      otherAccused,
+      incidentLocation,
+      phone: subjectPhone,
+      vehicle,
+      bank,
+      incidentSummary,
+      propertySummary
+    });
+
+    // 2. Add FIR node to graph
+    entities.push({
+      id: firEntityId,
+      name: firNumber,
+      local: `${policeStation} Case`,
+      type: 'FIR Case',
+      category: 'fir',
+      role: 'Registered FIR Dossier',
+      risk: 'high',
+      city: policeStation,
+      identifiers: { sections: sectionsText, date: incidentDate, district },
+      events: 1,
+      recent: 100,
+      x: 300 + Math.random() * 200,
+      y: 150 + Math.random() * 150
+    });
+
+    // 3. Add Accused Person node
+    entities.push({
+      id: subjectEntityId,
+      name: subjectName,
+      local: alias || subjectName,
+      type: 'Person',
+      category: 'person',
+      role: 'Primary Accused Subject',
+      risk: 'high',
+      city: incidentLocation || district,
+      phone: subjectPhone,
+      identifiers: { alias, otherAccused, firNumber, district },
+      events: 1,
+      recent: 100,
+      x: 320 + Math.random() * 200,
+      y: 280 + Math.random() * 150
+    });
+    edges.push([subjectEntityId, firEntityId, 'Named Primary Accused']);
+
+    // 4. Add Phone node if present
+    if (subjectPhone) {
+      const phoneId = 'phone_' + Date.now();
+      entities.push({
+        id: phoneId,
+        name: subjectPhone,
+        local: 'Suspect Contact',
+        type: 'Phone',
+        category: 'phone',
+        role: 'Discovered Contact Number',
+        risk: 'high',
+        city: district,
+        phone: subjectPhone,
+        identifiers: { carrier: 'Identified Mobile', firNumber },
+        events: 1,
+        recent: 95,
+        x: 220 + Math.random() * 180,
+        y: 220 + Math.random() * 140
+      });
+      edges.push([subjectEntityId, phoneId, 'Primary Contact Link']);
+      edges.push([phoneId, firEntityId, 'Evidence Record']);
+    }
+
+    // 5. Add Vehicle node if present
+    if (vehicle) {
+      const vehId = 'veh_' + Date.now();
+      entities.push({
+        id: vehId,
+        name: vehicle,
+        local: 'Seized / Sighted Vehicle',
+        type: 'Vehicle',
+        category: 'vehicle',
+        role: 'Mobility / Transport Asset',
+        risk: 'medium',
+        city: incidentLocation || district,
+        identifiers: { registration: vehicle, firNumber },
+        events: 1,
+        recent: 90,
+        x: 420 + Math.random() * 160,
+        y: 350 + Math.random() * 120
+      });
+      edges.push([subjectEntityId, vehId, 'Associated Vehicle']);
+      edges.push([vehId, firEntityId, 'Identified in Incident']);
+    }
+
+    // 6. Add Bank account node if present
+    if (bank) {
+      const bankId = 'bank_' + Date.now();
+      entities.push({
+        id: bankId,
+        name: bank,
+        local: 'Flagged Account',
+        type: 'Bank',
+        category: 'bank',
+        role: 'Mule / Fraud Channel',
+        risk: 'high',
+        city: district,
+        identifiers: { account: bank, firNumber },
+        events: 1,
+        recent: 95,
+        x: 480 + Math.random() * 140,
+        y: 220 + Math.random() * 140
+      });
+      edges.push([subjectEntityId, bankId, 'Beneficiary / Mule Account']);
+      edges.push([bankId, firEntityId, 'Financial Diversion Route']);
+    }
+
     recordAudit('FIR registered', `FIR ${firNumber} registered at ${policeStation} (${subjectName}).`, 'info', 'fir');
   }
 
-  showToast(`✓ Case Registered: ${firNumber} committed to National Crime Network.`);
+  // Clear draft
   state.manualEvidence = [];
   state.file = null;
   state.fileHash = '';
@@ -355,6 +483,16 @@ export async function saveFirstInformationReport() {
     incidentSummary: '',
     propertySummary: ''
   };
+
+  // Auto-trigger AI Analysis across all database records & syndicates
+  const analysisTarget = subjectPhone || vehicle || bank || subjectName || firNumber;
+  state.aiAnalysis.query = analysisTarget;
+  state.aiAnalysis.streamType = 'all';
+  performAIAnalysis(analysisTarget, 'all');
+
+  // Direct transition to AI Analysis View
+  state.view = 'ai_analysis';
+  showToast(`✓ FIR ${firNumber} Registered. Auto-running AI Linkage Engine…`);
   notifyStateChange();
 }
 
@@ -612,9 +750,9 @@ export function renderFIR(c) {
       el('div', { class: 'eyebrow blue' }, ['CRIMINAL INVESTIGATION MIS']),
       el('h1', {}, ['First Information Report (FIR Intake)']),
       el('p', { class: 'muted' }, ['Unified FIR registration with OCR document extraction and evidentiary chain-of-custody anchoring.'])
-    ]),
-    el('span', { class: 'secure-pill' }, [icon('lock'), 'SHA-256 HASH VERIFIED'])
+    ])
   ]);
+
 
   c.append(header, formSection);
 }
