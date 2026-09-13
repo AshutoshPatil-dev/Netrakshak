@@ -108,7 +108,10 @@ drop policy if exists evidence_insert_own on public.evidence_items;
 create policy evidence_insert_own on public.evidence_items for insert to authenticated with check (created_by = auth.uid());
 drop policy if exists audit_read_own on public.audit_events;
 create policy audit_read_own on public.audit_events for select to authenticated using (actor_id = auth.uid());
-drop policy if exists audit_insert_own on public.audit_events;
-create policy audit_insert_own on public.audit_events for insert to authenticated with check (actor_id = auth.uid());
-
 -- Access grants are intentionally not client-writable. Issue them from a trusted server or Edge Function.
+
+-- Grant table access to Supabase API roles (governed by Row Level Security)
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;

@@ -63,3 +63,9 @@ drop policy if exists audit_insert_own on public.audit_events;
 drop policy if exists audit_insert_auth on public.audit_events;
 create policy audit_insert_auth on public.audit_events for insert to authenticated 
   with check (actor_id = auth.uid() or actor_id is null or public.is_admin());
+
+-- Grant table access to Supabase API roles (governed by Row Level Security)
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
