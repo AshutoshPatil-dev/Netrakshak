@@ -592,3 +592,35 @@ body{background:#fff;min-width:1080px}button{transition:none!important}button:ho
   margin-bottom: 24px !important;
 }
 
+/* Inline login error message */
+.login-inline-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 2px 0 6px;
+}
+.login-inline-error .error-icon {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.login-form input.input-error {
+  border-color: #DC2626 !important;
+  background-color: #FFFBFB !important;
+}
+.login-form input.input-error:focus {
+  border-color: #DC2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+

@@ -76,7 +76,9 @@ let state = {
   auditLevelFilter: 'all',
   auditSearchQuery: '',
   auditActorFilter: 'all',
-  auditActionFilter: 'all'
+  auditActionFilter: 'all',
+  loginError: '',
+  loginEmail: ''
 };
 
 function getActiveOfficer() {
@@ -324,23 +326,33 @@ async function verifyOfficerAuthorization(user) {
 async function signInOfficer(form) {
   const email = form.querySelector('input[type="email"]').value.trim();
   const password = form.querySelector('input[type="password"]').value;
+  state.loginEmail = email;
+  state.loginError = '';
+
   if (supabaseConfigured) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !authData?.user) {
-      showToast(t('authFailed'));
+      if (submitBtn) submitBtn.disabled = false;
+      state.loginError = 'Invalid email address or password. Please verify your credentials.';
+      renderLogin();
       return;
     }
 
     const check = await verifyOfficerAuthorization(authData.user);
     if (!check.authorized) {
+      if (submitBtn) submitBtn.disabled = false;
       await supabase.auth.signOut();
       state.loggedIn = false;
-      showToast(`Access Denied: ${check.reason}`);
-      render();
+      state.loginError = `Access Denied: ${check.reason}`;
+      renderLogin();
       return;
     }
 
     state.loggedIn = true;
+    state.loginError = '';
     await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
     await loadSupabaseData();
     render();
@@ -348,6 +360,7 @@ async function signInOfficer(form) {
   }
   localStorage.setItem('demoSession', 'true');
   state.loggedIn = true;
+  state.loginError = '';
   await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
   render();
 }
@@ -357,6 +370,7 @@ async function signOutOfficer() {
   if (supabaseConfigured) await supabase.auth.signOut();
   localStorage.removeItem('demoSession');
   state.loggedIn = false;
+  state.loginError = '';
   render();
 }
 
@@ -406,6 +420,47 @@ function renderLogin() {
   const root = document.querySelector('#app');
   root.innerHTML = '';
 
+  const emailInput = el('input', {
+    type: 'email',
+    placeholder: 'officer@police.gov.in',
+    required: true,
+    value: state.loginEmail || '',
+    class: state.loginError ? 'input-error' : ''
+  });
+  emailInput.oninput = () => {
+    if (state.loginError) {
+      state.loginError = '';
+      const errEl = document.querySelector('.login-inline-error');
+      if (errEl) errEl.style.display = 'none';
+      emailInput.classList.remove('input-error');
+      const passInput = document.querySelector('.login-form input[type="password"]');
+      if (passInput) passInput.classList.remove('input-error');
+    }
+  };
+
+  const passInput = el('input', {
+    type: 'password',
+    placeholder: '••••••••',
+    required: true,
+    class: state.loginError ? 'input-error' : ''
+  });
+  passInput.oninput = () => {
+    if (state.loginError) {
+      state.loginError = '';
+      const errEl = document.querySelector('.login-inline-error');
+      if (errEl) errEl.style.display = 'none';
+      passInput.classList.remove('input-error');
+      emailInput.classList.remove('input-error');
+    }
+  };
+
+  const errorBlock = state.loginError
+    ? el('div', { class: 'login-inline-error', role: 'alert' }, [
+        el('span', { class: 'error-icon' }, ['⚠']),
+        el('span', {}, [state.loginError])
+      ])
+    : null;
+
   const loginCard = el('section', { class: 'login-card' }, [
     el('div', { class: 'login-card-top' }, [
       logo(),
@@ -418,12 +473,13 @@ function renderLogin() {
     el('form', { class: 'login-form' }, [
       el('label', {}, [
         t('email'),
-        el('input', { type: 'email', placeholder: 'officer@police.gov.in', required: true })
+        emailInput
       ]),
       el('label', {}, [
         t('password'),
-        el('input', { type: 'password', placeholder: '••••••••', required: true })
+        passInput
       ]),
+      ...(errorBlock ? [errorBlock] : []),
       el('button', { class: 'primary-btn', type: 'submit' }, [
         t('signIn'),
         el('span', {}, [icon('arrow')])
