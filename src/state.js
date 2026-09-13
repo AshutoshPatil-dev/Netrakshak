@@ -339,7 +339,7 @@ export const state = {
   query: '',
   sort: 'risk',
   type: 'all',
-  selected: 'ent_sameer',
+  selected: null,
   file: null,
   fileHash: '',
   filePath: '',
@@ -358,8 +358,160 @@ export const state = {
   auditActionFilter: 'all',
   loginError: '',
   loginEmail: '',
-  previewModalFile: null
+  previewModalFile: null,
+  profileEntityId: null,
+  profileHistory: [],
+  previousViewBeforeProfile: 'network',
+  graphSideTab: 'dossier',
+  directorySearchQuery: '',
+  directoryCategoryFilter: 'all',
+  graphExploration: {
+    active: false, // false shows the full launchpad selection menu
+    mode: 'focused', // 'focused' or 'all'
+    seedId: null,
+    previousSeedId: null,
+    previousMode: 'focused',
+    expandedNodeIds: []
+  }
 };
+
+export function openEntityProfile(entityId) {
+  if (state.view !== 'entity_profile') {
+    state.previousViewBeforeProfile = state.view || 'network';
+    state.profileHistory = [];
+  } else if (state.profileEntityId && state.profileEntityId !== entityId) {
+    state.profileHistory.push(state.profileEntityId);
+  }
+  state.profileEntityId = entityId;
+  state.selected = entityId;
+  state.view = 'entity_profile';
+  notifyStateChange();
+}
+
+export function backEntityProfile() {
+  if (state.profileHistory.length > 0) {
+    const previousId = state.profileHistory.pop();
+    state.profileEntityId = previousId;
+    state.selected = previousId;
+    notifyStateChange();
+  } else {
+    state.view = state.previousViewBeforeProfile || 'network';
+    state.profileEntityId = null;
+    notifyStateChange();
+  }
+}
+
+export function getVisibleGraphNodeIds() {
+  if (!state.graphExploration.active) {
+    return new Set();
+  }
+  if (state.graphExploration.mode === 'all') {
+    return new Set(entities.map(e => e.id));
+  }
+  const visible = new Set(state.graphExploration.expandedNodeIds || []);
+  if (state.graphExploration.seedId) {
+    visible.add(state.graphExploration.seedId);
+  }
+  // Include direct 1-hop neighbors of any expanded node
+  (state.graphExploration.expandedNodeIds || []).forEach(nodeId => {
+    edges.forEach(edge => {
+      if (edge[0] === nodeId) visible.add(edge[1]);
+      if (edge[1] === nodeId) visible.add(edge[0]);
+    });
+  });
+  return visible;
+}
+
+export function startGraphInvestigation(seedId) {
+  state.graphExploration.active = true;
+  state.graphExploration.mode = 'focused';
+  state.graphExploration.seedId = seedId;
+  state.graphExploration.expandedNodeIds = [seedId];
+  state.selected = seedId;
+  notifyStateChange();
+}
+
+export function returnToGraphLaunchpad() {
+  state.graphExploration.active = false;
+  state.graphExploration.seedId = null;
+  state.graphExploration.expandedNodeIds = [];
+  state.selected = null;
+  notifyStateChange();
+}
+
+export function expandGraphNode(nodeId) {
+  if (!state.graphExploration.expandedNodeIds.includes(nodeId)) {
+    state.graphExploration.expandedNodeIds.push(nodeId);
+    state.graphExploration.active = true;
+    state.graphExploration.mode = 'focused';
+    notifyStateChange();
+  }
+}
+
+export function collapseGraphNode(nodeId) {
+  state.graphExploration.expandedNodeIds = state.graphExploration.expandedNodeIds.filter(id => id !== nodeId);
+  if (state.graphExploration.expandedNodeIds.length === 0) {
+    state.graphExploration.expandedNodeIds = [state.graphExploration.seedId].filter(Boolean);
+  }
+  notifyStateChange();
+}
+
+export function setGraphSeed(seedId) {
+  if (state.graphExploration.seedId !== seedId) {
+    state.graphExploration.previousSeedId = state.graphExploration.seedId;
+    state.graphExploration.previousMode = state.graphExploration.mode;
+  }
+  startGraphInvestigation(seedId);
+}
+
+export function toggleGraphSeed(seedId) {
+  // If this entity is already the active focal seed, toggle it OFF!
+  const isCurrentlySeed = state.graphExploration.active &&
+    state.graphExploration.seedId === seedId &&
+    state.graphExploration.mode === 'focused';
+
+  if (isCurrentlySeed) {
+    const prevSeed = state.graphExploration.previousSeedId;
+    const prevMode = state.graphExploration.previousMode;
+
+    if (prevSeed && prevSeed !== seedId) {
+      state.graphExploration.previousSeedId = null;
+      startGraphInvestigation(prevSeed);
+    } else if (prevMode === 'all') {
+      showFullGraphUniverse();
+    } else {
+      showFullGraphUniverse();
+    }
+  } else {
+    // Turning it ON: remember current state before setting
+    state.graphExploration.previousSeedId = state.graphExploration.seedId;
+    state.graphExploration.previousMode = state.graphExploration.mode;
+    startGraphInvestigation(seedId);
+  }
+}
+
+export function resetGraphExploration() {
+  const seed = state.graphExploration.seedId;
+  state.customNodePositions = {};
+  if (seed) {
+    state.graphExploration.active = true;
+    state.graphExploration.expandedNodeIds = [seed];
+    state.graphExploration.mode = 'focused';
+    state.selected = seed;
+  } else {
+    state.graphExploration.active = false;
+  }
+  notifyStateChange();
+}
+
+export function showFullGraphUniverse() {
+  state.graphExploration.active = true;
+  state.graphExploration.mode = 'all';
+  if (!state.selected && entities.length > 0) {
+    state.selected = entities[0].id;
+  }
+  notifyStateChange();
+}
 
 export function getActiveOfficer() {
   const you = state.officers.find(o => o.isYou);
@@ -495,30 +647,61 @@ export async function loadSupabaseData() {
       saveOfficers();
     }
 
-    if (dbEntities) {
-      entities = dbEntities.map((e, idx) => ({
+    if (dbEntities && dbEntities.length > 0) {
+      const fetchedEntities = dbEntities.map((e, idx) => ({
         id: e.id,
         name: e.display_name,
         local: e.aliases?.[0] || e.display_name,
         type: e.entity_type ? e.entity_type.charAt(0).toUpperCase() + e.entity_type.slice(1) : 'Entity',
+        category: (e.entity_type || 'person').toLowerCase(),
         risk: e.risk_level || 'low',
-        city: e.identifiers?.city || e.identifiers?.address || '',
-        phone: e.identifiers?.phone || e.identifiers?.bank || e.identifiers?.vehicle || '',
-        events: 0,
-        recent: 50,
+        city: e.identifiers?.city || e.identifiers?.address || e.identifiers?.location || '',
+        phone: e.identifiers?.phone || '',
+        identifiers: e.identifiers || {},
+        events: 1,
+        recent: 80,
         x: 350 + Math.cos(idx) * 160,
         y: 250 + Math.sin(idx) * 160
       }));
-      if (entities.length > 0 && (!state.selected || !entities.some(x => x.id === state.selected))) {
-        state.selected = entities[0].id;
-      }
+
+      // Deduplicate by name and type against DEFAULT_ENTITIES
+      const entityMap = new Map();
+      DEFAULT_ENTITIES.forEach(ent => {
+        const key = `${ent.name.trim().toLowerCase()}::${ent.type.toLowerCase()}`;
+        entityMap.set(key, ent);
+      });
+      fetchedEntities.forEach(ent => {
+        const key = `${ent.name.trim().toLowerCase()}::${ent.type.toLowerCase()}`;
+        if (entityMap.has(key)) {
+          // Merge identifiers
+          const existing = entityMap.get(key);
+          entityMap.set(key, { ...existing, id: ent.id, identifiers: { ...existing.identifiers, ...ent.identifiers } });
+        } else {
+          entityMap.set(key, ent);
+        }
+      });
+      entities = Array.from(entityMap.values());
+    } else {
+      entities = [...DEFAULT_ENTITIES];
     }
 
-    if (dbRels) {
-      edges = dbRels.map(r => [r.source_entity_id, r.target_entity_id]);
+    if (dbRels && dbRels.length > 0) {
+      const fetchedEdges = dbRels.map(r => [r.source_entity_id, r.target_entity_id, r.relationship_type || 'Link']);
+      const edgeSet = new Set(DEFAULT_EDGES.map(e => `${e[0]}=>${e[1]}`));
+      const combinedEdges = [...DEFAULT_EDGES];
+      fetchedEdges.forEach(e => {
+        const key = `${e[0]}=>${e[1]}`;
+        if (!edgeSet.has(key)) {
+          edgeSet.add(key);
+          combinedEdges.push(e);
+        }
+      });
+      edges = combinedEdges;
+    } else {
+      edges = [...DEFAULT_EDGES];
     }
 
-    if (dbCases) {
+    if (dbCases && dbCases.length > 0) {
       firCases = dbCases;
     }
 

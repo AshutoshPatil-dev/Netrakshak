@@ -1,8 +1,9 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, edges, firCases, notifyStateChange } from '../state.js';
+import { state, entities, edges, firCases, notifyStateChange, openEntityProfile } from '../state.js';
 import { supabaseConfigured } from '../lib/supabase.js';
 import { showToast } from '../components/Toast.js';
+import { objectTypeColors, objectTypeIcons } from './NetworkGraphView.js';
 
 export function card(title, value, foot, cls = '') {
   return el('div', { class: `metric-card ${cls}` }, [
@@ -15,28 +16,45 @@ export function card(title, value, foot, cls = '') {
   ]);
 }
 
-export function recentPanel() {
-  const recentLogs = state.auditLogs.slice(0, 5);
-  const body = recentLogs.length > 0 ? el('div', { class: 'activity-list' }, recentLogs.map(log => el('div', { class: 'activity' }, [
-    el('span', { class: `activity-dot ${log.level === 'critical' ? 'alert' : 'verified'}` }, [icon(log.level === 'critical' ? 'alert' : 'check')]),
-    el('div', {}, [
-      el('strong', {}, [log.action]),
-      el('span', {}, [log.summary])
-    ]),
-    el('time', {}, [log.time.split(' ')[1] || log.time])
-  ]))) : el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--muted); font-size: 13px;' }, [
-    'No recent activity recorded yet.'
-  ]);
+export function intelligenceSummaryPanel() {
+  const categories = [
+    { type: 'FIR Case', label: 'FIR Cases', iconName: 'file' },
+    { type: 'Person', label: 'Suspects & Persons', iconName: 'user' },
+    { type: 'Vehicle', label: 'Vehicles', iconName: 'grid' },
+    { type: 'Phone', label: 'Phones / SIMs', iconName: 'pulse' },
+    { type: 'Bank', label: 'Mule Accounts', iconName: 'database' },
+    { type: 'Location', label: 'Cell Towers', iconName: 'network' }
+  ];
 
   return el('section', { class: 'panel' }, [
     el('div', { class: 'panel-heading' }, [
       el('div', {}, [
-        el('h3', {}, [t('recent')]),
-        el('span', { class: 'muted' }, [t('liveAudit')])
+        el('h3', {}, ['Intelligence Multi-Object Summary']),
+        el('span', { class: 'muted' }, ['Active entities across the intelligence database'])
       ]),
-      el('span', { class: 'live-dot' }, ['LIVE'])
+      el('button', {
+        class: 'text-btn',
+        onclick: () => { state.view = 'network'; notifyStateChange(); }
+      }, ['Explore Graph', icon('arrow')])
     ]),
-    body
+    el('div', { style: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 14px 0;' }, categories.map(cat => {
+      const count = entities.filter(e => e.type === cat.type).length;
+      const color = objectTypeColors[cat.type] || '#1E293B';
+      return el('button', {
+        style: 'background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 8px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.15s ease;',
+        onclick: () => {
+          state.type = cat.type.toLowerCase();
+          state.view = 'network';
+          notifyStateChange();
+        }
+      }, [
+        el('div', { style: `width: 26px; height: 26px; border-radius: 6px; background: ${color}15; color: ${color}; display: grid; place-items: center; font-size: 12px; margin-bottom: 8px;` }, [
+          icon(cat.iconName)
+        ]),
+        el('strong', { style: 'display: block; font-size: 16px; color: var(--app-text); line-height: 1.1;' }, [String(count)]),
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: var(--app-text-secondary); margin-top: 2px; display: block;' }, [cat.label])
+      ]);
+    }))
   ]);
 }
 
@@ -113,7 +131,7 @@ export function renderOverview(c) {
       card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
       card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
     ]),
-    el('div', { class: 'dashboard-grid' }, [recentPanel(), riskPanel()]),
+    el('div', { class: 'dashboard-grid' }, [intelligenceSummaryPanel(), riskPanel()]),
     el('div', { class: 'section-heading' }, [
       el('h2', {}, [t('activeCase')]),
       el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [t('viewAll'), icon('arrow')])
@@ -121,3 +139,4 @@ export function renderOverview(c) {
     activeCaseCard
   );
 }
+

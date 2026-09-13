@@ -17,17 +17,28 @@ export function navItem(view, label, i) {
 export function renderSidebar() {
   const activeOfficer = getActiveOfficer();
 
-  const sidebar = el('aside', { class: 'sidebar' }, [
+  const sidebarHeader = el('div', { class: 'sidebar-header' }, [
+    el('div', { class: 'sidebar-header-left' }, [
+      el('span', { class: 'sidebar-header-badge' }, [icon('shield')]),
+      el('span', { class: 'sidebar-header-text' }, ['WORKSPACE'])
+    ]),
     el('button', {
-      class: 'sidebar-toggle',
+      class: 'sidebar-toggle-btn',
       title: state.sidebarCollapsed ? t('expandSidebar') : t('collapseSidebar'),
       onclick: () => {
         state.sidebarCollapsed = !state.sidebarCollapsed;
         notifyStateChange();
       }
-    }, [state.sidebarCollapsed ? '▶' : '◀']),
+    }, [
+      el('span', { class: 'toggle-icon' }, [state.sidebarCollapsed ? '▶' : '◀'])
+    ])
+  ]);
+
+  const sidebar = el('aside', { class: 'sidebar' }, [
+    sidebarHeader,
     el('div', { class: 'nav-section-label' }, [t('workspace')]),
     navItem('overview', t('command'), 'grid'),
+    navItem('entities', t('entitiesNav'), 'user'),
     navItem('network', t('network'), 'network'),
     navItem('fir', t('fir'), 'file'),
     navItem('ai_analysis', t('aiAnalysis'), 'sparkle'),

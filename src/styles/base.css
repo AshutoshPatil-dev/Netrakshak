@@ -63,6 +63,34 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   outline-offset: 2px;
 }
 
+/* Clear ugly nested focus outline from embedded search inputs */
+[class*="search"] input,
+[class*="search"] input:focus,
+[class*="search"] input:focus-visible,
+input[class*="search"],
+input[class*="search"]:focus,
+input[class*="search"]:focus-visible,
+.launchpad-search-input,
+.launchpad-search-input:focus,
+.launchpad-search-input:focus-visible,
+.entities-search-input,
+.entities-search-input:focus,
+.entities-search-input:focus-visible,
+.global-search input,
+.global-search input:focus,
+.global-search input:focus-visible,
+.audit-search-wrapper input,
+.audit-search-wrapper input:focus,
+.audit-search-wrapper input:focus-visible,
+.ai-search-input,
+.ai-search-input:focus,
+.ai-search-input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3, strong { font-family: 'Plus Jakarta Sans', Inter, 'Noto Sans', sans-serif; }
 
