@@ -519,6 +519,58 @@ async function bootstrapAuth() {
   }
 }
 
+function renderOverview(c) {
+  c.innerHTML = '';
+  const highRiskCount = entities.filter(e => e.risk === 'high').length;
+
+  const activeCaseCard = firCases.length > 0 ? el('div', { class: 'case-row' }, [
+    el('div', { class: 'case-main' }, [
+      el('div', { class: 'case-icon' }, [icon('network')]),
+      el('div', {}, [
+        el('strong', {}, [firCases[0].fir_number || 'FIR Case']),
+        el('span', {}, [`${firCases[0].police_station || ''} · ${firCases[0].district || ''}`])
+      ])
+    ]),
+    el('div', { class: 'case-progress' }, [
+      el('div', { class: 'progress-label' }, [t('networkConfidence'), el('strong', {}, ['100%'])]),
+      el('div', { class: 'progress' }, [el('span', { style: 'width:100%' })])
+    ]),
+    el('button', { class: 'icon-btn', onclick: () => { state.view = 'fir'; render(); } }, [icon('arrow')])
+  ]) : el('div', { class: 'case-row' }, [
+    el('div', { class: 'case-main' }, [
+      el('div', { class: 'case-icon' }, [icon('file')]),
+      el('div', {}, [
+        el('strong', {}, ['No Active Investigation Cases']),
+        el('span', {}, ['Record an FIR or intake evidence to initiate criminal linkage analysis.'])
+      ])
+    ]),
+    el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; render(); } }, [icon('plus'), 'New FIR Intake'])
+  ]);
+
+  c.append(
+    el('div', { class: 'page-heading' }, [
+      el('div', {}, [
+        el('div', { class: 'eyebrow blue' }, [t('today')]),
+        el('h1', {}, [t('welcome')]),
+        el('p', { class: 'muted' }, [t('briefing')])
+      ]),
+      el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; render(); } }, [icon('network'), t('viewNetwork')])
+    ]),
+    el('div', { class: 'metric-grid' }, [
+      card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
+      card(t('entities'), String(entities.length), 'Entities in database', 'metric-blue'),
+      card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
+      card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
+    ]),
+    el('div', { class: 'dashboard-grid' }, [recentPanel(), riskPanel()]),
+    el('div', { class: 'section-heading' }, [
+      el('h2', {}, [t('activeCase')]),
+      el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; render(); } }, [t('viewAll'), icon('arrow')])
+    ]),
+    activeCaseCard
+  );
+}
+
 function renderLogin() {
   const root = document.querySelector('#app');
   root.innerHTML = '';
@@ -754,68 +806,6 @@ function card(title, value, foot, cls = '') {
     el('strong', { class: 'metric-value' }, [value]),
     el('span', { class: 'metric-foot' }, [foot])
   ]);
-}
-
-function renderOverview(c) {
-  c.innerHTML = '';
-  const highRiskCount = entities.filter(e => e.risk === 'high').length;
-
-  const topNotice = el('div', { class: 'notice-strip' }, [
-    el('span', { class: 'notice-icon' }, [icon(supabaseConfigured ? 'check' : 'alert')]),
-    el('div', {}, [
-      el('strong', {}, [supabaseConfigured ? 'Supabase Connected' : 'Local Offline Mode']),
-      el('span', { class: 'muted' }, [supabaseConfigured ? 'Connected to live database and auth.' : 'Database credentials active locally.'])
-    ]),
-    el('button', { class: 'text-btn', onclick: () => { state.view = 'sources'; render(); } }, [t('viewAll'), icon('arrow')])
-  ]);
-
-  const activeCaseCard = firCases.length > 0 ? el('div', { class: 'case-row' }, [
-    el('div', { class: 'case-main' }, [
-      el('div', { class: 'case-icon' }, [icon('network')]),
-      el('div', {}, [
-        el('strong', {}, [firCases[0].fir_number || 'FIR Case']),
-        el('span', {}, [`${firCases[0].police_station || ''} · ${firCases[0].district || ''}`])
-      ])
-    ]),
-    el('div', { class: 'case-progress' }, [
-      el('div', { class: 'progress-label' }, [t('networkConfidence'), el('strong', {}, ['100%'])]),
-      el('div', { class: 'progress' }, [el('span', { style: 'width:100%' })])
-    ]),
-    el('button', { class: 'icon-btn', onclick: () => { state.view = 'fir'; render(); } }, [icon('arrow')])
-  ]) : el('div', { class: 'case-row' }, [
-    el('div', { class: 'case-main' }, [
-      el('div', { class: 'case-icon' }, [icon('file')]),
-      el('div', {}, [
-        el('strong', {}, ['No Active Investigation Cases']),
-        el('span', {}, ['Record an FIR or intake evidence to initiate criminal linkage analysis.'])
-      ])
-    ]),
-    el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; render(); } }, [icon('upload'), t('reviewFIR')])
-  ]);
-
-  c.append(
-    el('div', { class: 'page-heading' }, [
-      el('div', {}, [
-        el('div', { class: 'eyebrow blue' }, [t('today')]),
-        el('h1', {}, [t('welcome')]),
-        el('p', { class: 'muted' }, [t('briefing')])
-      ]),
-      el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; render(); } }, [icon('network'), t('viewNetwork')])
-    ]),
-    topNotice,
-    el('div', { class: 'metric-grid' }, [
-      card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
-      card(t('entities'), String(entities.length), 'Entities in database', 'metric-blue'),
-      card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
-      card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
-    ]),
-    el('div', { class: 'dashboard-grid' }, [recentPanel(), riskPanel()]),
-    el('div', { class: 'section-heading' }, [
-      el('h2', {}, [t('activeCase')]),
-      el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; render(); } }, [t('viewAll'), icon('arrow')])
-    ]),
-    activeCaseCard
-  );
 }
 
 function recentPanel() {
