@@ -325,14 +325,60 @@ async function verifyOfficerAuthorization(user) {
 
 let isAuthActionInProgress = false;
 
+function setLoginInlineError(message) {
+  state.loginError = message;
+  const form = document.querySelector('.login-form');
+  if (!form) return;
+
+  const emailInput = form.querySelector('input[type="email"]');
+  const passInput = form.querySelector('input[type="password"]');
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  if (emailInput) emailInput.classList.add('input-error');
+  if (passInput) passInput.classList.add('input-error');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('loading');
+  }
+
+  let errorEl = form.querySelector('.login-inline-error');
+  if (!errorEl) {
+    errorEl = el('div', { class: 'login-inline-error', role: 'alert' }, [
+      el('span', { class: 'error-icon' }, ['⚠']),
+      el('span', { class: 'error-text' }, [message])
+    ]);
+    const passLabel = passInput ? passInput.closest('label') : null;
+    if (passLabel && passLabel.nextSibling) {
+      form.insertBefore(errorEl, passLabel.nextSibling);
+    } else if (submitBtn) {
+      form.insertBefore(errorEl, submitBtn);
+    } else {
+      form.appendChild(errorEl);
+    }
+  } else {
+    const textSpan = errorEl.querySelector('.error-text') || errorEl.querySelector('span:last-child');
+    if (textSpan) textSpan.textContent = message;
+    errorEl.style.display = 'flex';
+  }
+}
+
+function clearLoginInlineError() {
+  state.loginError = '';
+  const form = document.querySelector('.login-form');
+  if (!form) return;
+  const errorEl = form.querySelector('.login-inline-error');
+  if (errorEl) errorEl.remove();
+  const inputs = form.querySelectorAll('input');
+  inputs.forEach(inp => inp.classList.remove('input-error'));
+}
+
 async function signInOfficer(form) {
   if (isAuthActionInProgress) return;
   isAuthActionInProgress = true;
 
-  const email = form.querySelector('input[type="email"]').value.trim();
-  const password = form.querySelector('input[type="password"]').value;
+  const email = form.querySelector('input[type="email"]')?.value?.trim() || '';
+  const password = form.querySelector('input[type="password"]')?.value || '';
   state.loginEmail = email;
-  state.loginError = '';
 
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.disabled = true;
@@ -341,19 +387,15 @@ async function signInOfficer(form) {
     if (supabaseConfigured) {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !authData?.user) {
-        if (submitBtn) submitBtn.disabled = false;
-        state.loginError = 'Invalid email address or password. Please verify your credentials.';
-        renderLogin();
+        setLoginInlineError('Invalid email address or password. Please verify your credentials.');
         return;
       }
 
       const check = await verifyOfficerAuthorization(authData.user);
       if (!check.authorized) {
-        if (submitBtn) submitBtn.disabled = false;
         await supabase.auth.signOut();
         state.loggedIn = false;
-        state.loginError = `Access Denied: ${check.reason}`;
-        renderLogin();
+        setLoginInlineError(`Access Denied: ${check.reason}`);
         return;
       }
 
@@ -371,11 +413,10 @@ async function signInOfficer(form) {
     await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
     render();
   } catch (err) {
-    if (submitBtn) submitBtn.disabled = false;
-    state.loginError = 'An error occurred during authentication. Please try again.';
-    renderLogin();
+    setLoginInlineError('An error occurred during authentication. Please try again.');
   } finally {
     isAuthActionInProgress = false;
+    if (submitBtn && !state.loggedIn) submitBtn.disabled = false;
   }
 }
 
@@ -400,7 +441,6 @@ async function bootstrapAuth() {
       } else {
         await supabase.auth.signOut();
         state.loggedIn = false;
-        render();
       }
     }
     supabase.auth.onAuthStateChange(async (event, session) => {
@@ -412,8 +452,7 @@ async function bootstrapAuth() {
           await supabase.auth.signOut();
           if (state.loggedIn) {
             state.loggedIn = false;
-            state.loginError = `Access Denied: ${check.reason}`;
-            renderLogin();
+            setLoginInlineError(`Access Denied: ${check.reason}`);
           }
           return;
         }
@@ -455,23 +494,19 @@ function renderLogin() {
     class: state.loginError ? 'input-error' : ''
   });
 
-  const clearErrorsOnInput = () => {
+  const handleInputEdit = () => {
     if (state.loginError) {
-      state.loginError = '';
-      const errEl = document.querySelector('.login-inline-error');
-      if (errEl) errEl.remove();
-      emailInput.classList.remove('input-error');
-      passInput.classList.remove('input-error');
+      clearLoginInlineError();
     }
   };
 
-  emailInput.addEventListener('keydown', clearErrorsOnInput);
-  passInput.addEventListener('keydown', clearErrorsOnInput);
+  emailInput.addEventListener('input', handleInputEdit);
+  passInput.addEventListener('input', handleInputEdit);
 
   const errorBlock = state.loginError
     ? el('div', { class: 'login-inline-error', role: 'alert' }, [
         el('span', { class: 'error-icon' }, ['⚠']),
-        el('span', {}, [state.loginError])
+        el('span', { class: 'error-text' }, [state.loginError])
       ])
     : null;
 
