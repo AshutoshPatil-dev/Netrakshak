@@ -1,0 +1,123 @@
+import { el, icon } from '../lib/dom.js';
+import { t } from '../i18n/index.js';
+import { state, entities, edges, firCases, notifyStateChange } from '../state.js';
+import { supabaseConfigured } from '../lib/supabase.js';
+import { showToast } from '../components/Toast.js';
+
+export function card(title, value, foot, cls = '') {
+  return el('div', { class: `metric-card ${cls}` }, [
+    el('div', { class: 'metric-top' }, [
+      el('span', { class: 'metric-label' }, [title]),
+      el('span', { class: 'metric-spark' }, [icon('pulse')])
+    ]),
+    el('strong', { class: 'metric-value' }, [value]),
+    el('span', { class: 'metric-foot' }, [foot])
+  ]);
+}
+
+export function recentPanel() {
+  const recentLogs = state.auditLogs.slice(0, 5);
+  const body = recentLogs.length > 0 ? el('div', { class: 'activity-list' }, recentLogs.map(log => el('div', { class: 'activity' }, [
+    el('span', { class: `activity-dot ${log.level === 'critical' ? 'alert' : 'verified'}` }, [icon(log.level === 'critical' ? 'alert' : 'check')]),
+    el('div', {}, [
+      el('strong', {}, [log.action]),
+      el('span', {}, [log.summary])
+    ]),
+    el('time', {}, [log.time.split(' ')[1] || log.time])
+  ]))) : el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--muted); font-size: 13px;' }, [
+    'No recent activity recorded yet.'
+  ]);
+
+  return el('section', { class: 'panel' }, [
+    el('div', { class: 'panel-heading' }, [
+      el('div', {}, [
+        el('h3', {}, [t('recent')]),
+        el('span', { class: 'muted' }, [t('liveAudit')])
+      ]),
+      el('span', { class: 'live-dot' }, ['LIVE'])
+    ]),
+    body
+  ]);
+}
+
+export function riskPanel() {
+  const high = entities.filter(e => e.risk === 'high').length;
+  const medium = entities.filter(e => e.risk === 'medium').length;
+  const low = entities.filter(e => e.risk === 'low').length;
+
+  return el('section', { class: 'panel' }, [
+    el('div', { class: 'panel-heading' }, [
+      el('div', {}, [
+        el('h3', {}, [t('riskPulse')]),
+        el('span', { class: 'muted' }, ['Risk Level Summary'])
+      ]),
+      el('button', { class: 'icon-btn', onclick: () => showToast(t('refreshed')) }, ['•••'])
+    ]),
+    el('div', { style: 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 0;' }, [
+      el('div', { style: 'background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 14px; text-align: center;' }, [
+        el('strong', { style: 'display: block; font-size: 24px; color: #DC2626;' }, [String(high)]),
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #991B1B;' }, ['HIGH RISK'])
+      ]),
+      el('div', { style: 'background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 14px; text-align: center;' }, [
+        el('strong', { style: 'display: block; font-size: 24px; color: #D97706;' }, [String(medium)]),
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #92400E;' }, ['MEDIUM RISK'])
+      ]),
+      el('div', { style: 'background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 14px; text-align: center;' }, [
+        el('strong', { style: 'display: block; font-size: 24px; color: #16A34A;' }, [String(low)]),
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #166534;' }, ['LOW RISK'])
+      ])
+    ])
+  ]);
+}
+
+export function renderOverview(c) {
+  c.innerHTML = '';
+  const highRiskCount = entities.filter(e => e.risk === 'high').length;
+
+  const activeCaseCard = firCases.length > 0 ? el('div', { class: 'case-row' }, [
+    el('div', { class: 'case-main' }, [
+      el('div', { class: 'case-icon' }, [icon('network')]),
+      el('div', {}, [
+        el('strong', {}, [firCases[0].fir_number || 'FIR Case']),
+        el('span', {}, [`${firCases[0].police_station || ''} · ${firCases[0].district || ''}`])
+      ])
+    ]),
+    el('div', { class: 'case-progress' }, [
+      el('div', { class: 'progress-label' }, [t('networkConfidence'), el('strong', {}, ['100%'])]),
+      el('div', { class: 'progress' }, [el('span', { style: 'width:100%' })])
+    ]),
+    el('button', { class: 'icon-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('arrow')])
+  ]) : el('div', { class: 'case-row' }, [
+    el('div', { class: 'case-main' }, [
+      el('div', { class: 'case-icon' }, [icon('file')]),
+      el('div', {}, [
+        el('strong', {}, ['No Active Investigation Cases']),
+        el('span', {}, ['Record an FIR or intake evidence to initiate criminal linkage analysis.'])
+      ])
+    ]),
+    el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('plus'), 'New FIR Intake'])
+  ]);
+
+  c.append(
+    el('div', { class: 'page-heading' }, [
+      el('div', {}, [
+        el('div', { class: 'eyebrow blue' }, [t('today')]),
+        el('h1', {}, [t('welcome')]),
+        el('p', { class: 'muted' }, [t('briefing')])
+      ]),
+      el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; notifyStateChange(); } }, [icon('network'), t('viewNetwork')])
+    ]),
+    el('div', { class: 'metric-grid' }, [
+      card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
+      card(t('entities'), String(entities.length), 'Entities in database', 'metric-blue'),
+      card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
+      card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
+    ]),
+    el('div', { class: 'dashboard-grid' }, [recentPanel(), riskPanel()]),
+    el('div', { class: 'section-heading' }, [
+      el('h2', {}, [t('activeCase')]),
+      el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [t('viewAll'), icon('arrow')])
+    ]),
+    activeCaseCard
+  );
+}
