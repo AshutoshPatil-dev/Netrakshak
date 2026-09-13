@@ -2,6 +2,8 @@ import './styles.css';
 import Graph from 'graphology';
 import Sigma from 'sigma';
 import { supabase, supabaseConfigured } from './lib/supabase.js';
+import { uploadPrivateEvidence } from './lib/storage.js';
+import { graphMetrics } from './lib/analysis.js';
 
 const translations = {
   en: {
@@ -38,6 +40,10 @@ Object.assign(translations.en,{saveFailed:'The FIR could not be saved. Try again
 Object.assign(translations.hi,{saveFailed:'एफआईआर सेव नहीं हो सकी। फिर कोशिश करें या डेटाबेस सेटअप जांचें।'});
 Object.assign(translations.mr,{saveFailed:'FIR सेव्ह करता आली नाही. पुन्हा प्रयत्न करा किंवा डेटाबेस सेटअप तपासा.'});
 Object.assign(translations.gu,{saveFailed:'FIR સાચવી શકાયી નથી. ફરી પ્રયાસ કરો અથવા ડેટાબેસ સેટઅપ તપાસો.'});
+Object.assign(translations.en,{influence:'Influence'});
+Object.assign(translations.hi,{influence:'प्रभाव'});
+Object.assign(translations.mr,{influence:'प्रभाव'});
+Object.assign(translations.gu,{influence:'પ્રભાવ'});
 
 const entities = [
   { id: 'e1', name: 'Arjun Pawar', local: 'अर्जुन पवार', type: 'Person', risk: 'high', degree: 18, recent: 92, city: 'Pune, Maharashtra', phone: '+91 98••• 4421', events: 14, x: 380, y: 230 },
@@ -50,7 +56,7 @@ const entities = [
 ];
 const edges = [['e1','e2'],['e1','e3'],['e1','e4'],['e1','e6'],['e2','e7'],['e2','e5'],['e3','e6'],['e3','e5'],['e4','e7'],['e5','e6'],['e6','e7']];
 const riskColor = { high: '#c2415a', medium: '#d78b22', low: '#238b68' };
-let state = { locale: localStorage.getItem('locale') || 'en', loggedIn: false, view: 'overview', query: '', sort: 'risk', type: 'all', selected: 'e1', file: null, fileHash: '', graphFullscreen: false, sidebarCollapsed: false, fontScale: 1, firMode: 'upload', manualEvidence: [] };
+let state = { locale: localStorage.getItem('locale') || 'en', loggedIn: false, view: 'overview', query: '', sort: 'risk', type: 'all', selected: 'e1', file: null, fileHash: '', filePath: '', graphFullscreen: false, sidebarCollapsed: false, fontScale: 1, firMode: 'upload', manualEvidence: [] };
 let sigmaInstance = null;
 const t = (key) => (translations[state.locale] || translations.en)[key] || translations.en[key] || key;
 const el = (tag, attrs = {}, children = []) => { const node = document.createElement(tag); Object.entries(attrs).forEach(([k,v]) => { if (k === 'class') node.className = v; else if (k === 'html') node.innerHTML = v; else if (k.startsWith('on') && typeof v === 'function') node[k] = v; else if (k === 'value') node.value = v; else if (k === 'selected' || k === 'checked' || k === 'disabled' || k === 'hidden') node[k] = Boolean(v); else node.setAttribute(k,v); }); children.forEach(c => node.append(c)); return node; };
@@ -73,12 +79,13 @@ function recentPanel(){return el('section',{class:'panel'},[el('div',{class:'pan
 function riskPanel(){return el('section',{class:'panel'},[el('div',{class:'panel-heading'},[el('div',{},[el('h3',{},[t('riskPulse')]),el('span',{class:'muted'},[t('last30')])]),el('button',{class:'icon-btn',onclick:()=>showToast(t('refreshed'))},['•••'])]),el('div',{class:'risk-chart'},[el('div',{class:'chart-y'},['100','75','50','25','0'].map(x=>el('span',{},[x]))),el('div',{class:'chart-bars'},[35,48,42,65,55,80,68,90,72,82,60,75].map((h,i)=>el('i',{style:`height:${h}%`,class:i>8?'bar-hot':''}))),el('div',{class:'chart-x'},(t('riskDates')||translations.en.riskDates).map(x=>el('span',{},[x])))])]);}
 function renderNetwork(c) {
   c.innerHTML = '';
-  const filtered = entities.filter(e => (state.type === 'all' || e.type === state.type) && (e.name.toLowerCase().includes(state.query.toLowerCase()) || e.local.includes(state.query)));
+  const analyticalEntities = graphMetrics(entities, edges);
+  const filtered = analyticalEntities.filter(e => (state.type === 'all' || e.type === state.type) && (e.name.toLowerCase().includes(state.query.toLowerCase()) || e.local.includes(state.query)));
   const rank = { high: 0, medium: 1, low: 2 };
-  const sorted = [...filtered].sort((a, b) => state.sort === 'name' ? a.name.localeCompare(b.name) : state.sort === 'connections' ? b.degree - a.degree : state.sort === 'recent' ? b.recent - a.recent : rank[a.risk] - rank[b.risk]);
+  const sorted = [...filtered].sort((a, b) => state.sort === 'name' ? a.name.localeCompare(b.name) : state.sort === 'connections' ? b.degree - a.degree : state.sort === 'recent' ? b.recent - a.recent : state.sort === 'influence' ? b.influence - a.influence : rank[a.risk] - rank[b.risk]);
   const n = el('div', { class: `network-workspace ${state.graphFullscreen ? 'fullscreen' : ''}` });
   const typeOptions = [['all', t('allTypes')], ...Array.from(new Set(entities.map(e => e.type))).map(x => [x, x])];
-  const sortOptions = [['risk', t('risk')], ['connections', t('connectionsSort')], ['name', t('name')], ['recent', t('recent')]];
+  const sortOptions = [['risk', t('risk')], ['connections', t('connectionsSort')], ['name', t('name')], ['recent', t('recent')], ['influence', t('influence')]];
   const typeSelect = el('select', { class: 'filter-select' }, typeOptions.map(([v, l]) => { const o = el('option', { value: v }, [l]); o.selected = v === state.type; return o; }));
   typeSelect.onchange = e => { state.type = e.target.value; render(); };
   const sortSelect = el('select', { class: 'filter-select' }, sortOptions.map(([v, l]) => { const o = el('option', { value: v }, [l]); o.selected = v === state.sort; return o; }));
@@ -189,7 +196,7 @@ function manualFIRPanel(){
   const evidenceList=el('div',{class:'evidence-list'},state.manualEvidence.map((item,index)=>el('div',{class:'evidence-item'},[el('span',{class:'evidence-type'},[item.type]),el('span',{},[item.description]),el('button',{class:'evidence-remove',title:t('removeEvidence'),onclick:()=>{state.manualEvidence.splice(index,1);render()}},['×'])])));
   return el('section',{class:'panel manual-form'},[el('div',{class:'panel-heading'},[el('div',{},[el('h3',{},[t('manualEntry')]),el('span',{class:'muted'},[t('manualEntryHelp')])]),el('span',{class:'draft-status'},[t('draft')])]),el('div',{class:'manual-section'},[el('div',{class:'section-label'},[t('caseDetails')]),fields]),el('div',{class:'manual-section'},[el('div',{class:'section-label'},[t('evidence')]),evidenceInput,evidenceList]),el('div',{class:'manual-actions'},[el('button',{class:'outline-btn',onclick:()=>showToast(t('draftSaved'))},[t('saveDraft')]),el('button',{class:'primary-btn',onclick:saveManualFIR},[icon('check'),t('saveCase')])])]);
 }
-function uploadBox(){const box=el('div',{class:`upload-box ${state.fileHash?'has-file':''}`},[el('div',{class:'upload-icon'},[icon('upload')]),el('strong',{},[state.file?state.file.name:t('noFile')]),el('span',{},[state.fileHash?state.fileHash.slice(0,22)+'…':t('uploadBody')]),el('label',{class:'outline-btn'},[t('browse'),el('input',{type:'file',accept:'image/*,.pdf',hidden:true})])]);box.querySelector('input').onchange=async(e)=>{const file=e.target.files[0];if(!file)return;state.file=file;const buffer=await file.arrayBuffer();const hash=await crypto.subtle.digest('SHA-256',buffer);state.fileHash=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');render()};return box;}
+function uploadBox(){const box=el('div',{class:`upload-box ${state.fileHash?'has-file':''}`},[el('div',{class:'upload-icon'},[icon('upload')]),el('strong',{},[state.file?state.file.name:t('noFile')]),el('span',{},[state.fileHash?state.fileHash.slice(0,22)+'…':t('uploadBody')]),el('label',{class:'outline-btn'},[t('browse'),el('input',{type:'file',accept:'image/*,.pdf',hidden:true})])]);box.querySelector('input').onchange=async(e)=>{const file=e.target.files[0];if(!file)return;state.file=file;const buffer=await file.arrayBuffer();const hash=await crypto.subtle.digest('SHA-256',buffer);state.fileHash=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');if(supabaseConfigured){const {data:{user}}=await supabase.auth.getUser();const result=await uploadPrivateEvidence({supabase,file,userId:user?.id,sha256:state.fileHash});state.filePath=result.path||'';}render()};return box;}
 function renderSources(c){c.innerHTML='';c.append(el('div',{class:'page-heading'},[el('div',{},[el('div',{class:'eyebrow blue'},['GOVERNANCE • SOURCE CATALOGUE']),el('h1',{},[t('sources')]),el('p',{class:'muted'},['Every record has a declared source class, provenance, and integrity status.'])]),el('button',{class:'primary-btn',onclick:()=>{state.view='fir';render()}},[icon('upload'),'Import manifest'])]),el('div',{class:'source-grid'},[['NCRB Crime in India 2023','Official aggregate context','OGD India','live','National crime and women-safety indicators'],['Synthetic FIR fixtures','Prototype case-level graph','Netrakshak seed','synthetic','Indian names, stations, vehicles, accounts, and links'],['IBM AMLSim','Synthetic transaction patterns','Research dataset','live','Financial graph stress-testing and typology patterns'],['Elliptic Bitcoin Dataset','Labeled crypto graph','Research dataset','live','Licit/illicit wallet-network experiments'],['CIC-IDS2017','Labeled cyber flows','Research dataset','live','Attack and benign traffic pattern experiments'],['Audit ledger','Hash-linked local chain','Netrakshak integrity','verified','Document and batch fingerprint verification']].map(([a,b,cx,status,d])=>el('div',{class:'source-card'},[el('div',{class:'source-card-top'},[el('div',{class:'source-symbol'},[icon(status==='verified'?'check':status==='synthetic'?'file':'database')]),el('span',{class:`source-status ${status}`},[t(status)])]),el('h3',{},[a]),el('p',{class:'muted'},[b]),el('div',{class:'source-divider'}),el('span',{},[cx]),el('small',{},[d])]))),el('div',{class:'panel integrity-panel'},[el('div',{class:'panel-heading'},[el('div',{},[el('h3',{},[t('integrityChecks')]),el('span',{class:'muted'},['Last batch verification: 09:42 IST'])])]),el('div',{class:'integrity-items'},[['hashChain','Hash-linked event chain','24 events verified'],['ledger','Ledger anchor status','Ready for permissioned deployment'],['access','Access review','0 anomalous exports']].map(([a,b,d])=>el('div',{class:'integrity-item'},[el('span',{class:'integrity-check'},[icon('check')]),el('div',{},[el('strong',{},[a==='hashChain'?t('hashChain'):a==='ledger'?t('ledger'):'Access controls']),el('span',{},[b])]),el('strong',{class:'integrity-value'},[d])])))])); }
 function renderSettings(c) {
   c.innerHTML = '';
