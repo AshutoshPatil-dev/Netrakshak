@@ -310,18 +310,33 @@ function logo() {
 async function verifyOfficerAuthorization(user) {
   if (!user) return { authorized: false, reason: 'Authentication required' };
   try {
-    const { data: profile, error } = await supabase
+    let profile = null;
+    const { data: byId, error: errId } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error) {
-      console.warn('Profile authorization lookup error:', error);
-      return { authorized: false, reason: error.message || 'Database error verifying officer credentials.' };
+    if (byId) {
+      profile = byId;
+    } else {
+      const { data: byEmail, error: errEmail } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', user.email || '')
+        .maybeSingle();
+
+      if (byEmail) {
+        profile = byEmail;
+      } else if (errId || errEmail) {
+        const errMsg = errId?.message || errEmail?.message || 'Unknown database error';
+        console.warn('Profile authorization error:', errId || errEmail);
+        return { authorized: false, reason: `Database error: ${errMsg}` };
+      }
     }
+
     if (!profile) {
-      return { authorized: false, reason: 'This account is not registered in the Law Enforcement Officer Directory.' };
+      return { authorized: false, reason: `Account "${user.email}" is not registered in the Law Enforcement Officer Directory.` };
     }
     if (profile.is_active === false) {
       return { authorized: false, reason: 'Officer credentials have been deactivated by system administrator.' };
