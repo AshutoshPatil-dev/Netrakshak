@@ -11,22 +11,24 @@ npm run dev
 
 The production build is generated with `npm run build`.
 
-## Chosen deployment storage
+## Supabase setup
 
-For the SIH prototype, the target backend is Cloudflare Workers + D1 + R2:
+The current prototype uses Supabase Auth and PostgreSQL as the backend path:
 
-- **D1** stores officers, cases, entities, relationships, FIR metadata, audit events, and graph query projections.
-- **R2** stores private scanned FIRs and evidence files; only hashes and metadata are stored in D1.
-- **Workers** expose authenticated APIs and bounded neighborhood queries for the graph.
-- **Pages** serves the frontend.
+1. Copy `.env.example` to `.env` and add `VITE_SUPABASE_URL` plus `VITE_SUPABASE_ANON_KEY`.
+2. Run `supabase/migrations/0001_initial.sql` in the Supabase SQL editor.
+3. Create officer accounts under Authentication → Users.
+4. Optionally run `supabase/seed.sql` using a privileged SQL editor session.
 
-D1 is a good free-tier fit for the structured demo database, but it is SQLite-compatible and each database is single-threaded. The graph API will therefore use indexes, FTS5, bounded neighborhoods, and progressive expansion rather than returning the entire network. R2 is the file-storage companion, because it has a larger free monthly storage allowance and free egress. Production police data would require a security review, stronger identity controls, backups, retention policy, and an approved hosting posture.
+The migration enables RLS and uses scoped access: users can access records they created or records explicitly granted through `fir_access` / `entity_access`. Access grants are intentionally not client-writable. Use a trusted server or Edge Function to grant access. Scanned FIR files should use a private Storage bucket; store only the bucket path and SHA-256 fingerprint in `fir_cases` / `evidence_items`.
+
+When Supabase environment variables are absent, the UI uses a clearly labelled local demo session. It is not production authentication.
 
 ## Data honesty
 
 The browser prototype uses clearly labelled synthetic Indian-context records. Public NCRB catalogues are predominantly aggregate and do not provide a case-level suspect graph. The production ingestion adapters are designed for the authoritative SIH dataset specification when supplied.
 
-The FIR screen computes a real SHA-256 fingerprint locally. OCR, persistence, authentication, and ledger anchoring are explicit integration points and are not faked in this prototype.
+The FIR screen computes a real SHA-256 fingerprint locally. Supabase Auth and the database schema are wired, while OCR, Storage uploads, and ledger anchoring remain explicit integration points and are not faked.
 
 ## Planned adapters
 
