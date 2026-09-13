@@ -655,7 +655,6 @@ function navItem(view, label, i) {
 
 function accessibilityControls() {
   const wrap = el('div', { class: 'accessibility-controls' }, [
-    el('span', { class: 'accessibility-label' }, [t('accessibility')]),
     el('button', { class: 'a11y-btn', title: t('decreaseText'), onclick: () => setTextScale(-0.12) }, ['A−']),
     el('button', { class: 'a11y-btn', title: t('resetText'), onclick: () => setTextScale(0, true) }, ['A']),
     el('button', { class: 'a11y-btn', title: t('increaseText'), onclick: () => setTextScale(0.12) }, ['A+'])
@@ -1548,7 +1547,8 @@ function uploadFIRPanel() {
         el('div', {}, [
           el('h3', {}, [t('uploadTitle')]),
           el('span', { class: 'muted' }, [t('uploadBody')])
-        ])
+        ]),
+        el('span', { class: 'secure-pill' }, [icon('lock'), 'Secure Upload'])
       ]),
       uploadBox(),
       el('div', { class: 'workflow' }, [
@@ -1561,28 +1561,6 @@ function uploadFIRPanel() {
         el('strong', {}, [a]),
         el('small', {}, [b])
       ])))
-    ]),
-    el('section', { class: 'panel audit-panel' }, [
-      el('div', { class: 'panel-heading' }, [
-        el('div', {}, [
-          el('h3', {}, [t('auditTitle')]),
-          el('span', { class: 'muted' }, [t('auditBody')])
-        ]),
-        el('span', { class: 'verified-pill' }, [icon('check'), t('verified')])
-      ]),
-      el('div', { class: 'audit-chain' }, [
-        ['Now', t('documentReceived'), getActiveOfficer().name, 'hash'],
-        ['Now', t('hashGenerated'), 'Browser SHA-256', 'hash'],
-        [t('pending'), t('ocrExtraction'), 'OCR extraction ready', 'pending']
-      ].map(([time, a, b, k]) => el('div', { class: 'audit-event' }, [
-        el('div', { class: `audit-marker ${k}` }, [k === 'pending' ? '…' : icon('check')]),
-        el('div', {}, [el('strong', {}, [a]), el('span', {}, [b])]),
-        el('time', {}, [time])
-      ]))),
-      el('div', { class: 'hash-box' }, [
-        el('span', {}, [t('fingerprint')]),
-        el('code', {}, [state.fileHash || '—'])
-      ])
     ]),
     el('div', { class: 'panel draft-panel' }, [
       el('div', { class: 'panel-heading' }, [
@@ -1608,7 +1586,7 @@ function uploadBox() {
   const box = el('div', { class: `upload-box ${state.fileHash ? 'has-file' : ''}` }, [
     el('div', { class: 'upload-icon' }, [icon('upload')]),
     el('strong', {}, [state.file ? state.file.name : t('noFile')]),
-    el('span', {}, [state.fileHash ? state.fileHash.slice(0, 22) + '…' : t('uploadBody')]),
+    el('span', {}, [state.fileHash ? `Fingerprint: ${state.fileHash.slice(0, 24)}…` : t('uploadBody')]),
     el('label', { class: 'outline-btn' }, [
       t('browse'),
       el('input', { type: 'file', accept: 'image/*,.pdf', hidden: true })
@@ -1617,17 +1595,27 @@ function uploadBox() {
   box.querySelector('input').onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    state.file = file;
-    const buffer = await file.arrayBuffer();
-    const hash = await crypto.subtle.digest('SHA-256', buffer);
-    state.fileHash = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-    if (supabaseConfigured) {
-      const { data: { user } } = await supabase.auth.getUser();
-      const result = await uploadPrivateEvidence({ supabase, file, userId: user?.id, sha256: state.fileHash });
-      state.filePath = result.path || '';
+    try {
+      state.file = file;
+      const buffer = await file.arrayBuffer();
+      const hash = await crypto.subtle.digest('SHA-256', buffer);
+      state.fileHash = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      if (supabaseConfigured) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const result = await uploadPrivateEvidence({ supabase, file, userId: user?.id, sha256: state.fileHash });
+        if (result?.error) {
+          showToast(`Evidence storage warning: ${result.error.message || 'File recorded locally'}`);
+        } else {
+          state.filePath = result?.path || '';
+        }
+      }
+      recordAudit('FIR uploaded', `Scanned FIR "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}…).`, 'info', 'fir').catch(() => {});
+      showToast(`Document fingerprinted: ${state.fileHash.slice(0, 12)}…`);
+      render();
+    } catch (err) {
+      console.error('FIR upload error:', err);
+      showToast(`Upload failed: ${err.message || 'Error processing document'}`);
     }
-    recordAudit('FIR uploaded', `Scanned FIR "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}…).`, 'info', 'fir');
-    render();
   };
   return box;
 }
