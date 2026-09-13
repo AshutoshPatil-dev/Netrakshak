@@ -656,15 +656,15 @@ function navItem(view, label, i) {
 
 function accessibilityControls() {
   const wrap = el('div', { class: 'accessibility-controls' }, [
-    el('button', { class: 'a11y-btn', title: t('decreaseText'), onclick: () => setTextScale(-0.12) }, ['A−']),
+    el('button', { class: 'a11y-btn', title: t('decreaseText'), onclick: () => setTextScale(-0.1) }, ['A-']),
     el('button', { class: 'a11y-btn', title: t('resetText'), onclick: () => setTextScale(0, true) }, ['A']),
-    el('button', { class: 'a11y-btn', title: t('increaseText'), onclick: () => setTextScale(0.12) }, ['A+'])
+    el('button', { class: 'a11y-btn', title: t('increaseText'), onclick: () => setTextScale(0.1) }, ['A+'])
   ]);
   return wrap;
 }
 
 function setTextScale(delta, reset = false) {
-  state.fontScale = reset ? 1 : Math.min(1.3, Math.max(0.85, Math.round((state.fontScale + delta) * 100) / 100));
+  state.fontScale = reset ? 1 : Math.min(1.25, Math.max(0.85, Math.round((state.fontScale + delta) * 100) / 100));
   localStorage.setItem('font_scale', String(state.fontScale));
   document.documentElement.style.setProperty('--text-scale', String(state.fontScale));
   document.documentElement.style.fontSize = `${state.fontScale * 14}px`;
@@ -744,11 +744,6 @@ function appShell() {
   ]);
 
   root.append(shell);
-  shell.querySelector('.top-actions').prepend(accessibilityControls());
-  const main = shell.querySelector('.main-area');
-  if (main && state.fontScale) {
-    main.style.zoom = String(state.fontScale);
-  }
 
   if (state.view === 'overview') renderOverview(content);
   else if (state.view === 'network') renderNetwork(content);
