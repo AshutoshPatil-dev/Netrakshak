@@ -7,13 +7,32 @@ import { showToast } from '../components/Toast.js';
 export function renderOfficers(c) {
   c.innerHTML = '';
   const activeOfficer = getActiveOfficer();
-  const isAdmin = activeOfficer.isAdmin;
 
-  const editingOfficer = (isAdmin && state.editingOfficerId) ? state.officers.find(o => o.id === state.editingOfficerId) : null;
+  if (!activeOfficer.isAdmin) {
+    c.append(el('div', { class: 'restricted-access-panel' }, [
+      el('div', { class: 'restricted-lock-icon' }, [icon('lock')]),
+      el('div', { class: 'restricted-badge' }, ['RESTRICTED CLEARANCE']),
+      el('h2', {}, ['Administrator Clearance Required']),
+      el('p', {}, [
+        'Personnel directories, investigator credentials, and role permission assignments are strictly restricted to System Administrators for security compliance.'
+      ]),
+      el('div', { class: 'restricted-officer-info' }, [
+        el('span', {}, ['Current Officer:']),
+        el('strong', {}, [activeOfficer.name]),
+        el('span', { class: 'role-tag' }, [`Role: ${(activeOfficer.rawRole || 'case-officer').toUpperCase()}`])
+      ]),
+      el('button', {
+        class: 'primary-btn small',
+        onclick: () => { state.view = 'overview'; notifyStateChange(); }
+      }, ['Return to Dashboard'])
+    ]));
+    return;
+  }
 
-  const headerActions = [];
-  if (isAdmin) {
-    headerActions.push(el('button', {
+  const editingOfficer = state.editingOfficerId ? state.officers.find(o => o.id === state.editingOfficerId) : null;
+
+  const headerActions = [
+    el('button', {
       class: 'primary-btn',
       onclick: () => {
         state.editingOfficerId = null;
@@ -21,8 +40,8 @@ export function renderOfficers(c) {
         notifyStateChange();
         document.querySelector('.officer-form-panel input[name="fullName"]')?.focus();
       }
-    }, [icon('plus'), t('addOfficer')]));
-  }
+    }, [icon('plus'), t('addOfficer')])
+  ];
 
   const header = el('div', { class: 'page-heading' }, [
     el('div', {}, [
@@ -31,6 +50,7 @@ export function renderOfficers(c) {
     ]),
     ...headerActions
   ]);
+
 
   let listArea;
   if (state.officers.length === 0) {
@@ -118,9 +138,7 @@ export function renderOfficers(c) {
     }));
   }
 
-  let formPanel;
-  if (isAdmin) {
-    const form = el('form', { class: 'officer-form' }, [
+  const form = el('form', { class: 'officer-form' }, [
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('fullName') + ' *']),
         el('input', { name: 'fullName', required: true, placeholder: 'Inspector Anil Singh', value: editingOfficer ? editingOfficer.name : '' })
@@ -171,18 +189,26 @@ export function renderOfficers(c) {
       ]),
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('rolePermissions')]),
-        el('div', { class: 'role-pill-group' }, ['case-officer', 'analyst', 'admin'].map(role => {
-          const active = (state.officerFormRole || 'case-officer') === role;
-          const btn = el('button', {
-            type: 'button',
-            class: `role-pill-btn ${active ? 'active' : ''}`,
-            onclick: () => {
-              state.officerFormRole = role;
-              notifyStateChange();
-            }
-          }, [role]);
-          return btn;
-        }))
+        // Editing your own profile: role is locked to prevent accidental self-demotion
+        editingOfficer && editingOfficer.isYou
+          ? el('div', { class: 'role-pill-group' }, [
+              el('div', { class: 'admin-notice-box', style: 'margin:0;padding:8px 10px;' }, [
+                el('strong', {}, ['Role locked']),
+                el('span', {}, ['You cannot change your own role. Ask another admin to do this.'])
+              ])
+            ])
+          : el('div', { class: 'role-pill-group' }, ['case-officer', 'analyst', 'admin'].map(role => {
+              const active = (state.officerFormRole || 'case-officer') === role;
+              const btn = el('button', {
+                type: 'button',
+                class: `role-pill-btn ${active ? 'active' : ''}`,
+                onclick: () => {
+                  state.officerFormRole = role;
+                  notifyStateChange();
+                }
+              }, [role]);
+              return btn;
+            }))
       ]),
       el('div', { class: 'form-actions' }, [
         el('button', { class: 'primary-btn', type: 'submit' }, [
@@ -220,7 +246,8 @@ export function renderOfficers(c) {
         editingOfficer.state = stateVal;
         editingOfficer.email = email;
         editingOfficer.phone = phone;
-        editingOfficer.role = role;
+        // Never allow changing your own role
+        if (!editingOfficer.isYou) editingOfficer.role = role;
         saveOfficers();
         recordAudit('Officer updated', `Officer profile updated: ${name} (${rank}, ${district}).`, 'info', 'officer');
         if (supabaseConfigured && editingOfficer.id && !editingOfficer.id.startsWith('off_')) {
@@ -259,28 +286,13 @@ export function renderOfficers(c) {
       notifyStateChange();
     };
 
-    formPanel = el('div', { class: 'officer-form-panel' }, [
+    const formPanel = el('div', { class: 'officer-form-panel' }, [
       el('h3', {}, [editingOfficer ? t('editOfficer') : t('addOfficer')]),
       el('p', {}, [t('officersSubtitle')]),
       form
     ]);
-  } else {
-    formPanel = el('div', { class: 'officer-form-panel read-only-panel' }, [
-      el('div', { class: 'directory-info-badge' }, [icon('shield'), ' DIRECTORY VIEW']),
-      el('h3', {}, ['Investigator Directory']),
-      el('p', { class: 'muted' }, ['Cross-district directory of authenticated law enforcement personnel.']),
-      el('div', { class: 'admin-notice-box' }, [
-        el('strong', {}, ['Admin Privileges Required']),
-        el('span', {}, ['Only system administrators can register new officer profiles, change investigator credentials, or modify role permissions.'])
-      ]),
-      el('div', { class: 'current-user-summary' }, [
-        el('span', { class: 'field-label' }, ['Your Officer Profile:']),
-        el('strong', {}, [activeOfficer.name]),
-        el('span', { class: 'muted' }, [`Role: ${(activeOfficer.rawRole || 'case-officer').toUpperCase()} · District: ${activeOfficer.role}`])
-      ])
-    ]);
-  }
 
   const layout = el('div', { class: 'officers-layout' }, [listArea, formPanel]);
   c.append(header, layout);
 }
+

@@ -7,6 +7,9 @@ export function renderAppShell(renderCurrentView) {
   const root = document.querySelector('#app');
   root.innerHTML = '';
 
+  // Ensure any leftover floating widget is cleaned up
+  document.querySelector('.a11y-floating')?.remove();
+
   const topbar = renderTopbar();
   const sidebar = renderSidebar();
 
@@ -25,3 +28,4 @@ export function renderAppShell(renderCurrentView) {
     renderCurrentView(content);
   }
 }
+

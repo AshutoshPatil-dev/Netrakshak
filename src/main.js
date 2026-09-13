@@ -8,14 +8,10 @@ import { renderFIR } from './views/FIRView.js';
 import { renderOfficers } from './views/OfficersView.js';
 import { renderAuditLogs } from './views/AuditLogsView.js';
 import { renderSources } from './views/DataIntegrityView.js';
-import { renderSettings } from './views/SettingsView.js';
-import { setTextScale } from './components/Accessibility.js';
 
-// Apply persisted font scale before first paint
-if (state.fontScale && state.fontScale !== 1) {
-  document.documentElement.style.setProperty('--text-scale', String(state.fontScale));
-  document.documentElement.style.fontSize = `${state.fontScale * 14}px`;
-}
+// Ensure zoom is normalized
+document.body.style.zoom = '1';
+
 
 function getViewRenderer() {
   switch (state.view) {
@@ -25,7 +21,7 @@ function getViewRenderer() {
     case 'officers':   return renderOfficers;
     case 'audit_logs': return renderAuditLogs;
     case 'sources':    return renderSources;
-    case 'settings':   return renderSettings;
+
     default:           return renderOverview;
   }
 }

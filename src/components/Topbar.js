@@ -2,7 +2,7 @@ import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import { state, getActiveOfficer, signOutOfficer, entities, notifyStateChange } from '../state.js';
 import { langPicker } from './LanguagePicker.js';
-import { accessibilityControls } from './Accessibility.js';
+
 
 export function updateSearchSuggestions(input) {
   const box = input.closest('.global-search');
@@ -58,7 +58,6 @@ export function renderTopbar() {
       searchInput
     ]),
     el('div', { class: 'top-actions' }, [
-      accessibilityControls(),
       langPicker(),
       el('div', { class: 'topbar-officer' }, [
         el('div', { class: 'avatar' }, [activeOfficer.initials]),

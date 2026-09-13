@@ -1,12 +1,13 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { getActiveOfficer } from '../state.js';
-import { supabaseConfigured } from '../lib/supabase.js';
+import { getActiveOfficer, state } from '../state.js';
 import { langPicker } from '../components/LanguagePicker.js';
 
 export function renderSettings(c) {
   c.innerHTML = '';
   const officer = getActiveOfficer();
+  const myOfficer = state.officers.find(o => o.isYou) || {};
+
   const profile = el('section', { class: 'panel' }, [
     el('h3', {}, ['Investigator profile']),
     el('div', { class: 'profile-large' }, [
@@ -17,33 +18,30 @@ export function renderSettings(c) {
         el('span', { class: 'verified-text' }, [icon('check'), ' Authenticated'])
       ])
     ]),
-    el('div', { class: 'setting-row' }, ['Default language', langPicker()]),
-    el('div', { class: 'setting-row' }, ['Data environment', el('span', { class: 'secure-pill' }, [supabaseConfigured ? 'National Police Cloud' : 'Local Sandbox'])])
+    myOfficer.email ? el('div', { class: 'setting-row' }, [
+      'Email address',
+      el('span', { style: 'font-size:12px;color:var(--app-text);' }, [myOfficer.email])
+    ]) : null,
+    myOfficer.phone ? el('div', { class: 'setting-row' }, [
+      'Phone',
+      el('span', { style: 'font-size:12px;color:var(--app-text);' }, [myOfficer.phone])
+    ]) : null,
+    myOfficer.district ? el('div', { class: 'setting-row' }, [
+      'District',
+      el('span', { style: 'font-size:12px;color:var(--app-text);' }, [`${myOfficer.district}, ${myOfficer.state || ''}`])
+    ]) : null,
+    el('div', { class: 'setting-row' }, ['Display language', langPicker()])
   ]);
-  const controls = [
-    ['Human review required', 'Enabled for OCR, entity merges, and alerts'],
-    ['Evidence provenance', 'Shown on every extracted field'],
-    ['Model confidence threshold', '0.78 minimum for suggestions'],
-    ['Sensitive export approval', 'Two-person review']
-  ].map(([a, b]) => el('div', { class: 'toggle-row' }, [
-    el('div', {}, [
-      el('strong', {}, [a]),
-      el('span', {}, [b])
-    ]),
-    el('span', { class: 'toggle on' }, ['✓'])
-  ]));
-  const guardrails = el('section', { class: 'panel' }, [
-    el('h3', {}, ['Responsible AI controls']),
-    ...controls
-  ]);
+
   c.append(
     el('div', { class: 'page-heading' }, [
       el('div', {}, [
         el('div', { class: 'eyebrow blue' }, ['ADMINISTRATION']),
         el('h1', {}, [t('settings')]),
-        el('p', { class: 'muted' }, ['Investigator profile and system guardrails.'])
+        el('p', { class: 'muted' }, ['Your investigator profile and preferences.'])
       ])
     ]),
-    el('div', { class: 'settings-grid' }, [profile, guardrails])
+    profile
   );
 }
+
