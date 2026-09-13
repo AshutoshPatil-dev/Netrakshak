@@ -53,6 +53,7 @@ html,body{height:100%}body{margin:0;min-width:1000px;background:var(--app-surfac
 .evidence-entry{grid-template-columns:150px minmax(0,1fr) 150px auto}.evidence-file-picker{position:relative;overflow:hidden}.evidence-file-picker input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}@media(max-width:900px){.evidence-entry{grid-template-columns:150px minmax(0,1fr) auto}}@media(max-width:700px){.evidence-entry{grid-template-columns:1fr}.evidence-file-picker{width:100%}}
 .topbar,.top-actions{overflow:visible}
 .global-search{position:relative}
+.global-search input:focus, .global-search input:focus-visible { outline: none !important; box-shadow: none !important; }
 .search-suggestions{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;background:#fff;border:1px solid var(--app-border);border-radius:8px;box-shadow:var(--shadow-lg);overflow:hidden}
 .search-suggestion{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border:0;border-bottom:1px solid var(--app-border);background:#fff;color:var(--app-text);text-align:left;cursor:pointer}
 .search-suggestion:last-child{border-bottom:0}.search-suggestion:hover{background:var(--app-surface)}.search-suggestion-name{font-size:12px;font-weight:700}.search-suggestion-meta,.search-empty{font-size:10px;color:var(--app-text-secondary)}.search-empty{padding:11px}
@@ -271,10 +272,13 @@ html,body{height:100%}body{margin:0;min-width:1000px;background:var(--app-surfac
 }
 .current-user-summary strong { font-size: 13px; color: var(--app-text); }
 
-.officer-form { display: grid; gap: 12px; margin-top: 14px; }
-.form-group { display: flex; flex-direction: column; gap: 4px; }
+.officer-form { display: grid; gap: 12px; margin-top: 14px; width: 100%; min-width: 0; box-sizing: border-box; }
+.form-group { display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0; }
 .form-group label { font-size: 11px; font-weight: 700; color: var(--app-text); }
 .form-group input, .form-group select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 8px 10px;
   border: 1px solid var(--app-border);
   border-radius: 6px;
@@ -282,11 +286,13 @@ html,body{height:100%}body{margin:0;min-width:1000px;background:var(--app-surfac
   background: #FFFFFF;
   color: var(--app-text);
 }
-.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-row-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; min-width: 0; box-sizing: border-box; }
 .form-hint { font-size: 10px; color: var(--app-text-secondary); }
-.role-pill-group { display: flex; gap: 6px; }
+.role-pill-group { display: flex; gap: 6px; width: 100%; min-width: 0; }
 .role-pill-btn {
   flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 6px 8px;
   border: 1px solid var(--app-border);
   border-radius: 6px;
@@ -296,6 +302,10 @@ html,body{height:100%}body{margin:0;min-width:1000px;background:var(--app-surfac
   color: var(--app-text-secondary);
   cursor: pointer;
   text-transform: capitalize;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .role-pill-btn.active {
   background: #EFF6FF;
