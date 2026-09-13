@@ -695,4 +695,203 @@ body{background:#fff;min-width:1080px}button{transition:none!important}button:ho
   margin: 0;
 }
 
+/* File Upload & Evidence Preview */
+.upload-box.has-file {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  padding: 18px 24px;
+  height: auto;
+  min-height: 180px;
+}
+.upload-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 8px;
+}
+.upload-thumbnail {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--app-border);
+  flex-shrink: 0;
+}
+.upload-thumb-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: #EAF1FB;
+  color: var(--app-blue);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.upload-file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+.upload-file-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.upload-file-meta {
+  font-size: 11px;
+  color: var(--app-text-secondary);
+}
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Modal Overlay */
+.file-preview-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: modal-fade-in 0.2s ease-out;
+}
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.file-preview-modal-card {
+  width: min(880px, 94vw);
+  max-height: 90vh;
+  background: #ffffff;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.file-preview-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--app-border);
+  background: #FAFBFD;
+}
+.file-preview-modal-meta {
+  min-width: 0;
+  flex: 1;
+}
+.file-preview-modal-title {
+  display: block;
+  font-size: 14px;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-preview-modal-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--app-text-secondary);
+  margin-top: 2px;
+}
+.file-preview-modal-body {
+  flex: 1;
+  min-height: 320px;
+  max-height: calc(90vh - 140px);
+  overflow: auto;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.preview-image {
+  max-width: 100%;
+  max-height: calc(90vh - 170px);
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.preview-pdf-iframe {
+  width: 100%;
+  height: calc(90vh - 170px);
+  min-height: 480px;
+  border: 0;
+  border-radius: 6px;
+}
+.preview-fallback-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px;
+  text-align: center;
+}
+.preview-fallback-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: #EAF1FB;
+  color: var(--app-blue);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+}
+.file-preview-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--app-border);
+  background: #FAFBFD;
+}
+.preview-inline-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: #EAF1FB;
+  color: var(--app-blue);
+  font-weight: 600;
+  border: 1px solid #D0E1FD;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+.preview-inline-btn:hover {
+  background: #DCEAFE;
+}
+.preview-btn-danger {
+  color: #DC2626;
+  border-color: #FCA5A5;
+}
+.preview-btn-danger:hover {
+  background: #FEF2F2;
+}
+
 

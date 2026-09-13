@@ -11,14 +11,14 @@ const translations = {
     signInTitle: 'Secure investigator sign-in', signInBody: 'Access is monitored and every evidence action is recorded.', email: 'Official email', password: 'Password', signIn: 'Sign in', demoHint: 'Prototype access: use any email and password.',
     command: 'Dashboard', network: 'Network Graph', fir: 'FIR Report', officers: 'Officers', auditLogs: 'Audit Logs', sources: 'Data & Integrity', settings: 'Settings', overview: 'Dashboard', search: 'Search entities, FIR numbers, phones, vehicles…', activeCase: 'Active investigation', systemStatus: 'SYSTEM STATUS', secure: 'Secure • audit online', today: 'Today', alerts: 'Priority alerts', entities: 'Entities under review', connections: 'Verified connections', integrity: 'Evidence integrity', viewNetwork: 'Open network', reviewFIR: 'Review FIR intake', high: 'High', medium: 'Medium', low: 'Low', risk: 'Risk', type: 'Type', connectionsSort: 'Connections', recent: 'Recent activity', name: 'Name', allTypes: 'All types', filter: 'Filter', fullscreen: 'Fullscreen', exitFullscreen: 'Exit fullscreen', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset view', graphHint: 'Drag nodes • scroll to zoom • select an entity to inspect', selectedEntity: 'Selected entity', associations: 'Associations', linkedEvents: 'Linked events', source: 'Source', confidence: 'Confidence', evidenceTrail: 'Evidence trail', uploadTitle: 'FIR document intake', uploadBody: 'Drop a scanned FIR here or browse a local file. The original is fingerprinted before processing.', browse: 'Browse file', fingerprint: 'SHA-256 fingerprint', ocrReady: 'OCR adapter ready for connection', reviewDraft: 'Review extracted draft', noFile: 'No document selected', auditTitle: 'Tamper-evident audit trail', auditBody: 'Every change is versioned and hash-linked. Ledger anchoring is ready for deployment.', verified: 'Verified', imported: 'Imported', synthetic: 'Synthetic demo data', live: 'Live source', dataSources: 'Data sources', integrityChecks: 'Integrity checks', hashChain: 'Hash chain', ledger: 'Ledger anchor', all: 'All', logout: 'Sign Out', language: 'Language', welcome: 'Good morning, Officer.', briefing: 'Here is your network briefing for today.', viewAll: 'View all', noResults: 'No matching entities', sourceNote: 'Prototype data is synthetic and labelled. Connect the NCRB-approved dataset to enable live case analysis.',
     workspace: 'Workspace', governance: 'Governance', liveAudit: 'Live audit stream', riskPulse: 'Risk pulse', last30: 'Last 30 days', sortBy: 'Sort by', entitiesCount: 'entities', prototypeEnvironment: 'Prototype environment', priorityReview: '2 high priority · 1 review', sourceTypes: 'Across 7 source types', lastVerified: 'Last verified 09:42 IST', operationMonsoon: 'Operation Monsoon', caseLocation: 'Pune • Maharashtra • 18 connected entities', networkConfidence: 'Network confidence', linkageAnalysis: 'LINKAGE ANALYSIS • Operation Monsoon', documentIntelligence: 'DOCUMENT INTELLIGENCE • NCRB WORKFLOW', uploadWorkflow: 'Upload, fingerprint, extract, review, and save with an accountable chain of custody.', fingerprintStep: 'Fingerprint', extractStep: 'Extract', reviewStep: 'Review', commitStep: 'Commit', sha256: 'SHA-256', ocrAdapter: 'OCR adapter', officerConfirmation: 'Officer confirmation', auditLedger: 'Audit + ledger', reviewRequired: 'Review is required before commit', importManifest: 'Import manifest', sourceCatalogue: 'GOVERNANCE • SOURCE CATALOGUE', sourceProvenance: 'Every record has a declared source class, provenance, and integrity status.', batchVerified: 'Last batch verification: 09:42 IST', permissionedReady: 'Ready for permissioned deployment', anomalousExports: '0 anomalous exports', accessControls: 'Access controls', investigatorProfile: 'Investigator profile', responsibleAI: 'Responsible AI controls', defaultLanguage: 'Default language', dataEnvironment: 'Data environment', mfaEnabled: 'MFA enabled', investigationUnit: 'Maharashtra Police · Pune', officerName: 'Ashutosh Patil', tlsProtected: 'TLS protected', ncrbWorkflow: 'NCRB workflow', caseConfidence: '78%', approvedDataset: 'NCRB-approved dataset', heroTitle: 'See the network. Protect the evidence.', heroBody: 'A secure intelligence workspace for connecting records, discovering patterns, and supporting investigators across India.', evidenceFirst: 'Evidence-first investigations', graphPowered: 'Graph-powered linkage analysis', auditableByDesign: 'Auditable by design', prototypeFooter: 'Netrakshak • SIH 2026 prototype', versionFooter: 'v0.1 • Evidence integrity enabled', weeklyChange: '+8.4% this week', hashVerified: 'Hash verified', entityMergeReview: 'Entity merge review', assigned: 'A. Sharma assigned', newLinkDetected: 'New link detected', linkedAccount: 'Account •• 9130 ↔ Arjun Pawar', datasetManifest: 'Dataset manifest', demoBatch: 'Synthetic demo batch v0.3', lastVerifiedTime: 'Last verified 09:42 IST', riskDates: ['15 Aug', '22 Aug', '29 Aug', '05 Sep', '12 Sep'], refreshed: 'Risk pulse refreshed',
-    officersSubtitle: 'Law-enforcement profiles with rank, badge and district (used for login & audit attribution).', addOfficer: 'Add Officer', editOfficer: 'Edit Officer', fullName: 'Full name', rank: 'Rank', badgeNo: 'Badge no.', district: 'District', state: 'State', emailAddress: 'Email address', phone: 'Phone', initialPassword: 'Initial password', passwordHelp: 'New officers sign in with their email and this password. Min 6 characters.', rolePermissions: 'Role / permissions', caseOfficer: 'case-officer', analyst: 'analyst', admin: 'admin', clear: 'Clear', saveChanges: 'Save Changes', officerAdded: 'Officer profile created', officerUpdated: 'Officer profile updated', officerDeleted: 'Officer profile removed', auditSubtitle: 'Immutable activity trail — who changed what, and when', warnings: 'Warnings', criticalEvents: 'Critical events', tamperAlerts: 'Tamper alerts', noActiveAlerts: 'No active integrity alerts', level: 'Level', info: 'Info', critical: 'Critical', time: 'Time', actor: 'Actor', action: 'Action', summary: 'Summary', supabaseConnected: 'Supabase connected — writes persisted',
+    officersSubtitle: 'Law-enforcement profiles with rank, badge and district (used for login & audit attribution).', addOfficer: 'Add Officer', editOfficer: 'Edit Officer', fullName: 'Full name', rank: 'Rank', badgeNo: 'Badge no.', district: 'District', state: 'State', emailAddress: 'Email address', phone: 'Phone', initialPassword: 'Initial password', passwordHelp: 'New officers sign in with their email and this password. Min 6 characters.', rolePermissions: 'Role / permissions', caseOfficer: 'case-officer', analyst: 'analyst', admin: 'admin', clear: 'Clear', saveChanges: 'Save Changes', officerAdded: 'Officer profile created', officerUpdated: 'Officer profile updated', officerDeleted: 'Officer profile removed', auditSubtitle: 'Immutable activity trail - who changed what, and when', warnings: 'Warnings', criticalEvents: 'Critical events', tamperAlerts: 'Tamper alerts', noActiveAlerts: 'No active integrity alerts', level: 'Level', info: 'Info', critical: 'Critical', time: 'Time', actor: 'Actor', action: 'Action', summary: 'Summary', supabaseConnected: 'Supabase connected - writes persisted',
     accessibility: 'Accessibility', decreaseText: 'Decrease text size', resetText: 'Reset text size', increaseText: 'Increase text size', collapseSidebar: 'Collapse navigation', expandSidebar: 'Expand navigation', manualEntry: 'Manual FIR entry', scannedUpload: 'Scanned FIR upload', caseDetails: 'Case details', personDetails: 'Subject details', evidence: 'Evidence', saveDraft: 'Save draft', addEvidence: 'Add evidence', evidenceType: 'Evidence type', evidenceDescription: 'Evidence description', subjectName: 'Subject name', alias: 'Alias / known as', dob: 'Date of birth', address: 'Address', vehicle: 'Vehicle number', bank: 'Bank / wallet identifier', incidentSummary: 'Incident summary', reportingOfficer: 'Reporting officer', saveCase: 'Save FIR case', draftSaved: 'FIR draft saved locally', caseSaved: 'FIR case saved for review', manualEntryHelp: 'Enter case facts, subject identifiers, and evidence for officer review.', documentEvidence: 'Document', deviceEvidence: 'Device', financialEvidence: 'Financial record', witnessEvidence: 'Witness statement', draft: 'Draft', removeEvidence: 'Remove evidence',
     authFailed: 'Unable to sign in. Check your credentials.', authNotConfigured: 'Supabase is not configured; local demo session used.', saveFailed: 'The FIR could not be saved. Try again or check the database setup.', influence: 'Influence', documentReceived: 'Document received', officerActor: 'Officer Ashutosh Patil', hashGenerated: 'SHA-256 generated', browserCrypto: 'Browser cryptography', ocrExtraction: 'OCR extraction', adapterNotConnected: 'Adapter not connected', pending: 'Pending', firNumber: 'FIR number', policeStation: 'Police station', incidentDate: 'Incident date', sections: 'Sections', namedEntities: 'Named entities', extractedPending: '6 extracted · 2 pending review', sourceIntegrity: 'FIR + CDR + synthetic', documentCount: 'No document selected'
   },
   hi: {
     product: 'नेत्ररक्षक', productSub: 'अपराध नेटवर्क विश्लेषण', restricted: 'सीमित प्रवेश', signInTitle: 'सुरक्षित अन्वेषक प्रवेश', signInBody: 'प्रवेश की निगरानी की जाती है और हर साक्ष्य कार्रवाई दर्ज होती है।', email: 'आधिकारिक ईमेल', password: 'पासवर्ड', signIn: 'प्रवेश करें', demoHint: 'प्रोटोटाइप: कोई भी ईमेल और पासवर्ड इस्तेमाल करें।', command: 'डैशबोर्ड', network: 'नेटवर्क ग्राफ', fir: 'एफआईआर रिपोर्ट', officers: 'अधिकारी', auditLogs: 'ऑडिट लॉग', sources: 'डेटा और अखंडता', settings: 'सेटिंग्स', overview: 'डैशबोर्ड', search: 'इकाई, एफआईआर नंबर, फोन, वाहन खोजें…', activeCase: 'सक्रिय जांच', systemStatus: 'सिस्टम स्थिति', secure: 'सुरक्षित • ऑडिट ऑनलाइन', today: 'आज', alerts: 'प्राथमिकता अलर्ट', entities: 'समीक्षा वाली इकाइयां', connections: 'सत्यापित कनेक्शन', integrity: 'साक्ष्य अखंडता', viewNetwork: 'नेटवर्क खोलें', reviewFIR: 'एफआईआर देखें', high: 'उच्च', medium: 'मध्यम', low: 'कम', risk: 'जोखिम', type: 'प्रकार', connectionsSort: 'कनेक्शन', recent: 'हाल की गतिविधि', name: 'नाम', allTypes: 'सभी प्रकार', filter: 'फ़िल्टर', fullscreen: 'फुलस्क्रीन', exitFullscreen: 'बाहर निकलें', zoomIn: 'ज़ूम इन', zoomOut: 'ज़ूम आउट', reset: 'रीसेट', graphHint: 'नोड खींचें • ज़ूम के लिए स्क्रॉल करें • जांच हेतु इकाई चुनें', selectedEntity: 'चयनित इकाई', associations: 'संबंध', linkedEvents: 'जुड़ी घटनाएं', source: 'स्रोत', confidence: 'विश्वास', evidenceTrail: 'साक्ष्य ट्रेल', uploadTitle: 'एफआईआर दस्तावेज़ इनटेक', uploadBody: 'स्कैन की गई एफआईआर यहां छोड़ें या स्थानीय फाइल चुनें।', browse: 'फाइल चुनें', fingerprint: 'SHA-256 फिंगरप्रिंट', ocrReady: 'OCR एडाप्टर तैयार', reviewDraft: 'ड्राफ्ट समीक्षा', noFile: 'कोई दस्तावेज़ नहीं चुना', auditTitle: 'ऑडिट ट्रेल', auditBody: 'हर बदलाव संस्करणित और हैश-लिंक्ड है।', verified: 'सत्यापित', imported: 'आयातित', synthetic: 'सिंथेटिक डेमो डेटा', live: 'लाइव स्रोत', dataSources: 'डेटा स्रोत', integrityChecks: 'अखंडता जांच', hashChain: 'हैश चेन', ledger: 'लेजर एंकर', all: 'सभी', logout: 'बाहर निकलें', language: 'भाषा', welcome: 'सुप्रभात, अधिकारी।', briefing: 'आज का नेटवर्क ब्रीफिंग यहां है।', viewAll: 'सभी देखें', noResults: 'कोई मिलती इकाई नहीं', sourceNote: 'प्रोटोटाइप डेटा सिंथेटिक है।',
     workspace: 'कार्य क्षेत्र', governance: 'प्रशासन', liveAudit: 'लाइव ऑडिट स्ट्रीम', riskPulse: 'जोखिम संकेत', last30: 'पिछले 30 दिन', sortBy: 'क्रमबद्ध करें', entitiesCount: 'इकाइयां', prototypeEnvironment: 'प्रोटोटाइप वातावरण', priorityReview: '2 उच्च प्राथमिकता · 1 समीक्षा', sourceTypes: '7 स्रोत प्रकारों में', lastVerified: 'अंतिम सत्यापन 09:42 IST', operationMonsoon: 'ऑपरेशन मॉनसून', caseLocation: 'पुणे • महाराष्ट्र • 18 जुड़ी इकाइयां', networkConfidence: 'नेटवर्क विश्वास', linkageAnalysis: 'लिंकेज विश्लेषण • ऑपरेशन मॉनसून', documentIntelligence: 'दस्तावेज़ इंटेलिजेंस • NCRB वर्कफ़्लो', uploadWorkflow: 'अपलोड, फिंगरप्रिंट, एक्सट्रैक्ट और सुरक्षित सेव करें।', fingerprintStep: 'फिंगरप्रिंट', extractStep: 'निकालें', reviewStep: 'समीक्षा', commitStep: 'कमिट', sha256: 'SHA-256', ocrAdapter: 'OCR एडाप्टर', officerConfirmation: 'अधिकारी पुष्टि', auditLedger: 'ऑडिट + लेजर', reviewRequired: 'समीक्षा आवश्यक है', importManifest: 'मेनिफेस्ट आयात करें', sourceCatalogue: 'प्रशासन • स्रोत सूची', sourceProvenance: 'हर रिकॉर्ड में स्रोत वर्ग व स्थिति है।', batchVerified: 'अंतिम बैच सत्यापन: 09:42 IST', permissionedReady: 'तैनाती के लिए तैयार', anomalousExports: '0 असामान्य एक्सपोर्ट', accessControls: 'प्रवेश नियंत्रण', investigatorProfile: 'अन्वेषक प्रोफ़ाइल', responsibleAI: 'जिम्मेदार AI नियंत्रण', defaultLanguage: 'डिफ़ॉल्ट भाषा', dataEnvironment: 'डेटा वातावरण', mfaEnabled: 'MFA सक्षम', investigationUnit: 'महाराष्ट्र पुलिस · पुणे', officerName: 'आशुतोष पाटिल', tlsProtected: 'TLS सुरक्षित', ncrbWorkflow: 'NCRB वर्कफ़्लो', caseConfidence: '78%', approvedDataset: 'NCRB-अनुमोदित डेटासेट', heroTitle: 'नेटवर्क देखें। साक्ष्य सुरक्षित रखें।', heroBody: 'भारत भर के रिकॉर्ड जोड़ने और अन्वेषकों की सहायता के लिए सुरक्षित इंटेलिजेंस वर्कस्पेस।', evidenceFirst: 'साक्ष्य-प्रथम जांच', graphPowered: 'ग्राफ आधारित लिंकेज विश्लेषण', auditableByDesign: 'ऑडिट के लिए बनाया गया', prototypeFooter: 'नेत्ररक्षक • SIH 2026 प्रोटोटाइप', versionFooter: 'v0.1 • साक्ष्य अखंडता सक्षम', weeklyChange: '+8.4% इस सप्ताह', hashVerified: 'हैश सत्यापित', entityMergeReview: 'इकाई मर्ज समीक्षा', assigned: 'आशुतोष पाटिल को सौंपा गया', newLinkDetected: 'नया लिंक मिला', linkedAccount: 'खाता •• 9130 ↔ अर्जुन पवार', datasetManifest: 'डेटासेट मेनिफेस्ट', demoBatch: 'सिंथेटिक डेमो बैच v0.3', lastVerifiedTime: 'अंतिम सत्यापन 09:42 IST', riskDates: ['15 अगस्त', '22 अगस्त', '29 अगस्त', '05 सितंबर', '12 सितंबर'], refreshed: 'जोखिम संकेत रीफ्रेश हुआ',
-    officersSubtitle: 'कानून-प्रवर्तन प्रोफाइल (रैंक, बैज और जिला सहित)।', addOfficer: 'अधिकारी जोड़ें', editOfficer: 'अधिकारी संपादित करें', fullName: 'पूरा नाम', rank: 'रैंक', badgeNo: 'बैज नंबर', district: 'जिला', state: 'राज्य', emailAddress: 'ईमेल पता', phone: 'फोन', initialPassword: 'पासवर्ड', passwordHelp: 'नया अधिकारी इस पासवर्ड से प्रवेश करेगा।', rolePermissions: 'भूमिका / अनुमतियां', caseOfficer: 'केस अधिकारी', analyst: 'विश्लेषक', admin: 'व्यवस्थापक', clear: 'साफ करें', saveChanges: 'बदलाव सेव करें', officerAdded: 'अधिकारी प्रोफाइल बनी', officerUpdated: 'अधिकारी प्रोफाइल अपडेट हुई', officerDeleted: 'अधिकारी प्रोफाइल हटाई गई', auditSubtitle: 'अपरिवर्तनीय गतिविधि रिकॉर्ड', warnings: 'चेतावनियां', criticalEvents: 'गंभीर घटनाएं', tamperAlerts: 'छेड़छाड़ अलर्ट', noActiveAlerts: 'कोई अखंडता अलर्ट नहीं', level: 'स्तर', info: 'जानकारी', critical: 'गंभीर', time: 'समय', actor: 'कर्ता', action: 'कार्रवाई', summary: 'विवरण', supabaseConnected: 'सुपाबेस कनेक्टेड — डेटा सुरक्षित',
+    officersSubtitle: 'कानून-प्रवर्तन प्रोफाइल (रैंक, बैज और जिला सहित)।', addOfficer: 'अधिकारी जोड़ें', editOfficer: 'अधिकारी संपादित करें', fullName: 'पूरा नाम', rank: 'रैंक', badgeNo: 'बैज नंबर', district: 'जिला', state: 'राज्य', emailAddress: 'ईमेल पता', phone: 'फोन', initialPassword: 'पासवर्ड', passwordHelp: 'नया अधिकारी इस पासवर्ड से प्रवेश करेगा।', rolePermissions: 'भूमिका / अनुमतियां', caseOfficer: 'केस अधिकारी', analyst: 'विश्लेषक', admin: 'व्यवस्थापक', clear: 'साफ करें', saveChanges: 'बदलाव सेव करें', officerAdded: 'अधिकारी प्रोफाइल बनी', officerUpdated: 'अधिकारी प्रोफाइल अपडेट हुई', officerDeleted: 'अधिकारी प्रोफाइल हटाई गई', auditSubtitle: 'अपरिवर्तनीय गतिविधि रिकॉर्ड', warnings: 'चेतावनियां', criticalEvents: 'गंभीर घटनाएं', tamperAlerts: 'छेड़छाड़ अलर्ट', noActiveAlerts: 'कोई अखंडता अलर्ट नहीं', level: 'स्तर', info: 'जानकारी', critical: 'गंभीर', time: 'समय', actor: 'कर्ता', action: 'कार्रवाई', summary: 'विवरण', supabaseConnected: 'सुपाबेस कनेक्टेड - डेटा सुरक्षित',
     accessibility: 'सुलभता', decreaseText: 'अक्षर छोटे करें', resetText: 'अक्षर रीसेट करें', increaseText: 'अक्षर बड़े करें', collapseSidebar: 'नेविगेशन बंद करें', expandSidebar: 'नेविगेशन खोलें', manualEntry: 'मैनुअल एफआईआर', scannedUpload: 'स्कैन की गई एफआईआर', caseDetails: 'केस विवरण', personDetails: 'विषय विवरण', evidence: 'साक्ष्य', saveDraft: 'ड्राफ्ट सेव करें', addEvidence: 'साक्ष्य जोड़ें', evidenceType: 'साक्ष्य प्रकार', evidenceDescription: 'साक्ष्य विवरण', subjectName: 'विषय का नाम', alias: 'उपनाम', dob: 'जन्म तिथि', address: 'पता', vehicle: 'वाहन नंबर', bank: 'बैंक खाता', incidentSummary: 'घटना सारांश', reportingOfficer: 'रिपोर्टिंग अधिकारी', saveCase: 'केस सेव करें', draftSaved: 'ड्राफ्ट सेव हुआ', caseSaved: 'केस समीक्षा हेतु सेव हुआ', manualEntryHelp: 'केस तथ्य और साक्ष्य दर्ज करें।', documentEvidence: 'दस्तावेज़', deviceEvidence: 'डिवाइस', financialEvidence: 'वित्तीय', witnessEvidence: 'गवाह', draft: 'ड्राफ्ट', removeEvidence: 'साक्ष्य हटाएं'
   },
   mr: { product: 'नेत्ररक्षक', productSub: 'गुन्हेगारी नेटवर्क विश्लेषण', restricted: 'मर्यादित प्रवेश', signInTitle: 'सुरक्षित तपासनीस प्रवेश', signInBody: 'प्रवेशाचे निरीक्षण केले जाते.', email: 'अधिकृत ईमेल', password: 'पासवर्ड', signIn: 'प्रवेश करा', demoHint: 'प्रोटोटाइप प्रवेश.', command: 'डॅशबोर्ड', network: 'नेटवर्क ग्राफ', fir: 'FIR अहवाल', officers: 'अधिकारी', auditLogs: 'ऑडिट लॉग्स', sources: 'डेटा आणि अखंडता', settings: 'सेटिंग्ज', overview: 'डॅशबोर्ड', search: 'शोध घ्या…', today: 'आज', alerts: 'प्राधान्य अलर्ट', entities: 'संस्था', connections: 'कनेक्शन्स', integrity: 'पुरावा अखंडता', viewNetwork: 'नेटवर्क उघडा', reviewFIR: 'FIR तपासा', high: 'उच्च', medium: 'मध्यम', low: 'कमी', risk: 'धोका', type: 'प्रकार', connectionsSort: 'कनेक्शन', recent: 'कृती', name: 'नाव', allTypes: 'सर्व प्रकार', filter: 'फिल्टर', fullscreen: 'फुलस्क्रीन', exitFullscreen: 'बाहेर पडा', zoomIn: 'झूम इन', zoomOut: 'झूम आउट', reset: 'रीसेट', graphHint: 'नोड ओढा • झूम करण्यासाठी स्क्रोल करा', selectedEntity: 'निवडलेली संस्था', associations: 'संबंध', linkedEvents: 'घटना', source: 'स्रोत', confidence: 'विश्वास', evidenceTrail: 'पुरावा ट्रेल', uploadTitle: 'FIR इनटेक', uploadBody: 'स्कॅन केलेली FIR टाका.', browse: 'फाइल निवडा', fingerprint: 'SHA-256 फिंगरप्रिंट', ocrReady: 'OCR सज्ज', reviewDraft: 'ड्राफ्ट पुनरावलोकन', noFile: 'काहीही निवडलेले नाही', auditTitle: 'ऑडिट ट्रेल', auditBody: 'बदल नोंदवले जातात.', verified: 'सत्यापित', imported: 'आयातित', synthetic: 'सिंथेटिक डेटा', live: 'लाइव्ह', dataSources: 'डेटा स्रोत', integrityChecks: 'अखंडता', hashChain: 'हॅश चेन', ledger: 'लेजर', all: 'सर्व', logout: 'बाहेर पडा', language: 'भाषा', welcome: 'सुप्रभात, अधिकारी.', briefing: 'आजचे नेटवर्क ब्रीफिंग.', viewAll: 'सर्व पहा', noResults: 'जुळणारी संस्था नाही', sourceNote: 'प्रोटोटाइप डेटा आहे.', workspace: 'कार्य क्षेत्र', governance: 'प्रशासन', liveAudit: 'ऑडिट स्ट्रीम', riskPulse: 'जोखीम संकेत', last30: 'मागील 30 दिवस', sortBy: 'क्रमवारी', entitiesCount: 'संस्था', prototypeEnvironment: 'प्रोटोटाइप', priorityReview: 'प्राधान्य पुनरावलोकन', sourceTypes: 'स्रोत', lastVerified: 'सत्यापित 09:42 IST', operationMonsoon: 'ऑपरेशन मॉन्सून', caseLocation: 'पुणे • महाराष्ट्र', networkConfidence: 'विश्वास', linkageAnalysis: 'लिंकेज विश्लेषण', documentIntelligence: 'दस्तऐवज इंटेलिजन्स', uploadWorkflow: 'अपलोड व जतन करा.', fingerprintStep: 'फिंगरप्रिंट', extractStep: 'काढा', reviewStep: 'पुनरावलोकन', commitStep: 'कमिट', sha256: 'SHA-256', ocrAdapter: 'OCR अडॅप्टर', officerConfirmation: 'अधिकारी पुष्टी', auditLedger: 'ऑडिट + लेजर', reviewRequired: 'पुनरावलोकन आवश्यक', importManifest: 'मॅनिफेस्ट', sourceCatalogue: 'स्रोत सूची', sourceProvenance: 'स्रोत नोंद', batchVerified: 'सत्यापन: 09:42 IST', permissionedReady: 'सज्ज', anomalousExports: '0', accessControls: 'प्रवेश', investigatorProfile: 'प्रोफाइल', responsibleAI: 'AI नियंत्रणे', defaultLanguage: 'भाषा', dataEnvironment: 'वातावरण', mfaEnabled: 'MFA', investigationUnit: 'महाराष्ट्र पोलीस · पुणे', officerName: 'आशुतोष पाटील', officersSubtitle: 'अधिकारी प्रोफाइल्स (रँक व जिल्हा).', addOfficer: 'अधिकारी जोडा', editOfficer: 'अधिकारी संपादित करा', fullName: 'पूर्ण नाव', rank: 'रँक', badgeNo: 'बॅज क्र.', district: 'जिल्हा', state: 'राज्य', emailAddress: 'ईमेल', phone: 'फोन', initialPassword: 'पासवर्ड', passwordHelp: 'नवीन अधिकारी पासवर्ड.', rolePermissions: 'भूमिका', caseOfficer: 'केस अधिकारी', analyst: 'विश्लेषक', admin: 'प्रशासक', clear: 'साफ करा', saveChanges: 'जतन करा', officerAdded: 'अधिकारी जोडला', officerUpdated: 'अधिकारी अपडेट झाला', officerDeleted: 'अधिकारी हटवला', auditSubtitle: 'अपरिवर्तनीय क्रियाकलाप नोंद', warnings: 'इशारे', criticalEvents: 'गंभीर', tamperAlerts: 'छे查ड अलर्ट', noActiveAlerts: 'कोणताही अलर्ट नाही', level: 'पातळी', info: 'माहिती', critical: 'गंभीर', time: 'वेळ', actor: 'कर्ता', action: 'कृती', summary: 'तपशील', supabaseConnected: 'कनेक्टेड' },
@@ -79,7 +79,8 @@ let state = {
   auditActorFilter: 'all',
   auditActionFilter: 'all',
   loginError: '',
-  loginEmail: ''
+  loginEmail: '',
+  previewModalFile: null
 };
 
 function getActiveOfficer() {
@@ -954,22 +955,22 @@ function renderOfficers(c) {
                   el('strong', {}, [officer.name]),
                   officer.isYou ? el('span', { class: 'officer-you-tag' }, ['YOU']) : null
                 ]),
-                el('span', {}, [`${officer.rank || 'Officer'} · ${officer.badge || '—'}`])
+                el('span', {}, [`${officer.rank || 'Officer'} · ${officer.badge || '-'}`])
               ]),
               el('span', { class: `officer-role-pill ${roleClass}` }, [officer.role || 'case-officer'])
             ]),
             el('div', { class: 'officer-fields' }, [
               el('div', { class: 'officer-field-row' }, [
                 el('span', { class: 'field-label' }, ['District']),
-                el('span', { class: 'field-val' }, [`${officer.district || '—'}, ${officer.state || ''}`])
+                el('span', { class: 'field-val' }, [`${officer.district || '-'}, ${officer.state || ''}`])
               ]),
               el('div', { class: 'officer-field-row' }, [
                 el('span', { class: 'field-label' }, ['Email address']),
-                el('span', { class: 'field-val' }, [officer.email || '—'])
+                el('span', { class: 'field-val' }, [officer.email || '-'])
               ]),
               el('div', { class: 'officer-field-row' }, [
                 el('span', { class: 'field-label' }, ['Phone']),
-                el('span', { class: 'field-val' }, [officer.phone || '—'])
+                el('span', { class: 'field-val' }, [officer.phone || '-'])
               ])
             ]),
             actions.length > 0 ? el('div', { class: 'officer-card-actions' }, actions) : null
@@ -1582,11 +1583,142 @@ function uploadFIRPanel() {
   ]);
 }
 
+function openFilePreview(fileOrInfo) {
+  if (!fileOrInfo) return;
+  let fileUrl = '';
+  let fileName = 'Document';
+  let fileType = '';
+  let fileSize = '';
+  let fileHash = '';
+
+  if (fileOrInfo instanceof File) {
+    fileName = fileOrInfo.name;
+    fileType = fileOrInfo.type;
+    fileSize = (fileOrInfo.size / 1024).toFixed(1) + ' KB';
+    fileUrl = URL.createObjectURL(fileOrInfo);
+    fileHash = state.fileHash || '';
+  } else if (typeof fileOrInfo === 'object') {
+    fileName = fileOrInfo.name || 'Document';
+    fileType = fileOrInfo.type || (fileOrInfo.file ? fileOrInfo.file.type : '');
+    fileSize = fileOrInfo.size ? (fileOrInfo.size / 1024).toFixed(1) + ' KB' : (fileOrInfo.file ? (fileOrInfo.file.size / 1024).toFixed(1) + ' KB' : '');
+    fileUrl = fileOrInfo.url || (fileOrInfo.file ? URL.createObjectURL(fileOrInfo.file) : '');
+    fileHash = fileOrInfo.hash || state.fileHash || '';
+  }
+
+  state.previewModalFile = { name: fileName, type: fileType, size: fileSize, url: fileUrl, hash: fileHash };
+  renderPreviewModal();
+}
+
+function closeFilePreview() {
+  state.previewModalFile = null;
+  const modal = document.querySelector('.file-preview-modal-overlay');
+  if (modal) modal.remove();
+}
+
+function renderPreviewModal() {
+  const existing = document.querySelector('.file-preview-modal-overlay');
+  if (existing) existing.remove();
+  if (!state.previewModalFile) return;
+
+  const { name, type, size, url, hash } = state.previewModalFile;
+  const isImage = type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(name);
+  const isPdf = type === 'application/pdf' || /\.pdf$/i.test(name);
+
+  let previewContent;
+  if (isImage && url) {
+    previewContent = el('div', { class: 'preview-image-container' }, [
+      el('img', { src: url, alt: name, class: 'preview-image' })
+    ]);
+  } else if (isPdf && url) {
+    previewContent = el('div', { class: 'preview-pdf-container' }, [
+      el('iframe', { src: url, title: name, class: 'preview-pdf-iframe' })
+    ]);
+  } else {
+    previewContent = el('div', { class: 'preview-fallback-container' }, [
+      el('div', { class: 'preview-fallback-icon' }, [icon('file')]),
+      el('strong', {}, [name]),
+      el('span', { class: 'muted' }, [`Format: ${type || 'Binary / Document'}`]),
+      el('span', { class: 'muted' }, [`Size: ${size || 'N/A'}`])
+    ]);
+  }
+
+  const modal = el('div', { class: 'file-preview-modal-overlay', onclick: (e) => {
+    if (e.target.classList.contains('file-preview-modal-overlay')) closeFilePreview();
+  }}, [
+    el('div', { class: 'file-preview-modal-card' }, [
+      el('div', { class: 'file-preview-modal-header' }, [
+        el('div', { class: 'file-preview-modal-meta' }, [
+          el('strong', { class: 'file-preview-modal-title' }, [name]),
+          el('span', { class: 'file-preview-modal-sub' }, [
+            `${size ? size + ' · ' : ''}${isImage ? 'Image preview' : isPdf ? 'PDF document' : 'Evidence file'}${hash ? ' · Fingerprint: ' + hash.slice(0, 16) + '…' : ''}`
+          ])
+        ]),
+        el('button', { class: 'icon-btn close-preview-btn', title: 'Close preview', onclick: closeFilePreview }, [icon('close')])
+      ]),
+      el('div', { class: 'file-preview-modal-body' }, [previewContent]),
+      el('div', { class: 'file-preview-modal-footer' }, [
+        el('button', { class: 'outline-btn', onclick: closeFilePreview }, ['Close']),
+        url ? el('a', { href: url, download: name, class: 'primary-btn small', target: '_blank' }, [icon('arrow'), 'Open in New Tab']) : null
+      ])
+    ])
+  ]);
+
+  document.body.appendChild(modal);
+}
+
 function uploadBox() {
-  const box = el('div', { class: `upload-box ${state.fileHash ? 'has-file' : ''}` }, [
+  if (state.file) {
+    const isImage = state.file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(state.file.name);
+    const isPdf = state.file.type === 'application/pdf' || /\.pdf$/i.test(state.file.name);
+    const thumbEl = isImage
+      ? el('img', { src: URL.createObjectURL(state.file), alt: state.file.name, class: 'upload-thumbnail' })
+      : el('div', { class: 'upload-thumb-icon' }, [icon(isPdf ? 'file' : 'database')]);
+
+    const box = el('div', { class: 'upload-box has-file' }, [
+      el('div', { class: 'upload-preview-card' }, [
+        thumbEl,
+        el('div', { class: 'upload-file-details' }, [
+          el('strong', { class: 'upload-file-name' }, [state.file.name]),
+          el('span', { class: 'upload-file-meta' }, [
+            `${(state.file.size / 1024).toFixed(1)} KB · ${state.file.type || 'Document'} · SHA-256: ${state.fileHash ? state.fileHash.slice(0, 16) + '…' : 'Processing'}`
+          ])
+        ])
+      ]),
+      el('div', { class: 'upload-actions' }, [
+        el('button', {
+          class: 'primary-btn small',
+          type: 'button',
+          onclick: () => openFilePreview(state.file)
+        }, [icon('search'), 'Preview Document']),
+        el('label', { class: 'outline-btn' }, [
+          'Replace file',
+          el('input', { type: 'file', accept: 'image/*,.pdf', hidden: true })
+        ]),
+        el('button', {
+          class: 'outline-btn preview-btn-danger',
+          type: 'button',
+          onclick: () => {
+            state.file = null;
+            state.fileHash = '';
+            state.filePath = '';
+            render();
+          }
+        }, ['Remove'])
+      ])
+    ]);
+
+    box.querySelector('input').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      handleFileUpload(file);
+    };
+    return box;
+  }
+
+  const box = el('div', { class: 'upload-box' }, [
     el('div', { class: 'upload-icon' }, [icon('upload')]),
-    el('strong', {}, [state.file ? state.file.name : t('noFile')]),
-    el('span', {}, [state.fileHash ? `Fingerprint: ${state.fileHash.slice(0, 24)}…` : t('uploadBody')]),
+    el('strong', {}, [t('noFile')]),
+    el('span', {}, [t('uploadBody')]),
     el('label', { class: 'outline-btn' }, [
       t('browse'),
       el('input', { type: 'file', accept: 'image/*,.pdf', hidden: true })
@@ -1595,29 +1727,33 @@ function uploadBox() {
   box.querySelector('input').onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-      state.file = file;
-      const buffer = await file.arrayBuffer();
-      const hash = await crypto.subtle.digest('SHA-256', buffer);
-      state.fileHash = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-      if (supabaseConfigured) {
-        const { data: { user } } = await supabase.auth.getUser();
-        const result = await uploadPrivateEvidence({ supabase, file, userId: user?.id, sha256: state.fileHash });
-        if (result?.error) {
-          showToast(`Evidence storage warning: ${result.error.message || 'File recorded locally'}`);
-        } else {
-          state.filePath = result?.path || '';
-        }
-      }
-      recordAudit('FIR uploaded', `Scanned FIR "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}…).`, 'info', 'fir').catch(() => {});
-      showToast(`Document fingerprinted: ${state.fileHash.slice(0, 12)}…`);
-      render();
-    } catch (err) {
-      console.error('FIR upload error:', err);
-      showToast(`Upload failed: ${err.message || 'Error processing document'}`);
-    }
+    handleFileUpload(file);
   };
   return box;
+}
+
+async function handleFileUpload(file) {
+  try {
+    state.file = file;
+    const buffer = await file.arrayBuffer();
+    const hash = await crypto.subtle.digest('SHA-256', buffer);
+    state.fileHash = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (supabaseConfigured) {
+      const { data: { user } } = await supabase.auth.getUser();
+      const result = await uploadPrivateEvidence({ supabase, file, userId: user?.id, sha256: state.fileHash });
+      if (result?.error) {
+        showToast(`Evidence storage warning: ${result.error.message || 'File recorded locally'}`);
+      } else {
+        state.filePath = result?.path || '';
+      }
+    }
+    recordAudit('FIR uploaded', `Scanned FIR "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}…).`, 'info', 'fir').catch(() => {});
+    showToast(`Document uploaded & fingerprinted: ${state.fileHash.slice(0, 12)}…`);
+    render();
+  } catch (err) {
+    console.error('FIR upload error:', err);
+    showToast(`Upload failed: ${err.message || 'Error processing document'}`);
+  }
 }
 
 async function hashText(value) {
@@ -1775,6 +1911,12 @@ function manualFIRPanel() {
   const evidenceList = el('div', { class: 'evidence-list' }, state.manualEvidence.map((item, index) => el('div', { class: 'evidence-item' }, [
     el('span', { class: 'evidence-type' }, [item.type]),
     el('span', {}, [item.file ? `${item.description} • ${item.file.name}` : item.description]),
+    item.file ? el('button', {
+      class: 'preview-inline-btn',
+      type: 'button',
+      title: 'Preview attached file',
+      onclick: () => openFilePreview(item.file)
+    }, [icon('search'), 'Preview']) : null,
     el('button', {
       class: 'evidence-remove',
       title: t('removeEvidence'),
