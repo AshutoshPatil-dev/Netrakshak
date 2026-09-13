@@ -312,13 +312,13 @@ async function verifyOfficerAuthorization(user) {
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('id, display_name, role_name, is_active, rank, district')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
     if (error) {
       console.warn('Profile authorization lookup error:', error);
-      return { authorized: false, reason: 'Database error verifying officer credentials.' };
+      return { authorized: false, reason: error.message || 'Database error verifying officer credentials.' };
     }
     if (!profile) {
       return { authorized: false, reason: 'This account is not registered in the Law Enforcement Officer Directory.' };
