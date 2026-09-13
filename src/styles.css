@@ -312,8 +312,8 @@ body{background:#fff;min-width:1080px}button{transition:none!important}button:ho
   box-shadow: var(--shadow);
 }
 .empty-shell-icon {
-  width: 54px;
-  height: 54px;
+  width: 56px;
+  height: 56px;
   margin: 0 auto 16px;
   background: #EFF6FF;
   color: var(--app-blue);
@@ -321,6 +321,43 @@ body{background:#fff;min-width:1080px}button{transition:none!important}button:ho
   display: grid;
   place-items: center;
   font-size: 24px;
+  flex-shrink: 0;
+}
+.empty-shell-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.empty-graph-shell {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 32px 20px;
+  background: #FFFFFF;
+  z-index: 1;
+}
+.empty-shell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.empty-shell-content strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin-bottom: 6px;
+  display: block;
+}
+.empty-shell-content p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--app-text-secondary);
+  margin: 0;
 }
 
 /* Audit logs view styles */

@@ -1387,13 +1387,13 @@ function renderNetwork(c) {
   ]);
   const graph = el('section', { class: 'graph-panel' }, [
     graphContainer(sorted),
-    el('div', { class: 'graph-legend' }, [['high', t('high')], ['medium', t('medium')], ['low', t('low')]].map(([r, l]) => el('span', {}, [el('i', { style: `background:${riskColor[r]}` }), l]))),
-    el('div', { class: 'graph-controls' }, [
+    sorted.length > 0 ? el('div', { class: 'graph-legend' }, [['high', t('high')], ['medium', t('medium')], ['low', t('low')]].map(([r, l]) => el('span', {}, [el('i', { style: `background:${riskColor[r]}` }), l]))) : null,
+    sorted.length > 0 ? el('div', { class: 'graph-controls' }, [
       el('button', { class: 'icon-btn', onclick: () => sigmaInstance?.getCamera().animatedZoom() }, ['＋']),
       el('button', { class: 'icon-btn', onclick: () => sigmaInstance?.getCamera().animatedUnzoom() }, ['−']),
       el('button', { class: 'icon-btn', onclick: () => sigmaInstance?.getCamera().animatedReset({ duration: 300 }) }, ['⌖'])
-    ])
-  ]);
+    ]) : null
+  ].filter(Boolean));
   const entityAside = el('aside', { class: 'entity-panel' }, [
     selectedCard(),
     el('div', { class: 'entity-list-head' }, [el('h3', {}, [t('entities')]), el('span', { class: 'muted' }, [sorted.length + ' total'])]),
