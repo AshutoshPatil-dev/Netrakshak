@@ -160,22 +160,25 @@ async function recordAudit(action, summary, level = 'info', actionType = 'system
   } catch (e) {}
 
   if (supabaseConfigured) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const payload = JSON.stringify({ action, summary, level, at: now.toISOString() });
-        const hash = await hashText(payload);
-        await supabase.from('audit_events').insert({
-          actor_id: user.id,
-          action,
-          resource_type: actionType,
-          change_summary: { summary, level },
-          event_hash: hash
-        });
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const user = data?.session?.user;
+        if (user) {
+          const payload = JSON.stringify({ action, summary, level, at: now.toISOString() });
+          const hash = await hashText(payload);
+          await supabase.from('audit_events').insert({
+            actor_id: user.id,
+            action,
+            resource_type: actionType,
+            change_summary: { summary, level },
+            event_hash: hash
+          });
+        }
+      } catch (err) {
+        console.warn('Supabase audit insert:', err);
       }
-    } catch (err) {
-      console.warn('Supabase audit insert:', err);
-    }
+    })();
   }
 }
 
@@ -188,11 +191,25 @@ function saveOfficers() {
 async function loadSupabaseData() {
   if (!supabaseConfigured) return;
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user;
     if (!user) return;
-    
-    // Load audit events from Supabase audit_events
-    const { data: events } = await supabase.from('audit_events').select('*').order('created_at', { ascending: false }).limit(100);
+
+    // Load all data concurrently in parallel
+    const [
+      { data: events },
+      { data: dbProfiles },
+      { data: dbEntities },
+      { data: dbRels },
+      { data: dbCases }
+    ] = await Promise.all([
+      supabase.from('audit_events').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('profiles').select('*').order('created_at', { ascending: true }),
+      supabase.from('entities').select('*').order('created_at', { ascending: false }),
+      supabase.from('relationships').select('*'),
+      supabase.from('fir_cases').select('*').order('created_at', { ascending: false })
+    ]);
+
     if (events && events.length > 0) {
       state.auditLogs = events.map(e => {
         const d = new Date(e.created_at);
@@ -216,8 +233,6 @@ async function loadSupabaseData() {
       } catch (e) {}
     }
 
-    // Load registered officer profiles directly from public.profiles (keyed to auth.users)
-    const { data: dbProfiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: true });
     if (dbProfiles && dbProfiles.length > 0) {
       state.officers = dbProfiles.map(p => ({
         id: p.id,
@@ -234,8 +249,6 @@ async function loadSupabaseData() {
       saveOfficers();
     }
 
-    // Load entities from Supabase
-    const { data: dbEntities } = await supabase.from('entities').select('*').order('created_at', { ascending: false });
     if (dbEntities) {
       entities = dbEntities.map((e, idx) => ({
         id: e.id,
@@ -255,14 +268,10 @@ async function loadSupabaseData() {
       }
     }
 
-    // Load relationships from Supabase
-    const { data: dbRels } = await supabase.from('relationships').select('*');
     if (dbRels) {
       edges = dbRels.map(r => [r.source_entity_id, r.target_entity_id]);
     }
 
-    // Load FIR cases from Supabase
-    const { data: dbCases } = await supabase.from('fir_cases').select('*').order('created_at', { ascending: false });
     if (dbCases) {
       firCases = dbCases;
     }
@@ -381,7 +390,10 @@ async function signInOfficer(form) {
   state.loginEmail = email;
 
   const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Verifying…</span>`;
+  }
 
   try {
     if (supabaseConfigured) {
@@ -393,7 +405,7 @@ async function signInOfficer(form) {
 
       const check = await verifyOfficerAuthorization(authData.user);
       if (!check.authorized) {
-        await supabase.auth.signOut();
+        supabase.auth.signOut().catch(() => {});
         state.loggedIn = false;
         setLoginInlineError(`Access Denied: ${check.reason}`);
         return;
@@ -401,32 +413,37 @@ async function signInOfficer(form) {
 
       state.loggedIn = true;
       state.loginError = '';
-      await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
-      await loadSupabaseData();
       render();
+      recordAudit('Login event', `Signed in (${email}).`, 'info', 'login').catch(() => {});
+      loadSupabaseData();
       return;
     }
 
     localStorage.setItem('demoSession', 'true');
     state.loggedIn = true;
     state.loginError = '';
-    await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
     render();
+    recordAudit('Login event', `Signed in (${email}).`, 'info', 'login').catch(() => {});
   } catch (err) {
     setLoginInlineError('An error occurred during authentication. Please try again.');
   } finally {
     isAuthActionInProgress = false;
-    if (submitBtn && !state.loggedIn) submitBtn.disabled = false;
+    if (submitBtn && !state.loggedIn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `${t('signIn')} <span>${icon('arrow')}</span>`;
+    }
   }
 }
 
 async function signOutOfficer() {
-  await recordAudit('Logoff event', 'Signed out of session.', 'info', 'logoff');
-  if (supabaseConfigured) await supabase.auth.signOut();
+  recordAudit('Logoff event', 'Signed out of session.', 'info', 'logoff').catch(() => {});
   localStorage.removeItem('demoSession');
   state.loggedIn = false;
   state.loginError = '';
   render();
+  if (supabaseConfigured) {
+    supabase.auth.signOut().catch(() => {});
+  }
 }
 
 async function bootstrapAuth() {
