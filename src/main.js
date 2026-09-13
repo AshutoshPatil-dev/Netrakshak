@@ -54,6 +54,7 @@ let firCases = [];
 const riskColor = { high: '#DC2626', medium: '#F59E0B', low: '#16A34A' };
 
 let state = {
+  authChecking: true,
   locale: localStorage.getItem('locale') || 'en',
   loggedIn: false,
   view: 'overview',
@@ -462,47 +463,58 @@ async function signOutOfficer() {
 }
 
 async function bootstrapAuth() {
-  if (supabaseConfigured) {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.user) {
-      const check = await verifyOfficerAuthorization(data.session.user);
-      if (check.authorized) {
-        state.loggedIn = true;
-        await loadSupabaseData();
-        render();
+  try {
+    if (supabaseConfigured) {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        const check = await verifyOfficerAuthorization(data.session.user);
+        if (check.authorized) {
+          state.loggedIn = true;
+          await loadSupabaseData();
+        } else {
+          await supabase.auth.signOut().catch(() => {});
+          state.loggedIn = false;
+          if (check.reason) state.loginError = check.reason;
+        }
       } else {
-        await supabase.auth.signOut();
         state.loggedIn = false;
       }
-    }
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (isAuthActionInProgress) return;
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (isAuthActionInProgress) return;
 
-      if (session?.user) {
-        const check = await verifyOfficerAuthorization(session.user);
-        if (!check.authorized) {
-          await supabase.auth.signOut();
+        if (session?.user) {
+          const check = await verifyOfficerAuthorization(session.user);
+          if (!check.authorized) {
+            await supabase.auth.signOut().catch(() => {});
+            if (state.loggedIn) {
+              state.loggedIn = false;
+              setLoginInlineError(`Access Denied: ${check.reason}`);
+            }
+            return;
+          }
+          if (!state.loggedIn) {
+            state.loggedIn = true;
+            state.loginError = '';
+            await loadSupabaseData();
+            render();
+          }
+        } else {
           if (state.loggedIn) {
             state.loggedIn = false;
-            setLoginInlineError(`Access Denied: ${check.reason}`);
+            render();
           }
-          return;
         }
-        if (!state.loggedIn) {
-          state.loggedIn = true;
-          state.loginError = '';
-          await loadSupabaseData();
-          render();
-        }
-      } else {
-        if (state.loggedIn) {
-          state.loggedIn = false;
-          render();
-        }
-      }
-    });
-  } else if (localStorage.getItem('demoSession') === 'true') {
-    state.loggedIn = true;
+      });
+    } else if (localStorage.getItem('demoSession') === 'true') {
+      state.loggedIn = true;
+    } else {
+      state.loggedIn = false;
+    }
+  } catch (err) {
+    console.warn('Auth bootstrap error:', err);
+    state.loggedIn = false;
+  } finally {
+    state.authChecking = false;
     render();
   }
 }
@@ -600,14 +612,10 @@ function accessibilityControls() {
 }
 
 function setTextScale(delta, reset = false) {
-  state.fontScale = reset ? 1 : Math.min(1.36, Math.max(0.85, Math.round((state.fontScale + delta) * 100) / 100));
+  state.fontScale = reset ? 1 : Math.min(1.3, Math.max(0.85, Math.round((state.fontScale + delta) * 100) / 100));
   localStorage.setItem('font_scale', String(state.fontScale));
   document.documentElement.style.setProperty('--text-scale', String(state.fontScale));
   document.documentElement.style.fontSize = `${state.fontScale * 14}px`;
-  const main = document.querySelector('.main-area');
-  if (main) {
-    main.style.zoom = String(state.fontScale);
-  }
   showToast(`Text size: ${Math.round(state.fontScale * 100)}%`);
 }
 
@@ -628,6 +636,7 @@ function appShell() {
       el('input', { placeholder: t('search'), value: state.query })
     ]),
     el('div', { class: 'top-actions' }, [
+      accessibilityControls(),
       langPicker(),
       el('div', { class: 'topbar-officer' }, [
         el('div', { class: 'avatar' }, [getActiveOfficer().initials]),
@@ -1924,8 +1933,36 @@ function renderSettings(c) {
   );
 }
 
+function renderLoadingSplash() {
+  const root = document.querySelector('#app');
+  root.innerHTML = '';
+  const splash = el('div', { class: 'loading-splash' }, [
+    el('div', { class: 'splash-card' }, [
+      el('div', { class: 'splash-mark' }, [icon('shield')]),
+      el('div', { class: 'splash-text' }, [
+        el('strong', {}, [t('product')]),
+        el('span', {}, [t('productSub')])
+      ]),
+      el('div', { class: 'splash-spinner' }),
+      el('p', { class: 'splash-status' }, ['Verifying security credentials…'])
+    ])
+  ]);
+  root.append(splash);
+}
+
 function render() {
-  state.loggedIn ? appShell() : renderLogin();
+  if (state.authChecking) {
+    renderLoadingSplash();
+  } else if (state.loggedIn) {
+    appShell();
+  } else {
+    renderLogin();
+  }
+}
+
+if (state.fontScale && state.fontScale !== 1) {
+  document.documentElement.style.setProperty('--text-scale', String(state.fontScale));
+  document.documentElement.style.fontSize = `${state.fontScale * 14}px`;
 }
 
 render();

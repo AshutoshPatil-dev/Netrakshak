@@ -1,3 +1,2 @@
 -- Supabase seed file (clean empty state)
 -- Insert records through the Netrakshak interface or Supabase dashboard as needed.
-
