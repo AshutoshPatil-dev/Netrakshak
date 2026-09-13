@@ -323,46 +323,60 @@ async function verifyOfficerAuthorization(user) {
   }
 }
 
+let isAuthActionInProgress = false;
+
 async function signInOfficer(form) {
+  if (isAuthActionInProgress) return;
+  isAuthActionInProgress = true;
+
   const email = form.querySelector('input[type="email"]').value.trim();
   const password = form.querySelector('input[type="password"]').value;
   state.loginEmail = email;
   state.loginError = '';
 
-  if (supabaseConfigured) {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.disabled = true;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
 
-    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !authData?.user) {
-      if (submitBtn) submitBtn.disabled = false;
-      state.loginError = 'Invalid email address or password. Please verify your credentials.';
-      renderLogin();
+  try {
+    if (supabaseConfigured) {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !authData?.user) {
+        if (submitBtn) submitBtn.disabled = false;
+        state.loginError = 'Invalid email address or password. Please verify your credentials.';
+        renderLogin();
+        return;
+      }
+
+      const check = await verifyOfficerAuthorization(authData.user);
+      if (!check.authorized) {
+        if (submitBtn) submitBtn.disabled = false;
+        await supabase.auth.signOut();
+        state.loggedIn = false;
+        state.loginError = `Access Denied: ${check.reason}`;
+        renderLogin();
+        return;
+      }
+
+      state.loggedIn = true;
+      state.loginError = '';
+      await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
+      await loadSupabaseData();
+      render();
       return;
     }
 
-    const check = await verifyOfficerAuthorization(authData.user);
-    if (!check.authorized) {
-      if (submitBtn) submitBtn.disabled = false;
-      await supabase.auth.signOut();
-      state.loggedIn = false;
-      state.loginError = `Access Denied: ${check.reason}`;
-      renderLogin();
-      return;
-    }
-
+    localStorage.setItem('demoSession', 'true');
     state.loggedIn = true;
     state.loginError = '';
     await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
-    await loadSupabaseData();
     render();
-    return;
+  } catch (err) {
+    if (submitBtn) submitBtn.disabled = false;
+    state.loginError = 'An error occurred during authentication. Please try again.';
+    renderLogin();
+  } finally {
+    isAuthActionInProgress = false;
   }
-  localStorage.setItem('demoSession', 'true');
-  state.loggedIn = true;
-  state.loginError = '';
-  await recordAudit('Login event', `Signed in (${email}).`, 'info', 'login');
-  render();
 }
 
 async function signOutOfficer() {
@@ -389,17 +403,23 @@ async function bootstrapAuth() {
         render();
       }
     }
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (isAuthActionInProgress) return;
+
       if (session?.user) {
         const check = await verifyOfficerAuthorization(session.user);
         if (!check.authorized) {
           await supabase.auth.signOut();
-          state.loggedIn = false;
-          render();
+          if (state.loggedIn) {
+            state.loggedIn = false;
+            state.loginError = `Access Denied: ${check.reason}`;
+            renderLogin();
+          }
           return;
         }
         if (!state.loggedIn) {
           state.loggedIn = true;
+          state.loginError = '';
           await loadSupabaseData();
           render();
         }
@@ -427,16 +447,6 @@ function renderLogin() {
     value: state.loginEmail || '',
     class: state.loginError ? 'input-error' : ''
   });
-  emailInput.oninput = () => {
-    if (state.loginError) {
-      state.loginError = '';
-      const errEl = document.querySelector('.login-inline-error');
-      if (errEl) errEl.style.display = 'none';
-      emailInput.classList.remove('input-error');
-      const passInput = document.querySelector('.login-form input[type="password"]');
-      if (passInput) passInput.classList.remove('input-error');
-    }
-  };
 
   const passInput = el('input', {
     type: 'password',
@@ -444,15 +454,19 @@ function renderLogin() {
     required: true,
     class: state.loginError ? 'input-error' : ''
   });
-  passInput.oninput = () => {
+
+  const clearErrorsOnInput = () => {
     if (state.loginError) {
       state.loginError = '';
       const errEl = document.querySelector('.login-inline-error');
-      if (errEl) errEl.style.display = 'none';
-      passInput.classList.remove('input-error');
+      if (errEl) errEl.remove();
       emailInput.classList.remove('input-error');
+      passInput.classList.remove('input-error');
     }
   };
+
+  emailInput.addEventListener('keydown', clearErrorsOnInput);
+  passInput.addEventListener('keydown', clearErrorsOnInput);
 
   const errorBlock = state.loginError
     ? el('div', { class: 'login-inline-error', role: 'alert' }, [
