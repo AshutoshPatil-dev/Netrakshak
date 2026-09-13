@@ -480,10 +480,10 @@ function appShell() {
 
   const topbar = el('header', { class: 'topbar' }, [
     el('div', { class: 'topbar-brand' }, [
-      el('div', { class: 'topbar-mark' }, ['N']),
+      el('div', { class: 'topbar-mark' }, [icon('shield')]),
       el('div', {}, [
-        el('strong', {}, ['Nexus']),
-        el('span', {}, ['Criminal Network Analysis Dashboard'])
+        el('strong', {}, [t('product')]),
+        el('span', {}, [t('productSub')])
       ])
     ]),
     el('div', { class: 'global-search' }, [
@@ -681,7 +681,7 @@ function recentPanel() {
       el('span', {}, [log.summary])
     ]),
     el('time', {}, [log.time.split(' ')[1] || log.time])
-  ]))) : el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--nexus-muted); font-size: 13px;' }, [
+  ]))) : el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--muted); font-size: 13px;' }, [
     'No recent activity recorded yet.'
   ]);
 
@@ -1183,7 +1183,7 @@ function renderAuditLogs(c) {
     ]);
   }) : [
     el('tr', {}, [
-      el('td', { colspan: '4', style: 'text-align: center; padding: 48px 16px; color: var(--nexus-muted); font-size: 13px;' }, ['No audit log events match the current filter criteria.'])
+      el('td', { colspan: '4', style: 'text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px;' }, ['No audit log events match the current filter criteria.'])
     ])
   ];
 
@@ -1261,7 +1261,7 @@ function renderNetwork(c) {
   const entityAside = el('aside', { class: 'entity-panel' }, [
     selectedCard(),
     el('div', { class: 'entity-list-head' }, [el('h3', {}, [t('entities')]), el('span', { class: 'muted' }, [sorted.length + ' total'])]),
-    el('div', { class: 'entity-list' }, sorted.length > 0 ? sorted.map(e => entityListItem(e)) : [el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--nexus-muted); font-size: 12px;' }, ['No entities recorded yet.'])])
+    el('div', { class: 'entity-list' }, sorted.length > 0 ? sorted.map(e => entityListItem(e)) : [el('div', { style: 'padding: 24px 12px; text-align: center; color: var(--muted); font-size: 12px;' }, ['No entities recorded yet.'])])
   ]);
   n.append(heading, toolbar, el('div', { class: 'network-grid' }, [graph, entityAside]));
   c.append(n);
