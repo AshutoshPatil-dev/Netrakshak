@@ -7,27 +7,7 @@ import { showToast } from '../components/Toast.js';
 export function renderOfficers(c) {
   c.innerHTML = '';
   const activeOfficer = getActiveOfficer();
-
-  if (!activeOfficer.isAdmin) {
-    c.append(el('div', { class: 'restricted-access-panel' }, [
-      el('div', { class: 'restricted-lock-icon' }, [icon('lock')]),
-      el('div', { class: 'restricted-badge' }, ['RESTRICTED CLEARANCE']),
-      el('h2', {}, ['Administrator Clearance Required']),
-      el('p', {}, [
-        'Personnel directories, investigator credentials, and role permission assignments are strictly restricted to System Administrators for security compliance.'
-      ]),
-      el('div', { class: 'restricted-officer-info' }, [
-        el('span', {}, ['Current Officer:']),
-        el('strong', {}, [activeOfficer.name]),
-        el('span', { class: 'role-tag' }, [`Role: ${(activeOfficer.rawRole || 'case-officer').toUpperCase()}`])
-      ]),
-      el('button', {
-        class: 'primary-btn small',
-        onclick: () => { state.view = 'overview'; notifyStateChange(); }
-      }, ['Return to Dashboard'])
-    ]));
-    return;
-  }
+  const isAdmin = activeOfficer ? (activeOfficer.isAdmin !== false) : true;
 
   const editingOfficer = state.editingOfficerId ? state.officers.find(o => o.id === state.editingOfficerId) : null;
 
@@ -113,7 +93,7 @@ export function renderOfficers(c) {
                   el('strong', {}, [officer.name]),
                   officer.isYou ? el('span', { class: 'officer-you-tag' }, ['YOU']) : null
                 ]),
-                el('span', {}, [`${officer.rank || 'Officer'} · ${officer.badge || '-'}`])
+                el('span', {}, [`${officer.rank || 'Officer'} · ${officer.district || 'Maharashtra'}`])
               ]),
               el('span', { class: `officer-role-pill ${roleClass}` }, [officer.role || 'case-officer'])
             ]),
@@ -158,29 +138,23 @@ export function renderOfficers(c) {
           }))
         ]),
         el('div', { class: 'form-group' }, [
-          el('label', {}, [t('badgeNo')]),
-          el('input', { name: 'badge', placeholder: 'MH/INSP/1124', value: editingOfficer ? editingOfficer.badge : '' })
+          el('label', {}, [t('district') + ' *']),
+          el('input', { name: 'district', required: true, placeholder: 'Pune City', value: editingOfficer ? editingOfficer.district : '' })
         ])
       ]),
       el('div', { class: 'form-row-2' }, [
-        el('div', { class: 'form-group' }, [
-          el('label', {}, [t('district') + ' *']),
-          el('input', { name: 'district', required: true, placeholder: 'Pune', value: editingOfficer ? editingOfficer.district : '' })
-        ]),
         el('div', { class: 'form-group' }, [
           el('label', {}, [t('state')]),
           el('input', { name: 'state', placeholder: 'Maharashtra', value: editingOfficer ? editingOfficer.state : 'Maharashtra' })
-        ])
-      ]),
-      el('div', { class: 'form-row-2' }, [
+        ]),
         el('div', { class: 'form-group' }, [
           el('label', {}, [t('emailAddress') + ' *']),
           el('input', { name: 'email', type: 'email', required: true, placeholder: 'officer@police.gov.in', value: editingOfficer ? editingOfficer.email : '' })
-        ]),
-        el('div', { class: 'form-group' }, [
-          el('label', {}, [t('phone')]),
-          el('input', { name: 'phone', type: 'tel', placeholder: '+91-…', value: editingOfficer ? editingOfficer.phone : '' })
         ])
+      ]),
+      el('div', { class: 'form-group' }, [
+        el('label', {}, [t('phone')]),
+        el('input', { name: 'phone', type: 'tel', placeholder: '+91-…', value: editingOfficer ? editingOfficer.phone : '' })
       ]),
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('initialPassword') + ' *']),
@@ -202,9 +176,14 @@ export function renderOfficers(c) {
               const btn = el('button', {
                 type: 'button',
                 class: `role-pill-btn ${active ? 'active' : ''}`,
-                onclick: () => {
+                onclick: (e) => {
                   state.officerFormRole = role;
-                  notifyStateChange();
+                  // Update pill UI in-place instead of full re-render to preserve form values
+                  const group = e.target.closest('.role-pill-group');
+                  if (group) {
+                    group.querySelectorAll('.role-pill-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                  }
                 }
               }, [role]);
               return btn;
@@ -231,7 +210,6 @@ export function renderOfficers(c) {
       e.preventDefault();
       const name = form.querySelector('[name="fullName"]').value.trim();
       const rank = form.querySelector('[name="rank"]').value;
-      const badge = form.querySelector('[name="badge"]').value.trim();
       const district = form.querySelector('[name="district"]').value.trim();
       const stateVal = form.querySelector('[name="state"]').value.trim();
       const email = form.querySelector('[name="email"]').value.trim();
@@ -241,7 +219,6 @@ export function renderOfficers(c) {
       if (editingOfficer) {
         editingOfficer.name = name;
         editingOfficer.rank = rank;
-        editingOfficer.badge = badge;
         editingOfficer.district = district;
         editingOfficer.state = stateVal;
         editingOfficer.email = email;
@@ -254,7 +231,6 @@ export function renderOfficers(c) {
           supabase.from('profiles').update({
             display_name: name,
             rank,
-            badge_no: badge,
             district,
             state: stateVal,
             email,
@@ -270,7 +246,6 @@ export function renderOfficers(c) {
           id: newId,
           name,
           rank,
-          badge: badge || '',
           district,
           state: stateVal || 'Maharashtra',
           email,

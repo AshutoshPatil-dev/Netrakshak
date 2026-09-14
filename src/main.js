@@ -4,6 +4,7 @@ import { renderAppShell } from './components/AppShell.js';
 import { renderLogin, renderLoadingSplash } from './views/LoginView.js';
 import { renderOverview } from './views/DashboardView.js';
 import { renderNetwork } from './views/NetworkGraphView.js';
+import { renderPatternsAnomalies } from './views/PatternsAnomaliesView.js';
 import { renderFIR } from './views/FIRView.js';
 import { renderOfficers } from './views/OfficersView.js';
 import { renderAuditLogs } from './views/AuditLogsView.js';
@@ -21,6 +22,7 @@ function getViewRenderer() {
     case 'overview':       return renderOverview;
     case 'entities':       return renderEntities;
     case 'network':        return renderNetwork;
+    case 'patterns':       return renderPatternsAnomalies;
     case 'entity_profile': return renderEntityProfile;
     case 'fir':            return renderFIR;
     case 'ai_analysis':    return renderAIAnalysis;

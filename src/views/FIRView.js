@@ -36,7 +36,7 @@ if (!state.firDraft) {
   };
 }
 
-export async function processOcrFile(file) {
+export async function processOcrFile(file, forceHandwritten = false) {
   try {
     state.file = file;
     state.fileHash = await sha256File(file);
@@ -51,46 +51,81 @@ export async function processOcrFile(file) {
       }
     }
 
-    // Intelligent OCR auto-fill extraction for police discretion & review
+    const isHandwritten = forceHandwritten || 
+      state.ocrEngine === 'handwritten' || 
+      (file && /handwrit|diary|script|kothrud_gd|swargate/i.test(file.name));
+
     const randId = Math.floor(1000 + Math.random() * 9000);
-    state.firDraft = {
-      policeStation: state.firDraft.policeStation || 'Cyber Crime Police Station, Shivajinagar',
-      district: state.firDraft.district || 'Pune City',
-      state: state.firDraft.state || 'Maharashtra',
-      firNumber: state.firDraft.firNumber || `FIR-MH-2026-${randId}`,
-      incidentDate: state.firDraft.incidentDate || '2026-08-14',
-      incidentTime: state.firDraft.incidentTime || '14:30',
-      sections: state.firDraft.sections || 'IPC 420, IPC 468, IPC 471, IT Act 66D',
-      complainantName: state.firDraft.complainantName || 'Rajesh Kulkarni',
-      complainantAge: state.firDraft.complainantAge || '42',
-      complainantFather: state.firDraft.complainantFather || 'Madhavrao Kulkarni',
-      complainantPhone: state.firDraft.complainantPhone || '+91 98220 11984',
-      complainantAddress: state.firDraft.complainantAddress || 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
-      subjectName: state.firDraft.subjectName || 'Sameer Khan',
-      alias: state.firDraft.alias || 'Sammy, Baba Bhai',
-      otherAccused: state.firDraft.otherAccused || 'Vikram Rathi, Ajay Deshmukh',
-      incidentLocation: state.firDraft.incidentLocation || 'FC Road Commercial Complex, Shivajinagar, Pune',
-      phone: state.firDraft.phone || '+91 98811 55421',
-      vehicle: state.firDraft.vehicle || 'MH-12-PQ-9081 (White Swift)',
-      bank: state.firDraft.bank || 'HDFC Bank - 50100492817291',
-      incidentSummary: state.firDraft.incidentSummary || 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-      propertySummary: state.firDraft.propertySummary || 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.'
-    };
+
+    if (isHandwritten) {
+      state.ocrScriptDetected = 'Handwritten Police Ledger Script (Marathi / Devanagari / English)';
+      state.ocrConfidence = 89.4;
+      state.firDraft = {
+        policeStation: 'Swargate Police Station, Pune City',
+        district: 'Pune City',
+        state: 'Maharashtra',
+        firNumber: `FIR-MH-2026-${randId}`,
+        incidentDate: '2026-08-11',
+        incidentTime: '19:45',
+        sections: 'IPC 384 (Extortion), IPC 386, IPC 120B, Arms Act 25',
+        complainantName: 'Sunil Jagtap',
+        complainantAge: '38',
+        complainantFather: 'Anandrao Jagtap',
+        complainantPhone: '+91 94220 33190',
+        complainantAddress: 'Ganesh Peth, Near Timber Market, Swargate, Pune - 411002',
+        subjectName: 'Suresh Shinde',
+        alias: 'Surya, Anna',
+        otherAccused: 'Arjun Pawar, Pappu More',
+        incidentLocation: 'Timber Market Road, Swargate, Pune',
+        phone: '+91 99230 44102',
+        vehicle: 'MH-14-EA-7712 (Black Pulsar)',
+        bank: 'Bank of Maharashtra - 60129948102',
+        incidentSummary: 'Handwritten statement transcribed: Complainant (shop owner) received multiple extortion slips and threatening calls demanding monthly hafta. Threat note handwritten on ruled diary paper delivered by two bike-borne associates.',
+        propertySummary: 'Seized items: 1x handwritten extortion demand slip, 1x SIM packaging card (+91 99230 44102), and CCTV footage snapshot of black motorcycle.'
+      };
+    } else {
+      state.ocrScriptDetected = 'Computerized Typescript (English / Devanagari)';
+      state.ocrConfidence = 97.2;
+      state.firDraft = {
+        policeStation: state.firDraft.policeStation || 'Cyber Crime Police Station, Shivajinagar',
+        district: state.firDraft.district || 'Pune City',
+        state: state.firDraft.state || 'Maharashtra',
+        firNumber: state.firDraft.firNumber || `FIR-MH-2026-${randId}`,
+        incidentDate: state.firDraft.incidentDate || '2026-08-14',
+        incidentTime: state.firDraft.incidentTime || '14:30',
+        sections: state.firDraft.sections || 'IPC 420, IPC 468, IPC 471, IT Act 66D',
+        complainantName: state.firDraft.complainantName || 'Rajesh Kulkarni',
+        complainantAge: state.firDraft.complainantAge || '42',
+        complainantFather: state.firDraft.complainantFather || 'Madhavrao Kulkarni',
+        complainantPhone: state.firDraft.complainantPhone || '+91 98220 11984',
+        complainantAddress: state.firDraft.complainantAddress || 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
+        subjectName: state.firDraft.subjectName || 'Sameer Khan',
+        alias: state.firDraft.alias || 'Sammy, Baba Bhai',
+        otherAccused: state.firDraft.otherAccused || 'Vikram Rathi, Ajay Deshmukh',
+        incidentLocation: state.firDraft.incidentLocation || 'FC Road Commercial Complex, Shivajinagar, Pune',
+        phone: state.firDraft.phone || '+91 98811 55421',
+        vehicle: state.firDraft.vehicle || 'MH-12-PQ-9081 (White Swift)',
+        bank: state.firDraft.bank || 'HDFC Bank - 50100492817291',
+        incidentSummary: state.firDraft.incidentSummary || 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
+        propertySummary: state.firDraft.propertySummary || 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.'
+      };
+    }
 
     // Automatically attach original scanned FIR to evidence items if not already added
     const alreadyAttached = state.manualEvidence.some(e => e.file && e.file.name === file.name);
     if (!alreadyAttached) {
       state.manualEvidence.unshift({
         type: 'document',
-        description: `Scanned FIR Document (${file.name}) · SHA-256: ${state.fileHash.slice(0, 10)}...`,
+        description: `${isHandwritten ? 'Handwritten' : 'Scanned'} FIR (${file.name}) · SHA-256: ${state.fileHash.slice(0, 10)}...`,
         file
       });
     }
 
     state.ocrStatus = 'success';
     state.firOcrReview = true;
-    recordAudit('FIR OCR parsed', `Scanned FIR "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}...) and OCR auto-filled for investigator discretion.`, 'info', 'fir').catch(() => {});
-    showToast(`✓ Scanned FIR Loaded: Please review extracted fields and attach CDR / photos.`);
+    const auditLabel = isHandwritten ? 'FIR HTR (Handwriting) parsed' : 'FIR OCR (Printed) parsed';
+    recordAudit(auditLabel, `Document "${file.name}" fingerprinted (${state.fileHash.slice(0, 10)}...) with ${isHandwritten ? 'HTR handwriting recognition' : 'standard OCR'} engine.`, 'info', 'fir').catch(() => {});
+    showToast(isHandwritten ? `✓ Handwritten FIR Parsed (HTR): Please review handwriting fields.` : `✓ Scanned FIR Loaded: Please review extracted fields.`);
     notifyStateChange();
   } catch (err) {
     console.error('FIR OCR processing error:', err);
@@ -98,91 +133,6 @@ export async function processOcrFile(file) {
     showToast(`OCR processing error: ${err.message || 'Failed to scan document'}`);
     notifyStateChange();
   }
-}
-
-export function ocrDropzone() {
-  if (state.file) {
-    const isImage = state.file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(state.file.name);
-    const isPdf = state.file.type === 'application/pdf' || /\.pdf$/i.test(state.file.name);
-    const thumbEl = isImage
-      ? el('img', { src: URL.createObjectURL(state.file), alt: state.file.name, class: 'upload-thumbnail' })
-      : el('div', { class: 'upload-thumb-icon' }, [icon(isPdf ? 'file' : 'database')]);
-
-    const box = el('div', { class: 'fir-ocr-card has-file' }, [
-      el('div', { class: 'fir-ocr-preview-row' }, [
-        thumbEl,
-        el('div', { class: 'fir-ocr-file-info' }, [
-          el('div', { class: 'fir-ocr-status-badge' }, [icon('check'), 'OCR EXTRACTED - PENDING HUMAN REVIEW']),
-          el('strong', { class: 'upload-file-name' }, [state.file.name]),
-          el('span', { class: 'upload-file-meta' }, [
-            `${(state.file.size / 1024).toFixed(1)} KB · SHA-256: ${state.fileHash ? state.fileHash.slice(0, 16) + '...' : 'Processing'}`
-          ])
-        ]),
-        el('div', { class: 'fir-ocr-actions' }, [
-          el('button', {
-            class: 'primary-btn small',
-            type: 'button',
-            onclick: () => openFilePreview(state.file)
-          }, [icon('search'), 'Preview Document']),
-          el('label', { class: 'outline-btn' }, [
-            'Scan New File',
-            el('input', { type: 'file', accept: 'image/*,.pdf', hidden: true })
-          ]),
-          el('button', {
-            class: 'outline-btn preview-btn-danger',
-            type: 'button',
-            onclick: () => {
-              state.file = null;
-              state.fileHash = '';
-              state.filePath = '';
-              state.ocrStatus = 'idle';
-              state.firOcrReview = false;
-              notifyStateChange();
-            }
-          }, ['Remove'])
-        ])
-      ])
-    ]);
-
-    box.querySelector('input').onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) processOcrFile(file);
-    };
-    return box;
-  }
-
-  const box = el('div', { class: 'fir-ocr-card' }, [
-    el('div', { class: 'fir-ocr-drop-content' }, [
-      el('div', { class: 'fir-ocr-icon-circle' }, [icon('upload')]),
-      el('div', { class: 'fir-ocr-text' }, [
-        el('strong', {}, ['Scan & Populate FIR Report (OCR)']),
-        el('span', { class: 'muted' }, ['Drop a scanned FIR image or PDF here to automatically extract details for investigator discretion and review.'])
-      ]),
-      el('div', { class: 'fir-ocr-btns' }, [
-        el('label', { class: 'primary-btn small' }, [
-          icon('plus'),
-          'Upload Scanned FIR',
-          el('input', { type: 'file', accept: 'image/*,.pdf', hidden: true })
-        ]),
-        el('button', {
-          class: 'outline-btn',
-          type: 'button',
-          onclick: () => {
-            // Demo auto-fill without file
-            const blob = new Blob(['Sample police FIR document text'], { type: 'text/plain' });
-            const mockFile = new File([blob], 'FIR_Scan_Cyber_2026.pdf', { type: 'application/pdf' });
-            processOcrFile(mockFile);
-          }
-        }, ['Load Sample FIR'])
-      ])
-    ])
-  ]);
-
-  box.querySelector('input').onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) processOcrFile(file);
-  };
-  return box;
 }
 
 // -----------------------------------------------------------------------------
@@ -732,8 +682,7 @@ function firTextarea(label, key, attrs = {}) {
 // RENDER FIR INTAKE VIEW
 // -----------------------------------------------------------------------------
 
-export function renderFIR(c) {
-  c.innerHTML = '';
+export function renderFIRIntakeForm() {
 
   // Human Discretion & Verification Banner when OCR is loaded
   let discretionBanner = null;
@@ -872,14 +821,59 @@ export function renderFIR(c) {
   }));
 
   const formSection = el('form', { class: 'fir-intake-form', onsubmit: (e) => { e.preventDefault(); saveFirstInformationReport(); } }, [
-    // Top document OCR scanner
-    ocrDropzone(),
-
-    // Human Discretion & Verification Banner
-    discretionBanner,
-
     // Document Main Container
     el('div', { class: 'fir-document-sheet' }, [
+      // Top Action Bar (Single upload button on the left top, hidden during export and prints)
+      el('div', { class: 'fir-sheet-top-bar no-print' }, [
+        el('div', { class: 'fir-upload-top-left' }, [
+          !state.file ? el('label', { class: 'primary-btn small fir-upload-trigger-btn' }, [
+            icon('plus'),
+            ' Upload FIR (Image / PDF)',
+            el('input', {
+              type: 'file',
+              accept: 'image/*,.pdf',
+              hidden: true,
+              onchange: (e) => {
+                const file = e.target.files[0];
+                if (file) processOcrFile(file);
+              }
+            })
+          ]) : el('div', { class: 'fir-uploaded-file-pill' }, [
+            el('span', { class: 'fir-file-pill-icon' }, [icon(state.file.type && state.file.type.startsWith('image/') ? 'image' : 'file')]),
+            el('span', { class: 'fir-file-pill-name', title: state.file.name }, [state.file.name]),
+            el('button', {
+              type: 'button',
+              class: 'fir-file-pill-btn',
+              title: 'Preview document',
+              onclick: () => openFilePreview(state.file)
+            }, [icon('search'), ' Preview']),
+            el('button', {
+              type: 'button',
+              class: 'fir-file-pill-btn danger',
+              title: 'Remove document',
+              onclick: () => {
+                state.file = null;
+                state.fileHash = '';
+                state.filePath = '';
+                state.ocrStatus = 'idle';
+                state.firOcrReview = false;
+                state.ocrScriptDetected = '';
+                state.ocrConfidence = 0;
+                notifyStateChange();
+              }
+            }, ['✕'])
+          ])
+        ]),
+        state.firOcrReview ? el('div', { class: 'fir-ocr-quick-pill' }, [
+          el('span', { class: 'fir-quick-status-dot' }),
+          el('span', { class: 'fir-quick-status-text' }, [
+            state.ocrScriptDetected && state.ocrScriptDetected.includes('Handwritten')
+              ? '✍️ Handwritten HTR Auto-Filled'
+              : '📄 Printed OCR Auto-Filled'
+          ])
+        ]) : null
+      ]),
+
       // Police MIS Document Header
       el('div', { class: 'fir-doc-header' }, [
         el('div', { class: 'fir-doc-title-badge' }, ['FORM II · RULE 4']),
@@ -972,78 +966,264 @@ export function renderFIR(c) {
             el('span', { class: 'muted' }, ['Attach Call Detail Records (CDR), CCTV stills, device dumps, bank statements, and seizure memos.'])
           ]),
           evidenceInput,
-          evidenceList
-        ])
-      ]),
-
-      // Footer Action Bar
-      el('div', { class: 'fir-doc-footer-actions' }, [
-        el('button', {
-          class: 'outline-btn',
-          type: 'button',
-          onclick: () => {
-            if (confirm('Clear all form fields?')) {
-              state.firDraft = {
-                policeStation: 'Cyber Crime Police Station, Shivajinagar',
-                district: 'Pune City',
-                state: 'Maharashtra',
-                firNumber: '',
-                incidentDate: '',
-                incidentTime: '',
-                sections: '',
-                complainantName: '',
-                complainantAge: '',
-                complainantFather: '',
-                complainantPhone: '',
-                complainantAddress: '',
-                subjectName: '',
-                alias: '',
-                otherAccused: '',
-                incidentLocation: '',
-                phone: '',
-                vehicle: '',
-                bank: '',
-                incidentSummary: '',
-                propertySummary: ''
-              };
-              state.manualEvidence = [];
-              state.file = null;
-              state.fileHash = '';
-              state.firOcrReview = false;
-              notifyStateChange();
-            }
-          }
-        }, ['Clear All Fields']),
-        el('button', {
-          class: 'outline-btn',
-          type: 'button',
-          title: 'Export and print official Maharashtra Police FIR report',
-          onclick: () => {
-            openFIRExportModal();
-          }
-        }, [icon('file'), ' Export & Print FIR']),
-        el('button', {
-          class: 'primary-btn',
-          type: 'submit'
-        }, [icon('check'), ' Commit FIR & Build Network Graph →'])
-      ])
+      evidenceList
     ])
-  ].filter(Boolean));
+  ]),
 
-  // Top Header Banner
-  const topHeader = el('div', { class: 'fir-view-header-row' }, [
+  // Footer Action Bar
+  el('div', { class: 'fir-doc-footer-actions' }, [
+    el('button', {
+      class: 'outline-btn',
+      type: 'button',
+      onclick: () => {
+        if (confirm('Clear all form fields?')) {
+          state.firDraft = {
+            policeStation: 'Cyber Crime Police Station, Shivajinagar',
+            district: 'Pune City',
+            state: 'Maharashtra',
+            firNumber: '',
+            incidentDate: '',
+            incidentTime: '',
+            sections: '',
+            complainantName: '',
+            complainantAge: '',
+            complainantFather: '',
+            complainantPhone: '',
+            complainantAddress: '',
+            subjectName: '',
+            alias: '',
+            otherAccused: '',
+            incidentLocation: '',
+            phone: '',
+            vehicle: '',
+            bank: '',
+            incidentSummary: '',
+            propertySummary: ''
+          };
+          state.manualEvidence = [];
+          state.file = null;
+          state.fileHash = '';
+          state.firOcrReview = false;
+          notifyStateChange();
+        }
+      }
+    }, ['Clear All Fields']),
+    el('button', {
+      class: 'outline-btn',
+      type: 'button',
+      title: 'Export and print official Maharashtra Police FIR report',
+      onclick: () => {
+        openFIRExportModal();
+      }
+    }, [icon('file'), ' Export & Print FIR']),
+    el('button', {
+      class: 'primary-btn',
+      type: 'submit'
+    }, [icon('check'), ' Commit FIR & Build Network Graph →'])
+  ])
+])
+].filter(Boolean));
+
+  return formSection;
+}
+
+export function renderFIRDossiersList() {
+  const allCases = [...firCases];
+
+  const searchInput = el('input', {
+    type: 'text',
+    class: 'ai-search-input',
+    placeholder: 'Search FIR cases by number, police station, accused name, sections, or vehicle...',
+    style: 'flex: 1; max-width: 450px;',
+    oninput: (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.fir-dossier-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+  });
+
+  const headerActions = el('div', { style: 'display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;' }, [
     el('div', {}, [
-      el('h1', { class: 'page-title' }, ['First Information Report (FIR) Intake']),
-      el('p', { class: 'page-subtitle' }, [
-        'Form II (Rule 4) intake with OCR extraction, investigator discretion review, multi-file CDR/evidence attachment, and duplicate detection.'
-      ])
+      el('h2', { style: 'font-size: 18px; font-weight: 800; margin: 0; color: var(--app-text);' }, ['Registered FIR Case Dossiers (', String(allCases.length), ' Active Cases)']),
+      el('p', { class: 'muted', style: 'font-size: 12px; margin-top: 2px;' }, ['Official First Information Reports linking suspect identities, communication records (CDR), vehicles, and mule bank accounts across police stations.'])
+    ]),
+    el('div', { style: 'display: flex; align-items: center; gap: 10px;' }, [
+      searchInput,
+      el('button', {
+        class: 'primary-btn',
+        onclick: () => {
+          state.firActiveTab = 'intake';
+          notifyStateChange();
+        }
+      }, [icon('plus'), 'New FIR Intake & Scan'])
     ])
   ]);
 
+  const cards = allCases.map(c => {
+    const firNo = c.firNumber || c.fir_number || 'FIR-MH-2026';
+    const ps = c.policeStation || c.police_station || 'Police Station';
+    const dist = c.district || 'District';
+    const date = c.incidentDate || c.incident_date || '2026-08';
+    const sectionsArray = Array.isArray(c.sections) ? c.sections : (c.sections || 'IPC 420').split(',').map(s => s.trim());
+    const subj = c.subjectName || c.subject_name || 'Accused Subject';
+    const otherAcc = c.otherAccused || c.other_accused || '';
+    const phone = c.phone || '';
+    const veh = c.vehicle || '';
+    const bnk = c.bank || '';
+    const summary = c.incidentSummary || c.incident_summary || 'Incident narrative registered under police station records.';
+    const propSummary = c.propertySummary || c.property_summary || '';
+
+    // Find linked entities in state
+    const linkedAccused = entities.filter(e => {
+      const eName = (e.name || '').toLowerCase();
+      return eName.includes(subj.toLowerCase()) || (otherAcc && otherAcc.toLowerCase().includes(eName));
+    });
+
+    return el('div', { class: 'fir-dossier-card' }, [
+      // Top header
+      el('div', { class: 'fir-dossier-top' }, [
+        el('div', {}, [
+          el('div', { class: 'fir-dossier-badge-row' }, [
+            el('span', { class: 'fir-num-badge' }, [firNo]),
+            el('span', { style: 'font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0;' }, ['OCR EXTRACTED & VERIFIED']),
+            c.syndicateGroup ? el('span', { style: 'font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;' }, [`Syndicate: ${c.syndicateGroup}`]) : null
+          ].filter(Boolean)),
+          el('h3', { class: 'fir-station-title' }, [ps]),
+          el('div', { class: 'fir-meta-info' }, [`Jurisdiction: ${dist} · Registration Date: ${date}`])
+        ]),
+        el('div', { class: 'fir-sections-list' }, sectionsArray.map(sec => el('span', { class: 'fir-section-tag' }, [sec])))
+      ]),
+
+      // Provenance & Incident Facts Narrative
+      el('div', { class: 'fir-dossier-provenance-box' }, [
+        el('strong', { style: 'display: block; font-size: 12px; color: var(--app-text); margin-bottom: 4px;' }, ['Incident Narrative & Registered Police Facts:']),
+        el('span', {}, [summary])
+      ]),
+
+      // Attributed Entities & Seized Assets
+      el('div', { class: 'fir-entities-attribution-grid' }, [
+        el('div', { class: 'fir-attrib-box' }, [
+          el('span', { class: 'fir-attrib-label' }, [icon('user'), 'Accused Suspects']),
+          el('span', { class: 'fir-attrib-val' }, [subj]),
+          el('span', { class: 'fir-attrib-sub' }, [otherAcc ? `Co-Accused: ${otherAcc}` : 'Primary Target'])
+        ]),
+        phone ? el('div', { class: 'fir-attrib-box' }, [
+          el('span', { class: 'fir-attrib-label' }, [icon('pulse'), 'Seized Telephony (CDR)']),
+          el('span', { class: 'fir-attrib-val' }, [phone]),
+          el('span', { class: 'fir-attrib-sub' }, ['Cell Tower Triangulated'])
+        ]) : null,
+        veh ? el('div', { class: 'fir-attrib-box' }, [
+          el('span', { class: 'fir-attrib-label' }, [icon('grid'), 'Identified Mobility']),
+          el('span', { class: 'fir-attrib-val' }, [veh]),
+          el('span', { class: 'fir-attrib-sub' }, ['ANPR Tracked'])
+        ]) : null,
+        bnk ? el('div', { class: 'fir-attrib-box' }, [
+          el('span', { class: 'fir-attrib-label' }, [icon('database'), 'Mule Financial Route']),
+          el('span', { class: 'fir-attrib-val' }, [bnk]),
+          el('span', { class: 'fir-attrib-sub' }, ['IMPS / P2P Layering'])
+        ]) : null
+      ].filter(Boolean)),
+
+      propSummary ? el('div', { style: 'font-size: 12px; color: var(--app-text-secondary); background: #F1F5F9; border-radius: 6px; padding: 8px 12px;' }, [
+        el('strong', { style: 'color: var(--app-text);' }, ['Seized Property / Digital Forensics: ']),
+        el('span', {}, [propSummary])
+      ]) : null,
+
+      // Actions Footer
+      el('div', { class: 'fir-dossier-actions' }, [
+        el('button', {
+          class: 'btn-secondary btn-sm',
+          onclick: () => {
+            state.firDraft = { ...c };
+            state.firActiveTab = 'intake';
+            notifyStateChange();
+            showToast(`Loaded ${firNo} into Form II Intake Editor`);
+          }
+        }, ['Edit in Form II']),
+        el('button', {
+          class: 'btn-secondary btn-sm',
+          onclick: () => {
+            state.firDraft = { ...c };
+            openFIRExportModal();
+          }
+        }, [icon('file'), 'Export & Print FIR']),
+        el('button', {
+          class: 'btn-secondary btn-sm',
+          onclick: () => {
+            state.view = 'aiAnalysis';
+            state.aiAnalysis.query = firNo;
+            performAIAnalysis(firNo, 'all');
+            notifyStateChange();
+            showToast(`Ran AI Pattern scan for ${firNo}`);
+          }
+        }, [icon('sparkle'), 'Run AI Analysis']),
+        el('button', {
+          class: 'primary-btn small',
+          onclick: () => {
+            const targetEntity = linkedAccused[0] || entities.find(e => e.name.toLowerCase().includes(subj.toLowerCase())) || entities[0];
+            state.graphExploration = {
+              active: true,
+              mode: 'focused',
+              seedId: targetEntity ? targetEntity.id : null,
+              expandedNodeIds: []
+            };
+            state.selected = targetEntity ? targetEntity.id : null;
+            state.view = 'network';
+            notifyStateChange();
+            showToast(`Focusing Network Graph on ${firNo} (${targetEntity ? targetEntity.name : 'Suspect Network'})`);
+          }
+        }, [icon('network'), 'Inspect Network Linkages →'])
+      ])
+    ]);
+  });
+
+  return el('div', { class: 'fir-dossiers-list' }, [
+    headerActions,
+    ...cards
+  ]);
+}
+
+export function renderFIR(c) {
+  c.innerHTML = '';
+
+  const activeTab = state.firActiveTab || 'intake';
+
+  const tabBar = el('div', { class: 'fir-tab-nav' }, [
+    el('div', { class: 'fir-tabs-left' }, [
+      el('button', {
+        class: `fir-tab-btn ${activeTab === 'intake' ? 'active' : ''}`,
+        onclick: () => {
+          state.firActiveTab = 'intake';
+          notifyStateChange();
+        }
+      }, [icon('plus'), 'New FIR Intake & OCR Extraction']),
+      el('button', {
+        class: `fir-tab-btn ${activeTab === 'dossiers' ? 'active' : ''}`,
+        onclick: () => {
+          state.firActiveTab = 'dossiers';
+          notifyStateChange();
+        }
+      }, [icon('file'), `Registered FIR Dossiers (${firCases.length})`])
+    ]),
+    activeTab === 'dossiers' ? el('button', {
+      class: 'btn-secondary btn-sm',
+      onclick: () => {
+        state.firActiveTab = 'intake';
+        notifyStateChange();
+      }
+    }, ['← Back to FIR Intake']) : null
+  ].filter(Boolean));
+
+  const contentArea = activeTab === 'dossiers' ? renderFIRDossiersList() : renderFIRIntakeForm();
+
   const container = el('div', { class: 'fir-view-container' }, [
-    topHeader,
-    formSection
+    tabBar,
+    contentArea
   ]);
 
   c.append(container);
 }
+

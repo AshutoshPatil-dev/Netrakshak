@@ -56,7 +56,7 @@ export function getExportFirData() {
       actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
       ioName: officer.name || 'Ashutosh Patil',
       ioRank: officer.rank || 'Superintendent of Police',
-      ioBadge: officer.badge || 'IPS-001',
+      ioDistrict: officer.district || 'Pune HQ',
       printDate: new Date().toISOString().split('T')[0]
     };
   }
@@ -95,7 +95,7 @@ export function getExportFirData() {
         actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
         ioName: officer.name || 'Ashutosh Patil',
         ioRank: officer.rank || 'Superintendent of Police',
-        ioBadge: officer.badge || 'IPS-001',
+        ioDistrict: officer.district || 'Pune HQ',
         printDate: new Date().toISOString().split('T')[0]
       };
     }
@@ -130,7 +130,7 @@ export function getExportFirData() {
     actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
     ioName: officer.name || 'Ashutosh Patil',
     ioRank: officer.rank || 'Superintendent of Police',
-    ioBadge: officer.badge || 'IPS-001',
+    ioDistrict: officer.district || 'Pune HQ',
     printDate: new Date().toISOString().split('T')[0]
   };
 }
@@ -303,7 +303,7 @@ export function renderPrintableSheet(data) {
         ]),
         el('div', { class: 'print-io-name' }, [
           'Investigating Officer: ',
-          el('strong', {}, [`${data.ioName} (${data.ioRank} · ${data.ioBadge})`])
+          el('strong', {}, [`${data.ioName} (${data.ioRank}, ${data.ioDistrict})`])
         ]),
         el('div', { class: 'print-unit-tag' }, [
           'Unit: Crime & Criminal Network Command · Pune HQ'
@@ -371,31 +371,7 @@ export function renderFIRExportModal() {
     };
   }
 
-  // Pre-export submit banner if drafting
-  let draftSubmitBanner = null;
-  if (exportModalState.sourceType === 'current') {
-    draftSubmitBanner = el('div', { class: 'export-draft-submit-banner' }, [
-      el('div', { class: 'draft-banner-text' }, [
-        icon('file'),
-        el('div', {}, [
-          el('strong', {}, ['Exporting Active Form Draft']),
-          el('span', {}, ['You can submit & register this FIR into the Netrakshak network database now, or export the report directly.'])
-        ])
-      ]),
-      el('div', { class: 'draft-banner-actions' }, [
-        el('button', {
-          class: 'primary-btn small submit-first-btn',
-          onclick: () => {
-            saveFirstInformationReport();
-            exportModalState.submittedBeforeExport = true;
-            showToast('✓ FIR Case Registered & Saved. Ready for export.');
-            renderFIRExportModal();
-          }
-        }, [icon('check'), ' Submit & Register First']),
-        el('span', { class: 'muted-or' }, ['or print as draft'])
-      ])
-    ]);
-  }
+  // Draft submit banner removed per user request
 
   // Header
   const modalHeader = el('div', { class: 'fir-export-modal-header' }, [
@@ -422,7 +398,7 @@ export function renderFIRExportModal() {
       el('button', {
         class: 'outline-btn small',
         onclick: () => {
-          const textSummary = `MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)\nFIRST INFORMATION REPORT\nPolice Station: ${firData.policeStation}\nDistrict: ${firData.district}, ${firData.state}\nFIR No: ${firData.firNumber}\nDate: ${firData.incidentDate} Time: ${firData.incidentTime}\nSections: ${firData.sections}\n\n1. Complainant: ${firData.complainantName} (Age: ${firData.complainantAge}, S/o ${firData.complainantFather})\nPhone: ${firData.complainantPhone}\nAddress: ${firData.complainantAddress}\n\n2. Accused: ${firData.subjectName} (Aliases: ${firData.alias})\nOther Accused: ${firData.otherAccused}\nLocation: ${firData.incidentLocation}\n\n3. Multi-Object Linkages:\nPhone: ${firData.phone}\nVehicle: ${firData.vehicle}\nBank: ${firData.bank}\nTower: ${firData.tower}\n\n4. Incident Narrative:\n${firData.incidentSummary}\n\nProperty/Defrauded:\n${firData.propertySummary}\n\nIO in-charge: ${firData.ioName} (${firData.ioRank} · ${firData.ioBadge})\nAction: ${firData.actionTaken}`;
+          const textSummary = `MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)\nFIRST INFORMATION REPORT\nPolice Station: ${firData.policeStation}\nDistrict: ${firData.district}, ${firData.state}\nFIR No: ${firData.firNumber}\nDate: ${firData.incidentDate} Time: ${firData.incidentTime}\nSections: ${firData.sections}\n\n1. Complainant: ${firData.complainantName} (Age: ${firData.complainantAge}, S/o ${firData.complainantFather})\nPhone: ${firData.complainantPhone}\nAddress: ${firData.complainantAddress}\n\n2. Accused: ${firData.subjectName} (Aliases: ${firData.alias})\nOther Accused: ${firData.otherAccused}\nLocation: ${firData.incidentLocation}\n\n3. Multi-Object Linkages:\nPhone: ${firData.phone}\nVehicle: ${firData.vehicle}\nBank: ${firData.bank}\nTower: ${firData.tower}\n\n4. Incident Narrative:\n${firData.incidentSummary}\n\nProperty/Defrauded:\n${firData.propertySummary}\n\nIO in-charge: ${firData.ioName} (${firData.ioRank}, ${firData.ioDistrict})\nAction: ${firData.actionTaken}`;
           navigator.clipboard.writeText(textSummary).then(() => {
             showToast('✓ FIR text copied to clipboard.');
           });
@@ -446,7 +422,6 @@ export function renderFIRExportModal() {
     modalHeader,
     modalToolbar,
     savedSelectEl,
-    draftSubmitBanner,
     previewScrollArea
   ].filter(Boolean));
 

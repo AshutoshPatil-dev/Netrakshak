@@ -1,8 +1,7 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, getActiveOfficer, signOutOfficer, entities, notifyStateChange } from '../state.js';
+import { state, getActiveOfficer, signOutOfficer, entities, openEntityProfile, notifyStateChange } from '../state.js';
 import { langPicker } from './LanguagePicker.js';
-
 
 export function updateSearchSuggestions(input) {
   const box = input.closest('.global-search');
@@ -15,14 +14,14 @@ export function updateSearchSuggestions(input) {
     class: 'search-suggestion',
     type: 'button',
     onclick: () => {
-      state.selected = entity.id;
+      box.querySelector('.search-suggestions')?.remove();
+      input.value = '';
       state.query = '';
-      state.view = 'network';
-      notifyStateChange();
+      openEntityProfile(entity.id);
     }
   }, [
     el('span', { class: 'search-suggestion-name' }, [entity.name]),
-    el('span', { class: 'search-suggestion-meta' }, [`${entity.type} • ${entity.city}`])
+    el('span', { class: 'search-suggestion-meta' }, [`${entity.type} · ${entity.city || entity.role || 'Dossier'}`])
   ])) : [el('div', { class: 'search-empty' }, [t('noResults')])]);
   box.append(list);
 }
@@ -39,11 +38,22 @@ export function renderTopbar() {
   searchInput.onkeydown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      state.view = 'network';
+      const query = searchInput.value.trim().toLowerCase();
+      if (query) {
+        const matches = entities.filter(entity => [entity.name, entity.local, entity.type, entity.city, entity.phone].some(value => String(value || '').toLowerCase().includes(query)));
+        if (matches.length > 0) {
+          searchInput.closest('.global-search')?.querySelector('.search-suggestions')?.remove();
+          searchInput.value = '';
+          state.query = '';
+          openEntityProfile(matches[0].id);
+          return;
+        }
+      }
+      state.view = 'entities';
       notifyStateChange();
     }
   };
-  searchInput.onblur = () => setTimeout(() => searchInput.closest('.global-search')?.querySelector('.search-suggestions')?.remove(), 160);
+  searchInput.onblur = () => setTimeout(() => searchInput.closest('.global-search')?.querySelector('.search-suggestions')?.remove(), 200);
 
   const topbar = el('header', { class: 'topbar' }, [
     el('div', { class: 'topbar-brand' }, [

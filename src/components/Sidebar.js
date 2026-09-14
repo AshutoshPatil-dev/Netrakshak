@@ -40,6 +40,7 @@ export function renderSidebar() {
     navItem('overview', t('command'), 'grid'),
     navItem('entities', t('entitiesNav'), 'user'),
     navItem('network', t('network'), 'network'),
+    navItem('patterns', t('patternsAnomalies'), 'alert'),
     navItem('fir', t('fir'), 'file'),
     navItem('ai_analysis', t('aiAnalysis'), 'sparkle'),
     ...(activeOfficer.isAdmin ? [

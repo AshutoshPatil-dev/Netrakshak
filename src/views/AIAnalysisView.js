@@ -49,11 +49,11 @@ export function performAIAnalysis(queryText, streamType = 'all') {
       modusOperandi: 'Synthetic cryptocurrency investment lures targeting high-net-worth victims across Pune & Mumbai. Diverts funds into 1st-tier mule accounts within 4 minutes of receipt, then converts via unauthorized P2P gateways.',
       triggers: ['9881155421', 'sameerkhan', 'sammy', 'bababhai', 'mh12pq9081', '50100492817291', 'hdfc50100492817291', 'vikramrathi', 'ajaydeshmukh', 'fcroad'],
       nodes: [
-        { name: 'Sameer Khan (Baba Bhai)', role: 'Syndicate Kingpin / Caller', category: 'person', risk: 'high', link: 'Coordinates mule fund withdrawals & VoIP calling.' },
+        { name: 'Sameer Khan (Baba Bhai)', role: 'Syndicate Kingpin / Caller', category: 'person', risk: 'high', link: 'Coordinates mule fund withdrawals and VoIP calling.' },
         { name: '+91 98811 55421', role: 'Primary burner SIM (Jio 5G)', category: 'phone', risk: 'high', link: 'Active near FC Road Tower (Cell ID: PN-CY-482).' },
-        { name: 'MH-12-PQ-9081 (Swift)', role: 'Logistics / Mobility Asset', category: 'vehicle', risk: 'medium', link: 'Spotted at ATM cash-out clusters in Shivajinagar & Kothrud.' },
-        { name: 'HDFC - 50100492817291', role: 'Primary Layering Mule Account', category: 'bank', risk: 'high', link: 'Received INR 14.50L from victim; 6 rapid outgoing transfers.' },
-        { name: 'Vikram Rathi', role: 'Technical Mule Manager', category: 'person', risk: 'high', link: 'Manages fake digital bond certificates & fake KYC portals.' },
+        { name: 'MH-12-PQ-9081 (Swift)', role: 'Logistics / Mobility Asset', category: 'vehicle', risk: 'medium', link: 'Spotted at ATM cash-out clusters in Shivajinagar and Kothrud.' },
+        { name: 'HDFC-50100492817291', role: 'Primary Layering Mule Account', category: 'bank', risk: 'high', link: 'Received INR 14.50L from victim; 6 rapid outgoing transfers.' },
+        { name: 'Vikram Rathi', role: 'Technical Mule Manager', category: 'person', risk: 'high', link: 'Manages fake digital bond certificates and fake KYC portals.' },
         { name: 'Ajay Deshmukh', role: 'Cash Courier / ATM Mule', category: 'person', risk: 'medium', link: 'Withdrew INR 3.80L from Deccan Gymkhana ATM.' }
       ],
       firs: [
@@ -67,13 +67,13 @@ export function performAIAnalysis(queryText, streamType = 'all') {
         imeiOverlap: '864291048821902 (Dual SIM handset with 2 burner numbers)'
       },
       financialTrail: [
-        { step: 1, flow: 'Complainant (Rajesh Kulkarni)', target: 'HDFC - 50100492817291', amount: 'INR 14,50,000', note: 'Initial IMPS Transfer' },
-        { step: 2, flow: 'HDFC - 50100492817291', target: 'ICICI Mule - 0021948102', amount: 'INR 6,50,000', note: 'Split Layering' },
-        { step: 3, flow: 'HDFC - 50100492817291', target: 'Axis Mule - 91201004812', amount: 'INR 4,20,000', note: 'Split Layering' },
-        { step: 4, flow: 'ICICI / Axis Mule Accounts', target: 'Deccan ATM Cash-Out (Ajay Deshmukh)', amount: 'INR 3,80,000', note: 'Physical Cash Withdrawal' }
+        { step: 1, flow: 'Complainant (Rajesh Kulkarni)', target: 'HDFC-50100492817291', amount: 'INR 14,50,000', note: 'Initial IMPS Transfer' },
+        { step: 2, flow: 'HDFC-50100492817291', target: 'ICICI-0021948102', amount: 'INR 6,50,000', note: 'Split Layering' },
+        { step: 3, flow: 'HDFC-50100492817291', target: 'AXIS-91201004812', amount: 'INR 4,20,000', note: 'Split Layering' },
+        { step: 4, flow: 'ICICI / AXIS Mule Accounts', target: 'Deccan ATM Cash-Out (Ajay Deshmukh)', amount: 'INR 3,80,000', note: 'Physical Cash Withdrawal' }
       ],
       actions: [
-        { id: 'act_1', title: 'Issue Emergency Section 91 CrPC Notice', desc: 'Direct HDFC, ICICI, and Axis bank nodal officers to freeze linked mule accounts immediately.', priority: 'urgent' },
+        { id: 'act_1', title: 'Issue Emergency Section 91 CrPC Notice', desc: 'Direct HDFC, ICICI, and AXIS bank nodal officers to freeze linked mule accounts immediately.', priority: 'urgent' },
         { id: 'act_2', title: 'Tower Dump & IMEI Intercept', desc: 'Request CDR/IPDR for Cell ID PN-CY-482 and IMEI 864291048821902 from Telecom Service Providers.', priority: 'high' },
         { id: 'act_3', title: 'ANPR Vehicle Intercept (BOLO)', desc: 'Broadcast alert to Pune City traffic ANPR cameras for white Swift MH-12-PQ-9081.', priority: 'high' },
         { id: 'act_4', title: 'Unified Organized Crime Docket', desc: 'Merge FIR-MH-2026-4821 and FIR-MH-2026-1940 into single joint syndicate chargesheet under MCOCA/IPC 120B.', priority: 'medium' }
@@ -81,32 +81,34 @@ export function performAIAnalysis(queryText, streamType = 'all') {
     },
     {
       id: 'syn_02',
-      name: 'Deccan Hawala & Mule Consortium',
-      type: 'Financial Laundering & Mule Network',
+      name: 'Swargate Extortion & Hawala Ring',
+      type: 'Extortion & Unregistered Financial Routing',
       threat: 'ELEVATED',
       confidence: 88,
-      modusOperandi: 'Recruits college students and blue-collar workers for bank account opening under false commission promises. Uses digital banking credentials to channel illicit extortion and betting funds.',
-      triggers: ['arjunpawar', '9130', 'hdfc9130', 'sureshshinde', 'punehawala'],
+      modusOperandi: 'Extortion protection racket collecting weekly cash from commercial transport operators and laundering via Bank of Maharashtra mule accounts.',
+      triggers: ['arjunpawar', 'sureshshinde', 'rohitsalunkhe', '9819944312', '9765588910', 'bom60129948102', 'pnswr312', 'fir-mh-2026-2811'],
       nodes: [
-        { name: 'Arjun Pawar', role: 'Recruiter / Account Handler', category: 'person', risk: 'medium', link: 'Controls 12 verified UPI handles across Pune district.' },
-        { name: 'Account •• 9130', role: 'Mule Aggregator Account', category: 'bank', risk: 'high', link: 'High velocity turnover (> 40 transactions/day).' },
-        { name: 'Suresh Shinde', role: 'Beneficiary / Cash Operator', category: 'person', risk: 'high', link: 'Associated with unauthorized money lending and hawala.' }
+        { name: 'Suresh Shinde', role: 'Extortion Ringmaster / Hawala Operator', category: 'person', risk: 'high', link: 'Coordinates intimidation calls and off-ledger hawala couriers.' },
+        { name: 'Arjun Pawar', role: 'Enforcer / Account Holder', category: 'person', risk: 'medium', link: 'Recruits mules and collects extortion payoffs.' },
+        { name: 'Rohit Salunkhe', role: 'Field Intimidator / Delivery Asset', category: 'person', risk: 'medium', link: 'Delivers physical extortion threat slips.' },
+        { name: 'BOM-60129948102', role: 'Extortion Collection Mule Account', category: 'bank', risk: 'high', link: 'Layering hub for micro-deposits totaling INR 8.90L.' },
+        { name: 'Cell Tower PN-SWR-312', role: 'Swargate Bus Terminal Cell Site', category: 'cell_tower', risk: 'medium', link: 'Co-location sector for suspect communication bursts.' }
       ],
       firs: [
-        { firNo: 'FIR-MH-2026-2811', station: 'Swargate Police Station', sections: 'IPC 406, 420, 34', date: '2026-06-19', status: 'Charge-sheet Under Preparation' }
+        { firNo: 'FIR-MH-2026-2811', station: 'Swargate Police Station', sections: 'IPC 384, 386, 120B', date: '2026-06-19', status: 'Charge-sheet Under Preparation' }
       ],
       cdrEvidence: {
         totalCalls: 89,
         suspiciousNightCalls: 19,
-        commonTower: 'PN-SW-104 (Swargate Bus Depot Sector)',
+        commonTower: 'PN-SWR-312 (Swargate Bus Depot Sector)',
         imeiOverlap: '358291024781901'
       },
       financialTrail: [
-        { step: 1, flow: 'Multiple Small UPI Credits (48 transactions)', target: 'Account •• 9130', amount: 'INR 22,40,000', note: 'Aggregated micro-deposits' },
-        { step: 2, flow: 'Account •• 9130', target: 'Hawala Courier Cash Handover', amount: 'INR 20,00,000', note: 'Off-ledger settlement' }
+        { step: 1, flow: 'Transport Operator Payoffs (Multiple credits)', target: 'BOM-60129948102', amount: 'INR 8,90,000', note: 'Aggregated extortion deposits' },
+        { step: 2, flow: 'BOM-60129948102', target: 'Hawala Courier Cash Handover (Suresh Shinde)', amount: 'INR 7,50,000', note: 'Off-ledger settlement' }
       ],
       actions: [
-        { id: 'act_5', title: 'Freeze Bank Accounts under PMLA', desc: 'Liaise with FIU-IND and Cyber Crime Cell to freeze Account •• 9130 and related UPI Virtual Payment Addresses.', priority: 'urgent' },
+        { id: 'act_5', title: 'Freeze Bank Accounts under PMLA', desc: 'Liaise with Bank of Maharashtra nodal officer to freeze BOM-60129948102 immediately.', priority: 'urgent' },
         { id: 'act_6', title: 'Summon Account Holder for Interrogation', desc: 'Issue summons under Section 41A CrPC to Arjun Pawar.', priority: 'high' }
       ]
     }
@@ -316,6 +318,13 @@ export function renderAIAnalysis(c) {
   const sampleChips = el('div', { class: 'ai-sample-chips' }, [
     el('span', { class: 'chips-label' }, ['Quick Scan Presets:']),
     ...sampleQueries.map(sq => {
+      let iconName = 'sparkle';
+      if (sq.type === 'phone') iconName = 'pulse';
+      if (sq.type === 'vehicle') iconName = 'grid';
+      if (sq.type === 'bank') iconName = 'database';
+      if (sq.type === 'person') iconName = 'user';
+      if (sq.type === 'clean') iconName = 'check';
+
       const chip = el('button', {
         class: `ai-sample-chip ${state.aiAnalysis.query === sq.query ? 'active' : ''}`,
         title: sq.desc,
@@ -327,7 +336,7 @@ export function renderAIAnalysis(c) {
           performAIAnalysis(sq.query, 'all');
           notifyStateChange();
         }
-      }, [sq.label]);
+      }, [icon(iconName), el('span', {}, [sq.label])]);
       return chip;
     })
   ]);

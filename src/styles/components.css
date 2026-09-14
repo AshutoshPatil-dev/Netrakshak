@@ -32,7 +32,7 @@
 }
 .primary-btn.small { padding: 10px 14px; }
 .outline-btn {
-  border: 1px solid var(--app-blue);
+  border: 1.5px solid var(--app-blue);
   background: #fff;
   color: var(--app-blue);
 }
@@ -43,6 +43,42 @@
 }
 .outline-btn:active {
   transform: translateY(0);
+}
+.btn-secondary,
+.secondary-btn {
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1.5px solid var(--app-border, #CBD5E1);
+  background: #FFFFFF;
+  color: var(--app-text, #0F172A);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-secondary:hover,
+.secondary-btn:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: var(--app-blue, #2563EB);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+.btn-secondary:active,
+.secondary-btn:active {
+  transform: translateY(0);
+}
+.btn-secondary.btn-sm,
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
 }
 .text-btn {
   color: var(--blue); background: transparent;
