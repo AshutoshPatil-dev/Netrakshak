@@ -1412,6 +1412,7 @@ export function renderInvestigationLaunchpad(c) {
 // ACTIVE NETWORK GRAPH INVESTIGATION VIEW (After entity selected)
 // --------------------------------------------------------------------------
 export function renderActiveNetworkWorkspace(c) {
+  const isSat = !!state.graphSatelliteMode;
   const analyticalEntities = graphMetrics(entities, edges);
 
   // Compute visibility set
