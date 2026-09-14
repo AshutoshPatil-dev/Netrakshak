@@ -2,6 +2,7 @@ import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import { state, entities, edges, firCases, getActiveOfficer, notifyStateChange } from '../state.js';
 import { supabaseConfigured } from '../lib/supabase.js';
+import { runCryptographicAudit } from '../lib/integrity.js';
 
 export function renderSources(c) {
   c.innerHTML = '';
@@ -25,90 +26,243 @@ export function renderSources(c) {
     return;
   }
 
-  c.append(
-    el('div', { class: 'page-heading' }, [
-      el('div', {}, [
-        el('div', { class: 'eyebrow blue' }, ['GOVERNANCE · DATA INTEGRITY & LEDGER']),
-        el('h1', {}, [t('sources')]),
-        el('p', { class: 'muted' }, ['Operational database tables, cryptographic audit anchors, and storage volumes.'])
-      ]),
-      el('button', { class: 'primary-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('upload'), 'Intake FIR Case'])
-    ]),
+  // Auto-run audit if not yet completed
+  if (!state.integrityAuditResult && !state.isIntegrityAuditing) {
+    runCryptographicAudit();
+  }
 
-    // Top Governance & Integrity Metric Cards
-    el('div', { class: 'metric-grid' }, [
-      el('div', { class: 'metric-card metric-purple' }, [
-        el('div', { class: 'metric-top' }, [
-          el('span', { class: 'metric-label' }, [t('integrity')]),
-          el('span', { class: 'metric-spark' }, [icon('shield')])
-        ]),
-        el('strong', { class: 'metric-value' }, [supabaseConfigured ? '100%' : 'Local']),
-        el('span', { class: 'metric-foot' }, ['Ledger active'])
+  const audit = state.integrityAuditResult;
+  const isAuditing = state.isIntegrityAuditing;
+  const integrityScore = audit ? audit.integrityPercentage : (supabaseConfigured ? 100 : 100);
+  const hasBreaches = audit ? audit.hasBreaches : false;
+  const missingFilesCount = audit ? audit.missingFiles : 0;
+  const tamperedFilesCount = audit ? audit.tamperedFiles : 0;
+  const compromisedTablesCount = audit ? audit.compromisedTables : 0;
+
+  // Header
+  const header = el('div', { class: 'page-heading' }, [
+    el('div', {}, [
+      el('div', { class: 'eyebrow blue' }, ['GOVERNANCE · DATA INTEGRITY & LEDGER']),
+      el('h1', {}, [t('sources')]),
+      el('p', { class: 'muted' }, ['Real-time cryptographic SHA-256 evidence verification, audit hash-chains, and database health.'])
+    ]),
+    el('div', { style: 'display: flex; gap: 10px;' }, [
+      el('button', {
+        class: `primary-btn ${isAuditing ? 'loading' : ''}`,
+        disabled: isAuditing,
+        onclick: async () => {
+          await runCryptographicAudit();
+        }
+      }, [icon('check'), isAuditing ? 'Verifying Hashes…' : 'Run Cryptographic Audit']),
+      el('button', { class: 'outline-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('upload'), 'Intake FIR Case'])
+    ])
+  ]);
+
+  // Top Governance & Integrity Metric Cards
+  const metrics = el('div', { class: 'metric-grid' }, [
+    el('div', { class: `metric-card ${hasBreaches ? 'metric-red' : 'metric-purple'}` }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, [t('integrity')]),
+        el('span', { class: 'metric-spark' }, [icon(hasBreaches ? 'alert' : 'shield')])
       ]),
-      el('div', { class: 'metric-card metric-blue' }, [
-        el('div', { class: 'metric-top' }, [
-          el('span', { class: 'metric-label' }, ['Database Tables']),
-          el('span', { class: 'metric-spark' }, [icon('database')])
-        ]),
-        el('strong', { class: 'metric-value' }, ['6 Core']),
-        el('span', { class: 'metric-foot' }, ['PostgreSQL RLS Protected'])
+      el('strong', { class: 'metric-value', style: hasBreaches ? 'color: #DC2626;' : '' }, [
+        isAuditing ? '…' : `${integrityScore}%`
       ]),
-      el('div', { class: 'metric-card metric-green' }, [
-        el('div', { class: 'metric-top' }, [
-          el('span', { class: 'metric-label' }, ['Audit Hash Chain']),
-          el('span', { class: 'metric-spark' }, [icon('check')])
-        ]),
-        el('strong', { class: 'metric-value' }, [String(state.auditLogs.length)]),
-        el('span', { class: 'metric-foot' }, ['SHA-256 Fingerprinted'])
-      ]),
-      el('div', { class: 'metric-card metric-red' }, [
-        el('div', { class: 'metric-top' }, [
-          el('span', { class: 'metric-label' }, ['Evidence Vaults']),
-          el('span', { class: 'metric-spark' }, [icon('file')])
-        ]),
-        el('strong', { class: 'metric-value' }, ['1 Private']),
-        el('span', { class: 'metric-foot' }, ['Encrypted Evidence Storage'])
+      el('span', { class: 'metric-foot' }, [
+        hasBreaches ? '⚠ Breaches Detected' : 'All Signatures Verified'
       ])
     ]),
-
-    el('div', { class: 'source-grid', style: 'margin-top: 18px;' }, [
-      ['public.entities', 'Master entity records', String(entities.length) + ' records', 'live', 'Persons, organizations, vehicles, phones, accounts'],
-      ['public.relationships', 'Graph linkages and edges', String(edges.length) + ' connections', 'live', 'Multi-entity association matrix'],
-      ['public.fir_cases', 'Registered FIR cases', String(firCases.length) + ' cases', 'live', 'Police station case filings and extracts'],
-      ['public.profiles', 'Registered law-enforcement profiles', String(state.officers.length) + ' officers', 'live', 'Linked to Central Identity and IAM'],
-      ['public.audit_events', 'Cryptographic activity audit', String(state.auditLogs.length) + ' events', 'verified', 'SHA-256 fingerprinted event trail'],
-      ['Storage: fir-evidence', 'Encrypted evidence storage', 'Private bucket', 'verified', 'RLS-protected investigator vaults']
-    ].map(([a, b, cx, status, d]) => el('div', { class: 'source-card' }, [
-      el('div', { class: 'source-card-top' }, [
-        el('div', { class: 'source-symbol' }, [icon(status === 'verified' ? 'check' : 'database')]),
-        el('span', { class: 'source-status ' + status }, [status === 'verified' ? 'Active' : 'Live'])
+    el('div', { class: 'metric-card metric-blue' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Database Tables']),
+        el('span', { class: 'metric-spark' }, [icon('database')])
       ]),
-      el('h3', {}, [a]),
-      el('p', { class: 'muted' }, [b]),
-      el('div', { class: 'source-divider' }),
-      el('span', {}, [cx]),
-      el('small', {}, [d])
-    ]))),
+      el('strong', { class: 'metric-value' }, [
+        audit ? `${audit.operationalTables}/${audit.totalTables}` : '8 Core'
+      ]),
+      el('span', { class: 'metric-foot' }, [
+        compromisedTablesCount > 0 ? `${compromisedTablesCount} Tables Compromised` : 'PostgreSQL RLS Protected'
+      ])
+    ]),
+    el('div', { class: 'metric-card metric-green' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Evidence Files']),
+        el('span', { class: 'metric-spark' }, [icon('file')])
+      ]),
+      el('strong', { class: 'metric-value' }, [
+        audit ? `${audit.verifiedFiles}/${audit.totalFiles}` : String(state.evidenceItems?.length || 0)
+      ]),
+      el('span', { class: 'metric-foot' }, [
+        missingFilesCount > 0 ? `${missingFilesCount} Missing from Vault` : 'SHA-256 Fingerprinted'
+      ])
+    ]),
+    el('div', { class: 'metric-card metric-amber' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Audit Hash Chain']),
+        el('span', { class: 'metric-spark' }, [icon('check')])
+      ]),
+      el('strong', { class: 'metric-value' }, [String(state.auditLogs.length)]),
+      el('span', { class: 'metric-foot' }, ['Immutable Ledger Trail'])
+    ])
+  ]);
 
-    el('div', { class: 'panel integrity-panel', style: 'margin-top: 18px;' }, [
-      el('div', { class: 'panel-heading' }, [
-        el('div', {}, [
-          el('h3', {}, [t('integrityChecks')]),
-          el('span', { class: 'muted' }, [supabaseConfigured ? 'Connected to Police Cloud' : 'Local storage mode'])
+  // Breach Alert Banner
+  let alertBanner = null;
+  if (audit) {
+    if (hasBreaches) {
+      const breachItems = [];
+      if (missingFilesCount > 0) {
+        breachItems.push(`${missingFilesCount} evidence file(s) deleted from Supabase Storage Vault (404 Not Found in bucket).`);
+      }
+      if (tamperedFilesCount > 0) {
+        breachItems.push(`${tamperedFilesCount} evidence file(s) modified or corrupted (SHA-256 hash mismatch detected).`);
+      }
+      if (compromisedTablesCount > 0) {
+        breachItems.push(`${compromisedTablesCount} database table(s) inaccessible, dropped, or permission restricted.`);
+      }
+
+      alertBanner = el('div', { class: 'integrity-breach-banner' }, [
+        el('div', { class: 'breach-banner-icon' }, ['⚠']),
+        el('div', { class: 'breach-banner-content' }, [
+          el('h4', {}, ['Critical Evidence Integrity Alert']),
+          el('p', {}, ['The real-time cryptographic audit detected missing or tampered resources across your storage bucket and database tables:']),
+          el('ul', { class: 'breach-bullet-list' }, breachItems.map(item => el('li', {}, [item])))
+        ])
+      ]);
+    } else {
+      alertBanner = el('div', { class: 'integrity-breach-banner all-good' }, [
+        el('div', { class: 'breach-banner-icon' }, [icon('check')]),
+        el('div', { class: 'breach-banner-content' }, [
+          el('h4', {}, ['Evidence Vault & Ledger Intact']),
+          el('p', {}, ['All storage files in fir-evidence match their recorded SHA-256 cryptographic signatures. All PostgreSQL core tables are operational and protected with Row Level Security (RLS).'])
+        ])
+      ]);
+    }
+  }
+
+  // Action Status Bar
+  const actionBar = el('div', { class: 'audit-action-bar' }, [
+    el('div', { class: 'audit-status-text' }, [
+      el('span', { class: `audit-pulse-dot ${hasBreaches ? 'breached' : ''}` }),
+      el('strong', {}, [isAuditing ? 'Audit in progress…' : (hasBreaches ? 'Integrity Status: Compromised' : 'Integrity Status: Verified')]),
+      el('span', { class: 'muted' }, [audit ? `(Last audited: ${audit.formattedTime})` : ''])
+    ]),
+    el('button', {
+      class: 'outline-btn',
+      disabled: isAuditing,
+      onclick: async () => {
+        await runCryptographicAudit();
+      }
+    }, [icon('refresh'), 'Re-Verify Storage & Tables'])
+  ]);
+
+  // Evidence Files SHA-256 Verification Table
+  const evidenceRows = (audit?.evidenceResults || []).map(res => {
+    let statusClass = 'verified';
+    let statusLabel = 'VERIFIED (200 OK)';
+    if (res.status === 'DELETED') {
+      statusClass = 'deleted';
+      statusLabel = 'DELETED / 404 NOT FOUND';
+    } else if (res.status === 'TAMPERED') {
+      statusClass = 'tampered';
+      statusLabel = 'CHECKSUM MISMATCH';
+    }
+
+    return el('tr', {}, [
+      el('td', {}, [
+        el('strong', { style: 'display: block; color: var(--navy);' }, [res.description]),
+        el('small', { class: 'muted' }, [res.storagePath || 'No storage path'])
+      ]),
+      el('td', {}, [
+        el('span', { class: 'hash-pill', title: res.expectedHash || 'None' }, [
+          res.expectedHash ? `${res.expectedHash.slice(0, 16)}…${res.expectedHash.slice(-8)}` : 'None'
         ])
       ]),
-      el('div', { class: 'integrity-items' }, [
-        ['hashChain', 'Cryptographic SHA-256 hashing', String(state.auditLogs.length) + ' events fingerprinted'],
-        ['ledger', 'Evidence Chain of Custody', 'Enabled and active'],
-        ['access', 'Row Level Security (RLS)', supabaseConfigured ? 'Enforced by Database' : 'Active']
-      ].map(([a, b, d]) => el('div', { class: 'integrity-item' }, [
-        el('span', { class: 'integrity-check' }, [icon('check')]),
-        el('div', {}, [
-          el('strong', {}, [a === 'hashChain' ? t('hashChain') : a === 'ledger' ? t('ledger') : 'Access controls']),
-          el('span', {}, [b])
-        ]),
-        el('strong', { class: 'integrity-value' }, [d])
-      ])))
+      el('td', {}, [
+        el('span', { class: 'hash-pill', title: res.actualHash || res.details }, [
+          res.actualHash ? `${res.actualHash.slice(0, 16)}…${res.actualHash.slice(-8)}` : (res.status === 'DELETED' ? '404 NOT FOUND' : '-')
+        ])
+      ]),
+      el('td', {}, [
+        el('span', { class: `status-pill-badge ${statusClass}` }, [
+          icon(res.status === 'VERIFIED' ? 'check' : 'alert'),
+          statusLabel
+        ])
+      ]),
+      el('td', {}, [
+        el('small', { style: res.status === 'VERIFIED' ? 'color: #166534;' : 'color: #991B1B;' }, [res.details])
+      ])
+    ]);
+  });
+
+  const evidenceTableCard = el('div', { class: 'integrity-table-card' }, [
+    el('div', { class: 'integrity-table-header' }, [
+      el('h3', {}, ['Evidence Vault SHA-256 Signatures Audit']),
+      el('span', { class: 'muted', style: 'font-size: 11px;' }, [`${audit?.verifiedFiles || 0}/${audit?.totalFiles || 0} Files Intact`])
+    ]),
+    evidenceRows.length > 0
+      ? el('table', { class: 'integrity-table' }, [
+          el('thead', {}, [
+            el('tr', {}, [
+              el('th', {}, ['Evidence Asset / Path']),
+              el('th', {}, ['Registered SHA-256 Fingerprint']),
+              el('th', {}, ['Live Storage Bucket Hash']),
+              el('th', {}, ['Status']),
+              el('th', {}, ['Audit Diagnostic'])
+            ])
+          ]),
+          el('tbody', {}, evidenceRows)
+        ])
+      : el('div', { style: 'padding: 24px; text-align: center; color: var(--muted); font-size: 11px;' }, [
+          'No evidence files registered in database registry.'
+        ])
+  ]);
+
+  // Database Tables Health Table
+  const tableRows = (audit?.tableResults || []).map(tRes => {
+    const isOk = tRes.healthy;
+    return el('tr', {}, [
+      el('td', {}, [el('strong', {}, [tRes.tableName])]),
+      el('td', {}, [`${tRes.count} records`]),
+      el('td', {}, [
+        el('span', { class: `status-pill-badge ${isOk ? 'operational' : 'dropped'}` }, [
+          icon(isOk ? 'check' : 'alert'),
+          isOk ? 'OPERATIONAL' : 'COMPROMISED'
+        ])
+      ]),
+      el('td', {}, [
+        el('small', { style: isOk ? 'color: var(--slate);' : 'color: #DC2626;' }, [
+          isOk ? 'RLS Policy Active · Healthy Connection' : (tRes.error || 'Connection Failed / Table Dropped')
+        ])
+      ])
+    ]);
+  });
+
+  const databaseTableCard = el('div', { class: 'integrity-table-card' }, [
+    el('div', { class: 'integrity-table-header' }, [
+      el('h3', {}, ['PostgreSQL Core Tables & RLS Status']),
+      el('span', { class: 'muted', style: 'font-size: 11px;' }, [`${audit?.operationalTables || 0}/${audit?.totalTables || 0} Tables Healthy`])
+    ]),
+    el('table', { class: 'integrity-table' }, [
+      el('thead', {}, [
+        el('tr', {}, [
+          el('th', {}, ['Table Name']),
+          el('th', {}, ['Live Row Count']),
+          el('th', {}, ['Status']),
+          el('th', {}, ['Security / Health Diagnostic'])
+        ])
+      ]),
+      el('tbody', {}, tableRows)
     ])
+  ]);
+
+  c.append(
+    header,
+    metrics,
+    alertBanner || el('div'),
+    actionBar,
+    evidenceTableCard,
+    databaseTableCard
   );
 }
+

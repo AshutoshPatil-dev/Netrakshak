@@ -1,6 +1,6 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, getActiveOfficer, saveOfficers, recordAudit, notifyStateChange } from '../state.js';
+import { state, getActiveOfficer, saveOfficers, recordAudit, notifyStateChange, loadSupabaseData } from '../state.js';
 import { supabase, supabaseConfigured, createOfficerAccount } from '../lib/supabase.js';
 import { showToast } from '../components/Toast.js';
 
@@ -267,6 +267,7 @@ export function renderOfficers(c) {
                 role
               });
               if (createdId) newId = createdId;
+              await loadSupabaseData();
             } catch (authErr) {
               console.error('Supabase officer registration error:', authErr);
               showToast(`Notice: ${authErr.message || 'Could not register in Supabase Auth'}`);
@@ -285,7 +286,9 @@ export function renderOfficers(c) {
             role,
             isYou: false
           };
-          state.officers.push(newOff);
+          if (!state.officers.some(o => o.id === newId || (o.email && o.email.toLowerCase() === email.toLowerCase()))) {
+            state.officers.push(newOff);
+          }
           saveOfficers();
           recordAudit('Officer added', `New officer profile created: ${name} (${rank}, ${district}).`, 'info', 'officer');
           showToast(t('officerAdded'));
