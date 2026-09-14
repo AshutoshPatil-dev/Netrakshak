@@ -13,8 +13,7 @@ import { renderAIAnalysis } from './views/AIAnalysisView.js';
 import { renderEntityProfile } from './views/EntityProfileView.js';
 import { renderEntities } from './views/EntitiesView.js';
 
-// Ensure zoom is normalized
-document.body.style.zoom = '1';
+
 
 
 function getViewRenderer() {
@@ -50,6 +49,27 @@ registerRender(render);
 // Boot
 render();
 bootstrapAuth();
+
+// Listen for browser hash changes (Back/Forward navigation)
+window.addEventListener('hashchange', () => {
+  const hashView = window.location.hash.replace(/^#\/?/, '').trim();
+  const VALID_VIEWS = [
+    'overview',
+    'entities',
+    'network',
+    'patterns',
+    'entity_profile',
+    'fir',
+    'ai_analysis',
+    'officers',
+    'audit_logs',
+    'sources'
+  ];
+  if (VALID_VIEWS.includes(hashView) && state.view !== hashView) {
+    state.view = hashView;
+    render();
+  }
+});
 
 // Fullscreen change sync
 document.addEventListener('fullscreenchange', () => {

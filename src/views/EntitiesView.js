@@ -1,4 +1,5 @@
 import { el, icon } from '../lib/dom.js';
+import { t } from '../i18n/index.js';
 import {
   state,
   entities,
@@ -27,13 +28,13 @@ export function renderEntities(c) {
 
   // Type filter categories
   const categories = [
-    { id: 'all', label: 'All Entities', count: analyticalEntities.length },
-    { id: 'Person', label: 'Suspects & Persons', count: analyticalEntities.filter(e => e.type === 'Person').length },
-    { id: 'Phone', label: 'Phones / SIMs', count: analyticalEntities.filter(e => e.type === 'Phone').length },
-    { id: 'Vehicle', label: 'Vehicles', count: analyticalEntities.filter(e => e.type === 'Vehicle').length },
-    { id: 'Bank', label: 'Bank & Mule Accounts', count: analyticalEntities.filter(e => e.type === 'Bank').length },
-    { id: 'Location', label: 'Cell Towers & Places', count: analyticalEntities.filter(e => e.type === 'Location').length },
-    { id: 'Organization', label: 'Shell Companies', count: analyticalEntities.filter(e => e.type === 'Organization').length }
+    { id: 'all', label: t('allEntities'), count: analyticalEntities.length },
+    { id: 'Person', label: t('suspectsPersons'), count: analyticalEntities.filter(e => e.type === 'Person').length },
+    { id: 'Phone', label: t('phonesSims'), count: analyticalEntities.filter(e => e.type === 'Phone').length },
+    { id: 'Vehicle', label: t('vehicles'), count: analyticalEntities.filter(e => e.type === 'Vehicle').length },
+    { id: 'Bank', label: t('bankMuleAccounts'), count: analyticalEntities.filter(e => e.type === 'Bank').length },
+    { id: 'Location', label: t('cellTowersPlaces'), count: analyticalEntities.filter(e => e.type === 'Location').length },
+    { id: 'Organization', label: t('shellCompanies'), count: analyticalEntities.filter(e => e.type === 'Organization').length }
   ];
 
   // Filter entities
@@ -90,19 +91,17 @@ export function renderEntities(c) {
   // Header section
   const header = el('div', { class: 'entities-view-header' }, [
     el('div', { class: 'entities-header-text' }, [
-      el('h1', { class: 'page-title' }, ['Entities & Dossiers']),
-      el('p', { class: 'page-subtitle' }, [
-        'Explore all cross-case entities, FIRs, suspects, burner SIMs, vehicles, and mule accounts with comprehensive investigative dossiers.'
-      ])
+      el('h1', { class: 'page-title' }, [t('entitiesTitle')]),
+      el('p', { class: 'page-subtitle' }, [t('entitiesSubtitle')])
     ]),
     el('div', { class: 'entities-header-stats' }, [
       el('div', { class: 'header-stat-pill' }, [
         el('strong', {}, [String(analyticalEntities.length)]),
-        el('span', {}, ['Total Entities'])
+        el('span', {}, [t('totalEntities')])
       ]),
       el('div', { class: 'header-stat-pill' }, [
         el('strong', {}, [String(edges.length)]),
-        el('span', {}, ['Verified Links'])
+        el('span', {}, [t('verifiedLinks')])
       ])
     ])
   ]);
@@ -111,7 +110,7 @@ export function renderEntities(c) {
   const searchInput = el('input', {
     type: 'text',
     class: 'entities-search-input',
-    placeholder: 'Search any entity, FIR no, phone, vehicle plate, bank account, alias, role...',
+    placeholder: t('searchEntitiesPlaceholder'),
     value: state.entitiesTab.query || '',
     oninput: (ev) => {
       state.entitiesTab.query = ev.target.value;
@@ -142,11 +141,11 @@ export function renderEntities(c) {
       renderEntities(c);
     }
   }, [
-    el('option', { value: 'recent', selected: state.entitiesTab.sort === 'recent' }, ['Sort: Latest Activity / Added (Default)']),
-    el('option', { value: 'risk', selected: state.entitiesTab.sort === 'risk' }, ['Sort: Highest Risk First']),
-    el('option', { value: 'connections', selected: state.entitiesTab.sort === 'connections' }, ['Sort: Most Connected First']),
-    el('option', { value: 'name_asc', selected: state.entitiesTab.sort === 'name_asc' }, ['Sort: Name (A - Z)']),
-    el('option', { value: 'name_desc', selected: state.entitiesTab.sort === 'name_desc' }, ['Sort: Name (Z - A)'])
+    el('option', { value: 'recent', selected: state.entitiesTab.sort === 'recent' }, [t('sortLatest')]),
+    el('option', { value: 'risk', selected: state.entitiesTab.sort === 'risk' }, [t('sortRisk')]),
+    el('option', { value: 'connections', selected: state.entitiesTab.sort === 'connections' }, [t('sortConnections')]),
+    el('option', { value: 'name_asc', selected: state.entitiesTab.sort === 'name_asc' }, [t('sortNameAsc')]),
+    el('option', { value: 'name_desc', selected: state.entitiesTab.sort === 'name_desc' }, [t('sortNameDesc')])
   ]);
 
   const topControls = el('div', { class: 'entities-top-controls' }, [
