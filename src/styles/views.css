@@ -214,30 +214,59 @@
 .result-count { margin-left: auto; color: var(--muted); font-size: 11px; }
 
 /* Unified Network Workspace */
+.workspace:has(.network-mode),
+.workspace:has(.network-workspace),
+.main-area:has(.network-mode),
 .main-area:has(.network-workspace) {
   overflow: hidden !important;
-}
-
-.content:has(.network-workspace) {
-  padding: 10px 14px 10px 14px !important;
   height: 100% !important;
   max-height: calc(100vh - 64px) !important;
+}
+
+.content.network-mode,
+.content:has(.network-workspace) {
+  padding: 8px 12px 8px 12px !important;
+  height: 100% !important;
+  max-height: calc(100vh - 64px) !important;
+  min-height: 0 !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
 }
 
+.network-mode .network-workspace,
 .network-workspace {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  max-height: 100%;
-  flex: 1;
-  min-height: 0;
-  box-sizing: border-box;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.network-mode .network-grid,
+.network-workspace .network-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 340px !important;
+  gap: 10px !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: calc(100% - 46px) !important;
+  max-height: calc(100% - 46px) !important;
+  overflow: hidden !important;
+}
+
+.network-mode .graph-panel,
+.network-workspace .graph-panel {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 .network-top-strip {

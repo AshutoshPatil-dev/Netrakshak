@@ -376,6 +376,21 @@ export function mountLeafletMap(visibleNodes) {
       renderSatelliteMapPins(visibleNodes);
     }
 
+    // Prevent container scrolling or upward jump on focus
+    mapContainer.addEventListener('mousedown', () => {
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) {
+        mainArea.scrollTop = 0;
+      }
+    }, { capture: true, passive: true });
+
+    mapContainer.addEventListener('touchstart', () => {
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) {
+        mainArea.scrollTop = 0;
+      }
+    }, { capture: true, passive: true });
+
     leafletMapInstance.on('moveend', () => {
       if (!leafletMapInstance) return;
       const center = leafletMapInstance.getCenter();
@@ -388,7 +403,9 @@ export function mountLeafletMap(visibleNodes) {
 
     setTimeout(() => {
       if (leafletMapInstance) leafletMapInstance.invalidateSize();
-    }, 100);
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) mainArea.scrollTop = 0;
+    }, 50);
   } catch (err) {
     console.warn('Leaflet map initialization notice:', err);
   }
@@ -1822,6 +1839,9 @@ export function renderActiveNetworkWorkspace(c) {
 
   n.append(topStrip, el('div', { class: 'network-grid' }, [graph, entityAside]));
   c.append(n);
+
+  const mainArea = document.querySelector('.main-area');
+  if (mainArea) mainArea.scrollTop = 0;
 
   if (visibleNodes.length > 0) {
     lastRenderedGraphSignature = graphSignature;
