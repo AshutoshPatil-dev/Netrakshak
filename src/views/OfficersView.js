@@ -214,6 +214,7 @@ export function renderOfficers(c) {
       const stateVal = form.querySelector('[name="state"]').value.trim();
       const email = form.querySelector('[name="email"]').value.trim();
       const phone = form.querySelector('[name="phone"]').value.trim();
+      const password = form.querySelector('[name="password"]')?.value?.trim() || '';
       const role = state.officerFormRole || 'case-officer';
 
       if (editingOfficer) {
@@ -223,6 +224,9 @@ export function renderOfficers(c) {
         editingOfficer.state = stateVal;
         editingOfficer.email = email;
         editingOfficer.phone = phone;
+        if (password && password !== '********') {
+          editingOfficer.password = password;
+        }
         // Never allow changing your own role
         if (!editingOfficer.isYou) editingOfficer.role = role;
         saveOfficers();
@@ -250,6 +254,7 @@ export function renderOfficers(c) {
           state: stateVal || 'Maharashtra',
           email,
           phone,
+          password: password || 'password123',
           role,
           isYou: false
         };
