@@ -119,7 +119,7 @@ export const DEFAULT_OFFICERS = [
     rank: 'Sub-Inspector',
     cadre: 'MH Cadre',
     badge_no: 'MH-ACP-011',
-    district: 'Pune HQ',
+    district: 'Pune',
     state: 'Maharashtra',
     email: 'chaudhariyash3006@gmail.com',
     password: 'password123',
@@ -135,19 +135,11 @@ export function loadSavedOfficers() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const filtered = parsed.filter(o => !['off_anil', 'off_priya', 'off_vikas', 'off_neha', 'off_ashutosh'].includes(o.id));
-        if (filtered.length > 0) {
-          const map = new Map();
-          DEFAULT_OFFICERS.forEach(d => map.set(d.id, { ...d }));
-          filtered.forEach(f => map.set(f.id, { ...(map.get(f.id) || {}), ...f }));
-          return Array.from(map.values());
-        }
+        return parsed;
       }
     }
-    return [...DEFAULT_OFFICERS];
-  } catch (e) {
-    return [...DEFAULT_OFFICERS];
-  }
+  } catch (e) {}
+  return [...DEFAULT_OFFICERS];
 }
 
 export function loadSavedAuditLogs() {
