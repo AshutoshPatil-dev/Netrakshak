@@ -44,6 +44,16 @@ let currentLabelLayer = null;
 let leafletMarkersGroup = null;
 let leafletEdgesGroup = null;
 
+// Ensure Leaflet map and Sigma canvas adapt smoothly to browser zoom and window resize
+window.addEventListener('resize', () => {
+  if (leafletMapInstance) {
+    try { leafletMapInstance.invalidateSize(); } catch (e) {}
+  }
+  if (sigmaInstance) {
+    try { sigmaInstance.refresh(); } catch (e) {}
+  }
+}, { passive: true });
+
 export const GEO_PRESETS = [
   { name: 'Pune: Shivajinagar & FC Road', lat: 18.5284, lng: 73.8415, zoom: 15 },
   { name: 'Pune: Swargate Timber Market', lat: 18.5018, lng: 73.8580, zoom: 15 },
@@ -943,7 +953,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
     el('div', { class: 'inspector-title-row' }, [
       el('div', { class: 'inspector-title-wrap' }, [
         icon('shield'),
-        el('span', { class: 'inspector-title' }, ['Intelligence Inspector'])
+        el('span', { class: 'inspector-title' }, [t('intelligenceInspector')])
       ]),
       entity ? el('span', { class: 'inspector-live-dot', title: 'Target locked' }, ['● ACTIVE']) : null
     ].filter(Boolean)),
@@ -951,15 +961,15 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'dossier' ? 'active' : ''}`,
         onclick: () => setTab('dossier')
-      }, [icon('user'), ' Dossier']),
+      }, [icon('user'), ` ${t('dossier')}`]),
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'links' ? 'active' : ''}`,
         onclick: () => setTab('links')
-      }, [icon('network'), ` Links (${connectedLinks.length})`]),
+      }, [icon('network'), ` ${t('links')} (${connectedLinks.length})`]),
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'directory' ? 'active' : ''}`,
         onclick: () => setTab('directory')
-      }, [icon('grid'), ` Directory (${allEntities.length})`])
+      }, [icon('grid'), ` ${t('directory')} (${allEntities.length})`])
     ])
   ]);
 
@@ -969,8 +979,8 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
     if (!entity) {
       tabBody = el('div', { class: 'inspector-empty-state' }, [
         el('div', { class: 'inspector-empty-icon' }, [icon('network')]),
-        el('h4', {}, ['No Entity Selected']),
-        el('p', { class: 'muted' }, ['Click any node on the network graph or select from the directory to inspect situational intelligence.'])
+        el('h4', {}, [t('noResults')]),
+        el('p', { class: 'muted' }, [t('clickEntityToGenerate')])
       ]);
     } else {
       const typeColor = objectTypeColors[entity.type] || '#1E293B';
@@ -986,7 +996,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
           el('div', { class: 'inspector-hero-main' }, [
             el('div', { class: 'inspector-pill-row' }, [
               el('span', { class: 'inspector-type-pill', style: `background:${typeColor}15;color:${typeColor}` }, [entity.type]),
-              el('span', { class: `risk-badge ${entity.risk || 'low'}` }, [`${(entity.risk || 'LOW').toUpperCase()} RISK`])
+              el('span', { class: `risk-badge ${entity.risk || 'low'}` }, [`${(entity.risk || 'LOW').toUpperCase()} ${t('risk').toUpperCase()}`])
             ].filter(Boolean)),
             el('h3', { class: 'inspector-entity-name' }, [entity.name]),
             el('p', { class: 'inspector-entity-sub' }, [entity.role || entity.local || `${entity.type} Record`])
@@ -997,7 +1007,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
         el('div', { class: 'inspector-sitrep-box' }, [
           el('div', { class: 'sitrep-header' }, [
             icon('sparkle'),
-            el('strong', {}, ['Situational Summary:'])
+            el('strong', {}, [t('situationalSummary')])
           ]),
           el('p', { class: 'sitrep-text' }, [summaryText])
         ]),
@@ -1005,15 +1015,15 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
         // Quick Stats
         el('div', { class: 'inspector-stats-row' }, [
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Direct Links']),
+            el('span', { class: 'stat-lbl' }, [t('directLinks')]),
             el('strong', { class: 'stat-val' }, [String(connectedLinks.length)])
           ]),
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Activity Rank']),
+            el('span', { class: 'stat-lbl' }, [t('activityRank')]),
             el('strong', { class: 'stat-val' }, [`${entity.recent || 50}%`])
           ]),
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Risk Level']),
+            el('span', { class: 'stat-lbl' }, [t('riskLevel')]),
             el('strong', { class: `stat-val risk-${entity.risk || 'low'}` }, [(entity.risk || 'LOW').toUpperCase()])
           ])
         ]),
@@ -1027,7 +1037,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
               openEntityProfile(entity.id);
               showToast(`Opening profile for ${entity.name}`);
             }
-          }, [icon('user'), ' Full Profile →']),
+          }, [icon('user'), ` ${t('fullProfile')} →`]),
           el('button', {
             class: 'inspector-action-btn',
             title: 'Scan AI linkages and syndicate patterns',
@@ -1348,10 +1358,10 @@ export function renderInvestigationLaunchpad(c) {
   // Top Page Heading
   const heading = el('div', { class: 'page-heading' }, [
     el('div', {}, [
-      el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE INVESTIGATION COMMAND']),
-      el('h1', {}, ['Network Graph Investigation']),
+      el('div', { class: 'eyebrow blue' }, [t('intelligenceInvestigationCommand')]),
+      el('h1', {}, [t('investigationLaunchpad')]),
       el('p', { class: 'muted' }, [
-        'Search or select any starting FIR case, person, vehicle, phone, bank account or cell tower to generate and progressively explore connected criminal relationships.'
+        t('investigationLaunchpadDesc')
       ])
     ]),
     el('div', { class: 'heading-actions' }, [
@@ -1362,24 +1372,24 @@ export function renderInvestigationLaunchpad(c) {
           showFullGraphUniverse();
           showToast('Loaded full network universe');
         }
-      }, [icon('network'), ' Open Full Graph Canvas →']),
+      }, [icon('network'), ` ${t('openFullGraphCanvas')} →`]),
       el('button', {
         class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
-      }, [icon('file'), ' New FIR Intake'])
+      }, [icon('file'), ` ${t('newFIRIntake')}`])
     ])
   ]);
 
   // Fast Category Statistics Pills
   const categoryStats = el('div', { class: 'launchpad-stats-row' }, [
-    { type: 'all', label: 'All Records', count: allLaunchpadItems.length, iconName: 'shield', color: '#0F172A' },
-    { type: 'fir case', label: 'FIR Cases', count: totalCases, iconName: 'file', color: objectTypeColors['FIR Case'] },
-    { type: 'person', label: 'Suspects & Persons', count: totalPersons, iconName: 'user', color: objectTypeColors.Person },
-    { type: 'vehicle', label: 'Vehicles', count: totalVehicles, iconName: 'grid', color: objectTypeColors.Vehicle },
-    { type: 'phone', label: 'Phones / SIMs', count: totalPhones, iconName: 'pulse', color: objectTypeColors.Phone },
-    { type: 'bank', label: 'Mule Accounts', count: totalBanks, iconName: 'database', color: objectTypeColors.Bank },
-    { type: 'location', label: 'Cell Towers', count: totalTowers, iconName: 'network', color: objectTypeColors.Location },
-    { type: 'organization', label: 'Shell Companies', count: totalOrgs, iconName: 'shield', color: objectTypeColors.Organization }
+    { type: 'all', label: t('allRecords'), count: allLaunchpadItems.length, iconName: 'shield', color: '#0F172A' },
+    { type: 'fir case', label: t('firCases'), count: totalCases, iconName: 'file', color: objectTypeColors['FIR Case'] },
+    { type: 'person', label: t('suspectsPersons'), count: totalPersons, iconName: 'user', color: objectTypeColors.Person },
+    { type: 'vehicle', label: t('vehicles'), count: totalVehicles, iconName: 'grid', color: objectTypeColors.Vehicle },
+    { type: 'phone', label: t('phonesSims'), count: totalPhones, iconName: 'pulse', color: objectTypeColors.Phone },
+    { type: 'bank', label: t('muleAccounts'), count: totalBanks, iconName: 'database', color: objectTypeColors.Bank },
+    { type: 'location', label: t('cellTowers'), count: totalTowers, iconName: 'network', color: objectTypeColors.Location },
+    { type: 'organization', label: t('shellCompanies'), count: totalOrgs, iconName: 'shield', color: objectTypeColors.Organization }
   ].map(cat => {
     const isSelected = state.type.toLowerCase() === cat.type.toLowerCase();
     const card = el('button', {
@@ -1402,7 +1412,7 @@ export function renderInvestigationLaunchpad(c) {
   const searchInput = el('input', {
     type: 'text',
     class: 'launchpad-search-input',
-    placeholder: 'Search by Case ID, Accused name, Mobile (+91), Vehicle Reg, Mule Account, Tower ID or Section...',
+    placeholder: t('searchLaunchpadPlaceholder'),
     value: state.query || ''
   });
 
@@ -1417,10 +1427,10 @@ export function renderInvestigationLaunchpad(c) {
   }, ['✕']);
 
   const sortOptions = [
-    ['connections', 'Sort by Connection Links'],
-    ['risk', 'Sort by Risk Level'],
-    ['name', 'Sort by Name / Identifier'],
-    ['recent', 'Sort by Recent Activity']
+    ['connections', t('sortByConnections')],
+    ['risk', t('sortByRisk')],
+    ['name', t('sortByName')],
+    ['recent', t('sortByRecent')]
   ];
   const sortSelect = el('select', { class: 'filter-select' }, sortOptions.map(([v, l]) => {
     const o = el('option', { value: v }, [l]);
@@ -1439,19 +1449,19 @@ export function renderInvestigationLaunchpad(c) {
       clearBtn
     ]),
     el('div', { class: 'launchpad-sort-group' }, [
-      el('span', { class: 'toolbar-label' }, ['Sort by:']),
+      el('span', { class: 'toolbar-label' }, [`${t('filter')}:`]),
       sortSelect
     ])
   ]);
 
   // Results Grid
-  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} matching records`]);
+  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} ${t('matchingRecords')}`]);
   const resultsHeader = el('div', { class: 'launchpad-results-header' }, [
     el('div', { class: 'results-count-title' }, [
-      el('h3', {}, ['Select an Investigation Focal Point']),
+      el('h3', {}, [t('selectInvestigationFocalPoint')]),
       countPill
     ]),
-    el('span', { class: 'results-hint' }, ['Click any entity or FIR to generate its network relationship graph'])
+    el('span', { class: 'results-hint' }, [t('clickEntityToGenerate')])
   ]);
 
   const emptyStateBox = el('div', {
@@ -1459,8 +1469,8 @@ export function renderInvestigationLaunchpad(c) {
     style: sorted.length === 0 ? '' : 'display: none;'
   }, [
     el('div', { class: 'empty-icon' }, [icon('search')]),
-    el('h3', {}, ['No Records Found']),
-    el('p', { class: 'muted empty-search-msg' }, ['No records matching search query in active intelligence database.']),
+    el('h3', {}, [t('noRecordsFound')]),
+    el('p', { class: 'muted empty-search-msg' }, [t('noRecordsMatching')]),
     el('button', {
       class: 'outline-btn small',
       onclick: () => {
@@ -1468,7 +1478,7 @@ export function renderInvestigationLaunchpad(c) {
         searchInput.value = '';
         updateLaunchpadFilter('');
       }
-    }, ['Clear Search Filter'])
+    }, [t('clearSearchFilter')])
   ]);
 
   const cardsGrid = el('div', { class: 'launchpad-cards-grid' }, [emptyStateBox]);
@@ -1690,7 +1700,7 @@ export function renderActiveNetworkWorkspace(c) {
         renderSatelliteMapPins(visibleNodes);
         showToast(state.graphMapConfig.pinsLockedAll ? '🔒 All Pins Locked in Place' : '📍 Pins Draggable');
       }
-    }, [isAllPinsLocked ? '🔒 Pins: Locked' : '📍 Pins: Moveable']);
+    }, [isAllPinsLocked ? `🔒 ${t('pinsLocked')}` : `📍 ${t('pinsMoveable')}`]);
 
     const mapLockBtn = el('button', {
       class: `strip-btn ${isMapLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
@@ -1702,7 +1712,7 @@ export function renderActiveNetworkWorkspace(c) {
         applyMapLockState();
         showToast(state.graphMapConfig.locked ? '🔒 Map Viewport Locked' : '🗺 Pan Map (Interactive)');
       }
-    }, [isMapLocked ? '🔒 Map Locked' : '🗺 Pan Map']);
+    }, [isMapLocked ? `🔒 ${t('mapLockedText')}` : `🗺 ${t('panMapText')}`]);
 
     satControls = [
       el('div', { class: 'strip-divider' }),
@@ -1722,10 +1732,10 @@ export function renderActiveNetworkWorkspace(c) {
           returnToGraphLaunchpad();
           showToast('Returned to Investigation Launchpad');
         }
-      }, [icon('undo'), ' Launchpad']),
+      }, [icon('undo'), ` ${t('launchpad')}`]),
       el('div', { class: 'strip-divider' }),
       el('div', { class: 'strip-select-wrap' }, [
-        el('span', { class: 'strip-label' }, ['Filter:']),
+        el('span', { class: 'strip-label' }, [`${t('filter')}:`]),
         typeSelect
       ]),
       ...satControls
@@ -1735,7 +1745,7 @@ export function renderActiveNetworkWorkspace(c) {
         class: 'strip-btn',
         title: 'Reset graph to starting investigation entity',
         onclick: () => { resetGraphExploration(); showToast('Reset exploration to start node'); }
-      }, [icon('undo'), ' Reset']),
+      }, [icon('undo'), ` ${t('reset')}`]),
       selectedEntity ? el('button', {
         class: 'strip-btn strip-highlight-btn',
         title: `Expand direct 1-hop connections for ${selectedEntity.name}`,
@@ -1743,7 +1753,7 @@ export function renderActiveNetworkWorkspace(c) {
           expandGraphNode(selectedEntity.id);
           showToast(`Expanded neighbors for ${selectedEntity.name}`);
         }
-      }, [icon('plus'), ` Expand (${getConnectedLinks(selectedEntity.id).length})`]) : null,
+      }, [icon('plus'), ` ${t('expand')} (${getConnectedLinks(selectedEntity.id).length})`]) : null,
       el('div', { class: 'strip-divider' }),
       el('button', {
         class: `strip-btn strip-sat-btn ${isSat ? 'active' : ''}`,
@@ -1752,9 +1762,9 @@ export function renderActiveNetworkWorkspace(c) {
           toggleGraphSatelliteMode();
           showToast(state.graphSatelliteMode ? '🛰 Satellite Map Background Enabled' : 'Standard Clean Graph Canvas Enabled');
         }
-      }, [icon('network'), isSat ? ' 🛰 Satellite Map: ON' : ' 🗺 Satellite Map: OFF']),
+      }, [icon('network'), isSat ? ` 🛰 ${t('satelliteView')}: ON` : ` 🗺 ${t('satelliteView')}: OFF`]),
       el('span', { class: 'strip-count' }, [
-        `${visibleNodes.length}/${entities.length} nodes`
+        `${visibleNodes.length}/${entities.length} ${t('nodes')}`
       ]),
       el('button', {
         class: 'strip-btn strip-icon-btn',

@@ -13,8 +13,7 @@ import { renderAIAnalysis } from './views/AIAnalysisView.js';
 import { renderEntityProfile } from './views/EntityProfileView.js';
 import { renderEntities } from './views/EntitiesView.js';
 
-// Ensure zoom is normalized
-document.body.style.zoom = '1';
+
 
 
 function getViewRenderer() {

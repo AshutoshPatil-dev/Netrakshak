@@ -20,7 +20,7 @@ export function intelligenceSummaryPanel() {
   const categories = [
     {
       type: 'FIR Case',
-      label: 'FIR Cases',
+      label: t('firCases'),
       iconName: 'file',
       count: firCases.length,
       onClick: () => {
@@ -30,7 +30,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Person',
-      label: 'Suspects & Persons',
+      label: t('suspectsPersons'),
       iconName: 'user',
       count: entities.filter(e => e.type === 'Person').length,
       onClick: () => {
@@ -41,7 +41,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Vehicle',
-      label: 'Vehicles',
+      label: t('vehicles'),
       iconName: 'grid',
       count: entities.filter(e => e.type === 'Vehicle').length,
       onClick: () => {
@@ -52,7 +52,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Phone',
-      label: 'Phones / SIMs',
+      label: t('phonesSims'),
       iconName: 'pulse',
       count: entities.filter(e => e.type === 'Phone').length,
       onClick: () => {
@@ -63,7 +63,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Bank',
-      label: 'Mule Accounts',
+      label: t('muleAccounts'),
       iconName: 'database',
       count: entities.filter(e => e.type === 'Bank').length,
       onClick: () => {
@@ -74,7 +74,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Location',
-      label: 'Cell Towers',
+      label: t('cellTowers'),
       iconName: 'network',
       count: entities.filter(e => e.type === 'Location').length,
       onClick: () => {
@@ -85,7 +85,7 @@ export function intelligenceSummaryPanel() {
     },
     {
       type: 'Organization',
-      label: 'Shell Companies',
+      label: t('shellCompanies'),
       iconName: 'shield',
       count: entities.filter(e => e.type === 'Organization').length,
       onClick: () => {
@@ -99,13 +99,13 @@ export function intelligenceSummaryPanel() {
   return el('section', { class: 'panel' }, [
     el('div', { class: 'panel-heading' }, [
       el('div', {}, [
-        el('h3', {}, ['Intelligence Multi-Object Summary']),
-        el('span', { class: 'muted' }, ['Active entities across the intelligence database'])
+        el('h3', {}, [t('multiObjectSummary')]),
+        el('span', { class: 'muted' }, [t('activeEntitiesDesc')])
       ]),
       el('button', {
         class: 'text-btn',
         onclick: () => { state.view = 'network'; notifyStateChange(); }
-      }, ['Explore Graph', icon('arrow')])
+      }, [t('exploreGraph'), icon('arrow')])
     ]),
     el('div', { style: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; padding: 14px 0;' }, categories.map(cat => {
       const color = objectTypeColors[cat.type] || '#1E293B';
@@ -132,22 +132,22 @@ export function riskPanel() {
     el('div', { class: 'panel-heading' }, [
       el('div', {}, [
         el('h3', {}, [t('riskPulse')]),
-        el('span', { class: 'muted' }, ['Risk Level Summary'])
+        el('span', { class: 'muted' }, [t('riskSummary')])
       ]),
       el('button', { class: 'icon-btn', onclick: () => showToast(t('refreshed')) }, ['•••'])
     ]),
     el('div', { style: 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 0;' }, [
       el('div', { style: 'background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 14px; text-align: center;' }, [
         el('strong', { style: 'display: block; font-size: 24px; color: #DC2626;' }, [String(high)]),
-        el('span', { style: 'font-size: 11px; font-weight: 600; color: #991B1B;' }, ['HIGH RISK'])
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #991B1B;' }, [t('highRisk')])
       ]),
       el('div', { style: 'background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 14px; text-align: center;' }, [
         el('strong', { style: 'display: block; font-size: 24px; color: #D97706;' }, [String(medium)]),
-        el('span', { style: 'font-size: 11px; font-weight: 600; color: #92400E;' }, ['MEDIUM RISK'])
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #92400E;' }, [t('mediumRisk')])
       ]),
       el('div', { style: 'background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 14px; text-align: center;' }, [
         el('strong', { style: 'display: block; font-size: 24px; color: #16A34A;' }, [String(low)]),
-        el('span', { style: 'font-size: 11px; font-weight: 600; color: #166534;' }, ['LOW RISK'])
+        el('span', { style: 'font-size: 11px; font-weight: 600; color: #166534;' }, [t('lowRisk')])
       ])
     ])
   ]);
@@ -161,7 +161,7 @@ export function renderOverview(c) {
     el('div', { class: 'case-main' }, [
       el('div', { class: 'case-icon' }, [icon('network')]),
       el('div', {}, [
-        el('strong', {}, [firCases[0].fir_number || 'FIR Case']),
+        el('strong', {}, [firCases[0].fir_number || t('fir')]),
         el('span', {}, [`${firCases[0].police_station || ''} · ${firCases[0].district || ''}`])
       ])
     ]),
@@ -174,11 +174,11 @@ export function renderOverview(c) {
     el('div', { class: 'case-main' }, [
       el('div', { class: 'case-icon' }, [icon('file')]),
       el('div', {}, [
-        el('strong', {}, ['No Active Investigation Cases']),
-        el('span', {}, ['Record an FIR or intake evidence to initiate criminal linkage analysis.'])
+        el('strong', {}, [t('noActiveCases')]),
+        el('span', {}, [t('noActiveCasesDesc')])
       ])
     ]),
-    el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('plus'), 'New FIR Intake'])
+    el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('plus'), t('newFIRIntake')])
   ]);
 
   c.append(
@@ -191,10 +191,10 @@ export function renderOverview(c) {
       el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; notifyStateChange(); } }, [icon('network'), t('viewNetwork')])
     ]),
     el('div', { class: 'metric-grid' }, [
-      card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
-      card(t('entities'), String(entities.length), 'Entities in database', 'metric-blue'),
-      card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
-      card(t('fir'), String(firCases.length), 'Registered FIR dossiers', 'metric-purple')
+      card(t('alerts'), String(highRiskCount), t('highRiskPriority'), 'metric-red'),
+      card(t('entities'), String(entities.length), t('entitiesInDb'), 'metric-blue'),
+      card(t('connections'), String(edges.length), t('verifiedLinkages'), 'metric-green'),
+      card(t('fir'), String(firCases.length), t('registeredFIRDossiers'), 'metric-purple')
     ]),
     el('div', { class: 'dashboard-grid' }, [intelligenceSummaryPanel(), riskPanel()]),
     el('div', { class: 'section-heading' }, [

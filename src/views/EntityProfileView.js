@@ -1,4 +1,5 @@
 import { el, icon } from '../lib/dom.js';
+import { t } from '../i18n/index.js';
 import {
   state,
   entities,
@@ -27,8 +28,8 @@ export function renderEntityProfile(c) {
 
   if (!entity) {
     c.append(el('div', { class: 'empty-profile-page' }, [
-      el('h3', {}, ['No Entity Selected']),
-      el('button', { class: 'primary-btn', onclick: () => backEntityProfile() }, ['← Back'])
+      el('h3', {}, [t('noResults')]),
+      el('button', { class: 'primary-btn', onclick: () => backEntityProfile() }, [`← ${t('back')}`])
     ]));
     return;
   }
@@ -53,13 +54,13 @@ export function renderEntityProfile(c) {
     onclick: () => backEntityProfile()
   }, [
     icon('arrow-left'),
-    ' Back'
+    ` ${t('back')}`
   ]);
 
   const topHeader = el('div', { class: 'entity-profile-top-bar' }, [
     el('div', { class: 'profile-top-left' }, [
       backBtn,
-      el('h1', { class: 'profile-page-title' }, ['Entity Profile'])
+      el('h1', { class: 'profile-page-title' }, [t('entityProfile')])
     ]),
     el('div', { class: 'profile-top-actions' }, [
       el('button', {
@@ -74,7 +75,7 @@ export function renderEntityProfile(c) {
           notifyStateChange();
           showToast(`Running AI Linkage scan for ${entity.name}...`);
         }
-      }, [icon('sparkle'), ' AI Analysis Hub']),
+      }, [icon('sparkle'), ` ${t('aiAnalysisHub')}`]),
       el('button', {
         class: 'primary-btn small',
         title: 'Generate interactive network graph',
@@ -84,7 +85,7 @@ export function renderEntityProfile(c) {
           notifyStateChange();
           showToast(`Generated network around ${entity.name}`);
         }
-      }, [icon('network'), ' View in Network Graph →'])
+      }, [icon('network'), ` ${t('viewInNetworkGraph')} →`])
     ])
   ]);
 
@@ -181,14 +182,14 @@ export function renderEntityProfile(c) {
 
   // 1. Column 1: Network Influence Card
   const influenceCard = el('div', { class: 'profile-column-card' }, [
-    el('h3', { class: 'col-card-title' }, ['Network Influence']),
+    el('h3', { class: 'col-card-title' }, [t('networkMetrics')]),
     el('p', { class: 'col-card-subtitle' }, [
-      `How influential this ${entity.type.toLowerCase()} is inside the network - each value is relative to the strongest node for that measure in this case.`
+      `How influential this ${entity.type.toLowerCase()} is inside the network.`
     ]),
     el('div', { class: 'influence-metrics-list' }, [
       el('div', { class: 'influence-metric-group' }, [
         el('div', { class: 'metric-header-row' }, [
-          el('strong', { class: 'metric-title' }, ['Direct Connections']),
+          el('strong', { class: 'metric-title' }, [t('directConnections')]),
           el('span', { class: 'metric-pct' }, [`${directConnections}%`])
         ]),
         renderProgressBar(directConnections),
@@ -196,15 +197,15 @@ export function renderEntityProfile(c) {
       ]),
       el('div', { class: 'influence-metric-group' }, [
         el('div', { class: 'metric-header-row' }, [
-          el('strong', { class: 'metric-title' }, ['Go-Between']),
+          el('strong', { class: 'metric-title' }, [t('bridgePotential')]),
           el('span', { class: 'metric-pct' }, [`${goBetween}%`])
         ]),
         renderProgressBar(goBetween),
-        el('p', { class: 'metric-desc' }, [`How often this ${entity.type.toLowerCase()} sits between people or groups that are not directly linked - the link that holds the network together.`])
+        el('p', { class: 'metric-desc' }, [`How often this ${entity.type.toLowerCase()} sits between people or groups that are not directly linked.`])
       ]),
       el('div', { class: 'influence-metric-group' }, [
         el('div', { class: 'metric-header-row' }, [
-          el('strong', { class: 'metric-title' }, ['Links to Key Players']),
+          el('strong', { class: 'metric-title' }, [t('keyPlayerInfluence')]),
           el('span', { class: 'metric-pct' }, [`${linksToKeyPlayers}%`])
         ]),
         renderProgressBar(linksToKeyPlayers),
@@ -212,11 +213,11 @@ export function renderEntityProfile(c) {
       ]),
       el('div', { class: 'influence-metric-group' }, [
         el('div', { class: 'metric-header-row' }, [
-          el('strong', { class: 'metric-title' }, ['Overall Influence']),
+          el('strong', { class: 'metric-title' }, [t('betweennessCentrality')]),
           el('span', { class: 'metric-pct' }, [`${overallInfluence}%`])
         ]),
         renderProgressBar(overallInfluence),
-        el('p', { class: 'metric-desc' }, ['Their standing across the whole network - where an investigation should focus on.'])
+        el('p', { class: 'metric-desc' }, ['Their standing across the whole network.'])
       ])
     ])
   ]);
@@ -234,7 +235,7 @@ export function renderEntityProfile(c) {
   }).sort((a, b) => b.date.localeCompare(a.date));
 
   const timelineCard = el('div', { class: 'profile-column-card' }, [
-    el('h3', { class: 'col-card-title' }, ['Activity Timeline']),
+    el('h3', { class: 'col-card-title' }, [t('timelineEvents')]),
     timelineEvents.length > 0 ? el('div', { class: 'profile-timeline-flow' }, timelineEvents.map(ev => {
       const p = ev.partner;
       return el('div', { class: 'timeline-entry-row' }, [
@@ -253,13 +254,13 @@ export function renderEntityProfile(c) {
           ])
         ])
       ]);
-    })) : el('div', { class: 'empty-timeline-box' }, ['No recorded chronological events for this entity.'])
+    })) : el('div', { class: 'empty-timeline-box' }, [t('noResults')])
   ]);
 
   // 3. Column 3: Associated Nodes Card
   const associatedCard = el('div', { class: 'profile-column-card' }, [
     el('div', { class: 'associated-header-row' }, [
-      el('h3', { class: 'col-card-title' }, [`Associated Nodes (${connectedLinks.length})`])
+      el('h3', { class: 'col-card-title' }, [`${t('connectedEntities')} (${connectedLinks.length})`])
     ]),
     connectedLinks.length > 0 ? el('div', { class: 'associated-nodes-list' }, connectedLinks.map(link => {
       const p = link.partner;
@@ -285,7 +286,7 @@ export function renderEntityProfile(c) {
       ]);
 
       return nodeRow;
-    })) : el('div', { class: 'empty-associated-box' }, ['No direct links recorded.'])
+    })) : el('div', { class: 'empty-associated-box' }, [t('noResults')])
   ]);
 
   // Known Aliases Card

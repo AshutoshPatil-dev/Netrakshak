@@ -250,9 +250,9 @@ export function renderAIAnalysis(c) {
 
   const header = el('div', { class: 'section-header' }, [
     el('div', {}, [
-      el('h1', {}, ['AI Pattern & Syndicate Analysis']),
+      el('h1', {}, [t('aiPatternSyndicateAnalysis')]),
       el('p', { class: 'subtitle' }, [
-        'Universal multi-modal linkage engine: correlate phone numbers, vehicle registrations, bank accounts, suspect names, and case narratives across FIRs & CDR records to uncover hidden rackets.'
+        t('aiPatternSubtitle')
       ])
     ]),
     el('div', { class: 'header-actions' }, [
@@ -273,7 +273,7 @@ export function renderAIAnalysis(c) {
           URL.revokeObjectURL(url);
           showToast('✓ AI Intelligence Dossier exported successfully.');
         }
-      }, [icon('file'), ' Export Intelligence Dossier'])
+      }, [icon('file'), ` ${t('exportDossier')}`])
     ])
   ]);
 
@@ -281,17 +281,17 @@ export function renderAIAnalysis(c) {
   const searchInput = el('input', {
     type: 'text',
     class: 'ai-search-input',
-    placeholder: 'Enter phone number (+91…), vehicle plate (MH-12-…), bank account, person name, or lead note…',
+    placeholder: t('aiSearchPlaceholder'),
     value: state.aiAnalysis.query || ''
   });
 
   const streamSelect = el('select', { class: 'ai-stream-select' }, [
-    el('option', { value: 'all', selected: state.aiAnalysis.streamType === 'all' }, ['All Intelligence Streams']),
-    el('option', { value: 'phone', selected: state.aiAnalysis.streamType === 'phone' }, ['Phone / CDR Triangulation']),
-    el('option', { value: 'vehicle', selected: state.aiAnalysis.streamType === 'vehicle' }, ['Vehicle / Mobility']),
-    el('option', { value: 'bank', selected: state.aiAnalysis.streamType === 'bank' }, ['Bank & Mule Accounts']),
-    el('option', { value: 'person', selected: state.aiAnalysis.streamType === 'person' }, ['Person / Suspect Aliases']),
-    el('option', { value: 'narrative', selected: state.aiAnalysis.streamType === 'narrative' }, ['Unstructured Lead / FIR Narrative'])
+    el('option', { value: 'all', selected: state.aiAnalysis.streamType === 'all' }, [t('allIntelligenceStreams')]),
+    el('option', { value: 'phone', selected: state.aiAnalysis.streamType === 'phone' }, [t('phoneCDRTriangulation')]),
+    el('option', { value: 'vehicle', selected: state.aiAnalysis.streamType === 'vehicle' }, [t('vehicleMobility')]),
+    el('option', { value: 'bank', selected: state.aiAnalysis.streamType === 'bank' }, [t('bankMuleAccounts')]),
+    el('option', { value: 'person', selected: state.aiAnalysis.streamType === 'person' }, [t('personSuspectAliases')]),
+    el('option', { value: 'narrative', selected: state.aiAnalysis.streamType === 'narrative' }, [t('unstructuredLeadNarrative')])
   ]);
 
   const searchBtn = el('button', {
@@ -305,7 +305,7 @@ export function renderAIAnalysis(c) {
     }
   }, [
     icon('sparkle'),
-    el('span', {}, ['Run AI Linkage Scan'])
+    el('span', {}, [t('runAILinkageScan')])
   ]);
 
   // Enter key trigger
@@ -316,7 +316,7 @@ export function renderAIAnalysis(c) {
   };
 
   const sampleChips = el('div', { class: 'ai-sample-chips' }, [
-    el('span', { class: 'chips-label' }, ['Quick Scan Presets:']),
+    el('span', { class: 'chips-label' }, [t('quickScanPresets')]),
     ...sampleQueries.map(sq => {
       let iconName = 'sparkle';
       if (sq.type === 'phone') iconName = 'pulse';
