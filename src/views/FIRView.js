@@ -1444,7 +1444,7 @@ export function renderFIRDossiersList() {
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => {
-            state.view = 'aiAnalysis';
+            state.view = 'ai_analysis';
             state.aiAnalysis.query = firNo;
             performAIAnalysis(firNo, 'all');
             notifyStateChange();

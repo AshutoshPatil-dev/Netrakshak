@@ -4,11 +4,95 @@ import { getAccusedPhoto } from './lib/avatars.js';
 
 let renderCallback = null;
 
+export const VALID_VIEWS = [
+  'overview',
+  'entities',
+  'network',
+  'patterns',
+  'entity_profile',
+  'fir',
+  'ai_analysis',
+  'officers',
+  'audit_logs',
+  'sources'
+];
+
+export function getInitialView() {
+  try {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashView = window.location.hash.replace(/^#\/?/, '').trim();
+      if (VALID_VIEWS.includes(hashView)) {
+        return hashView;
+      }
+    }
+    const saved = localStorage.getItem('netrakshak_active_view');
+    if (saved && VALID_VIEWS.includes(saved)) {
+      return saved;
+    }
+  } catch (e) {}
+  return 'overview';
+}
+
+export function loadSavedGraphExploration() {
+  try {
+    const raw = localStorage.getItem('netrakshak_graph_exploration');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          active: Boolean(parsed.active),
+          mode: parsed.mode === 'all' ? 'all' : 'focused',
+          seedId: parsed.seedId || null,
+          previousSeedId: parsed.previousSeedId || null,
+          previousMode: parsed.previousMode || 'focused',
+          expandedNodeIds: Array.isArray(parsed.expandedNodeIds) ? parsed.expandedNodeIds : [],
+          hiddenNodeIds: Array.isArray(parsed.hiddenNodeIds) ? parsed.hiddenNodeIds : []
+        };
+      }
+    }
+  } catch (e) {}
+  return {
+    active: false,
+    mode: 'focused',
+    seedId: null,
+    previousSeedId: null,
+    previousMode: 'focused',
+    expandedNodeIds: [],
+    hiddenNodeIds: []
+  };
+}
+
 export function registerRender(cb) {
   renderCallback = cb;
 }
 
 export function notifyStateChange() {
+  try {
+    if (typeof state !== 'undefined') {
+      if (state.view && VALID_VIEWS.includes(state.view)) {
+        localStorage.setItem('netrakshak_active_view', state.view);
+        if (typeof window !== 'undefined' && window.location) {
+          const targetHash = `#/${state.view}`;
+          if (window.location.hash !== targetHash && window.location.hash !== `#${state.view}`) {
+            window.history.replaceState(null, '', targetHash);
+          }
+        }
+      }
+      if (state.graphExploration) {
+        localStorage.setItem('netrakshak_graph_exploration', JSON.stringify(state.graphExploration));
+      }
+      if (state.profileEntityId) {
+        localStorage.setItem('netrakshak_profile_entity_id', state.profileEntityId);
+      }
+      if (state.selected) {
+        localStorage.setItem('netrakshak_selected_entity', state.selected);
+      }
+      if (state.firMode) {
+        localStorage.setItem('netrakshak_fir_mode', state.firMode);
+      }
+    }
+  } catch (e) {}
+
   if (typeof renderCallback === 'function') {
     renderCallback();
   }
@@ -878,11 +962,11 @@ export const state = {
   authChecking: true,
   locale: localStorage.getItem('locale') || 'en',
   loggedIn: false,
-  view: 'overview',
+  view: getInitialView(),
   query: '',
   sort: 'risk',
   type: 'all',
-  selected: null,
+  selected: localStorage.getItem('netrakshak_selected_entity') || null,
   file: null,
   fileHash: '',
   filePath: '',
@@ -891,7 +975,7 @@ export const state = {
   graphMapConfig: loadSavedMapConfig(),
   sidebarCollapsed: false,
   fontScale: parseFloat(localStorage.getItem('font_scale')) || 1,
-  firMode: 'upload',
+  firMode: localStorage.getItem('netrakshak_fir_mode') || 'upload',
   manualEvidence: [],
   officers: loadSavedOfficers(),
   editingOfficerId: null,
@@ -904,7 +988,7 @@ export const state = {
   loginError: '',
   loginEmail: '',
   previewModalFile: null,
-  profileEntityId: null,
+  profileEntityId: localStorage.getItem('netrakshak_profile_entity_id') || null,
   profileHistory: [],
   previousViewBeforeProfile: 'network',
   graphSideTab: 'dossier',
@@ -913,15 +997,7 @@ export const state = {
   ocrEngine: 'auto', // 'auto', 'handwritten', 'printed'
   ocrScriptDetected: '',
   ocrConfidence: 0,
-  graphExploration: {
-    active: false, // false shows the full launchpad selection menu
-    mode: 'focused', // 'focused' or 'all'
-    seedId: null,
-    previousSeedId: null,
-    previousMode: 'focused',
-    expandedNodeIds: [],
-    hiddenNodeIds: []
-  },
+  graphExploration: loadSavedGraphExploration(),
   evidenceItems: [...DEFAULT_EVIDENCE_ITEMS],
   integrityAuditResult: null,
   isIntegrityAuditing: false
@@ -1741,6 +1817,11 @@ export async function signOutOfficer() {
   recordAudit('Logoff event', 'Signed out of session.', 'info', 'logoff').catch(() => {});
   localStorage.removeItem('demoSession');
   localStorage.removeItem('activeOfficerEmail');
+  localStorage.removeItem('netrakshak_active_view');
+  localStorage.removeItem('netrakshak_graph_exploration');
+  localStorage.removeItem('netrakshak_profile_entity_id');
+  localStorage.removeItem('netrakshak_selected_entity');
+  state.view = 'overview';
   state.loggedIn = false;
   state.loginError = '';
   state.loginEmail = '';
