@@ -280,7 +280,8 @@ export function renderOfficers(c) {
               await loadSupabaseData();
             } catch (authErr) {
               console.error('Supabase officer registration error:', authErr);
-              showToast(`Notice: ${authErr.message || 'Could not register in Supabase Auth'}`);
+              showToast(`Error: ${authErr.message || 'Could not register in Supabase'}`);
+              throw authErr;
             }
           }
 
@@ -303,13 +304,15 @@ export function renderOfficers(c) {
           saveOfficers();
           recordAudit('Officer added', `New officer profile created: ${name} (${rank}, ${district}).`, 'info', 'officer');
           showToast(t('officerAdded'));
+          form.reset();
         }
       } catch (err) {
         console.error('Officer save error:', err);
-        showToast(`Error: ${err.message || 'Failed to save officer'}`);
+        showToast(`Failed: ${err.message || 'Failed to save officer'}`);
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
+          submitBtn.textContent = editingOfficer ? t('saveChanges') : t('addOfficer');
         }
         notifyStateChange();
       }
