@@ -139,18 +139,38 @@ export function getExportFirData() {
 export function renderPrintableSheet(data) {
   const isBlank = !!data.isBlankTemplate;
 
+  // Helper for rendering values or clean fillable underlines
+  const valOrBlank = (val, isBold = false) => {
+    return el('div', { class: `print-value ${isBold ? 'bold' : ''}` }, [
+      val && val.trim() ? val.trim() : el('span', { class: 'print-blank-fill' }, ['\u00A0'])
+    ]);
+  };
+
+  // Helper for physical ruled writing lines
+  const renderRuledLines = (lineCount = 4) => {
+    const lines = [];
+    for (let i = 0; i < lineCount; i++) {
+      lines.push(el('div', { class: 'print-ruled-line-row' }));
+    }
+    return el('div', { class: 'print-ruled-lines-container' }, lines);
+  };
+
   return el('div', { class: 'fir-printable-sheet-root' }, [
     // Header
     el('div', { class: 'print-header-block' }, [
       el('div', { class: 'print-gov-title' }, ['MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)']),
       el('h1', { class: 'print-main-title' }, ['FIRST INFORMATION REPORT']),
       el('div', { class: 'print-subtitle-legal' }, ['(Crime & Criminal Intelligence MIS · Under Section 154 Cr.P.C. / BNSS 173)']),
-      el('div', { class: 'print-station-sub' }, [
-        'Police Station: ',
-        el('strong', { class: 'print-underline-text' }, [data.policeStation || '________________________________________']),
-        ' · District: ',
-        el('strong', { class: 'print-underline-text' }, [
-          data.district || data.state ? `${data.district || '____________________'}, ${data.state || 'Maharashtra'}` : '____________________, Maharashtra'
+      el('div', { class: 'print-station-sub-grid' }, [
+        el('div', { class: 'print-station-sub-item' }, [
+          el('span', { class: 'print-sub-label' }, ['Police Station:']),
+          el('span', { class: 'print-sub-line' }, [data.policeStation || '\u00A0'])
+        ]),
+        el('div', { class: 'print-station-sub-item' }, [
+          el('span', { class: 'print-sub-label' }, ['District:']),
+          el('span', { class: 'print-sub-line' }, [
+            data.district || data.state ? `${data.district || ''}${data.district && data.state ? ', ' : ''}${data.state || 'Maharashtra'}` : '\u00A0'
+          ])
         ])
       ])
     ]),
@@ -159,15 +179,15 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-3' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['FIR NUMBER / CASE REF']),
-        el('div', { class: 'print-value bold' }, [data.firNumber || '____________________'])
+        valOrBlank(data.firNumber, true)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['DATE OF OCCURRENCE']),
-        el('div', { class: 'print-value' }, [data.incidentDate || 'DD / MM / YYYY'])
+        valOrBlank(data.incidentDate)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['TIME OF INCIDENT']),
-        el('div', { class: 'print-value' }, [data.incidentTime || '______ HRS'])
+        valOrBlank(data.incidentTime)
       ])
     ]),
 
@@ -175,7 +195,7 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-1' }, [
       el('div', { class: 'print-field-box full' }, [
         el('span', { class: 'print-label' }, ['STATUTORY ACTS & SECTIONS']),
-        el('div', { class: 'print-value bold' }, [data.sections || '____________________________________________________________________________________'])
+        valOrBlank(data.sections, true)
       ])
     ]),
 
@@ -186,25 +206,25 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-3' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['NAME OF COMPLAINANT']),
-        el('div', { class: 'print-value' }, [data.complainantName || '____________________'])
+        valOrBlank(data.complainantName)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['AGE']),
-        el('div', { class: 'print-value' }, [data.complainantAge ? `${data.complainantAge} Years` : '______'])
+        valOrBlank(data.complainantAge ? `${data.complainantAge} Years` : '')
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ["FATHER'S / RELATIVE NAME"]),
-        el('div', { class: 'print-value' }, [data.complainantFather || '____________________'])
+        valOrBlank(data.complainantFather)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CONTACT MOBILE / PHONE']),
-        el('div', { class: 'print-value' }, [data.complainantPhone || '+91 ______________'])
+        valOrBlank(data.complainantPhone ? data.complainantPhone : '')
       ]),
       el('div', { class: 'print-field-box wide' }, [
         el('span', { class: 'print-label' }, ['PERMANENT / RESIDENTIAL ADDRESS']),
-        el('div', { class: 'print-value' }, [data.complainantAddress || '__________________________________________________________________'])
+        valOrBlank(data.complainantAddress)
       ])
     ]),
 
@@ -215,21 +235,21 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['PRIMARY ACCUSED NAME']),
-        el('div', { class: 'print-value bold' }, [data.subjectName || '____________________'])
+        valOrBlank(data.subjectName, true)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['KNOWN ALIASES / CYBER HANDLES']),
-        el('div', { class: 'print-value' }, [data.alias || '____________________'])
+        valOrBlank(data.alias)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CO-ACCUSED & CONSPIRATORS (COMMA SEPARATED)']),
-        el('div', { class: 'print-value' }, [data.otherAccused || '__________________________________________________'])
+        valOrBlank(data.otherAccused)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['INCIDENT LOCATION / PLACE OF OCCURRENCE']),
-        el('div', { class: 'print-value' }, [data.incidentLocation || '__________________________________________________'])
+        valOrBlank(data.incidentLocation)
       ])
     ]),
 
@@ -240,21 +260,21 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['ASSOCIATED PHONE / BURNER SIM']),
-        el('div', { class: 'print-value' }, [data.phone || '____________________'])
+        valOrBlank(data.phone)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['LOGISTICS / VEHICLE ASSET']),
-        el('div', { class: 'print-value' }, [data.vehicle || '____________________'])
+        valOrBlank(data.vehicle)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['MULE ACCOUNT / FINANCIAL ROUTE']),
-        el('div', { class: 'print-value' }, [data.bank || '__________________________________________________'])
+        valOrBlank(data.bank)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CELL TOWER / TRIANGULATION SECTOR']),
-        el('div', { class: 'print-value' }, [data.tower || '________________________________________'])
+        valOrBlank(data.tower)
       ])
     ]),
 
@@ -265,18 +285,18 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-narrative-block' }, [
       el('span', { class: 'print-label' }, ['DESCRIPTION OF CRIME & FACTUAL SEQUENCE']),
       el('div', { class: 'print-boxed-content' }, [
-        data.incidentSummary
-          ? el('p', { class: 'print-paragraph' }, [data.incidentSummary])
-          : el('div', { class: 'print-blank-lines' })
+        data.incidentSummary && data.incidentSummary.trim()
+          ? el('p', { class: 'print-paragraph' }, [data.incidentSummary.trim()])
+          : renderRuledLines(4)
       ])
     ]),
 
-    el('div', { class: 'print-narrative-block', style: 'margin-top: 10px;' }, [
+    el('div', { class: 'print-narrative-block', style: 'margin-top: 8px;' }, [
       el('span', { class: 'print-label' }, ['PROPERTY DEFRAUDED / STOLEN / SEIZED VALUABLES']),
       el('div', { class: 'print-boxed-content compact' }, [
-        data.propertySummary
-          ? el('p', { class: 'print-paragraph' }, [data.propertySummary])
-          : el('div', { class: 'print-blank-lines short' })
+        data.propertySummary && data.propertySummary.trim()
+          ? el('p', { class: 'print-paragraph' }, [data.propertySummary.trim()])
+          : renderRuledLines(3)
       ])
     ]),
 
@@ -303,13 +323,13 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-footer-signoff-row' }, [
       el('div', { class: 'print-signoff-left' }, [
         el('div', { class: 'print-action-taken' }, [
-          'Action taken: ',
-          el('span', {}, [data.actionTaken || '____________________________________________________________________________________'])
+          el('span', { class: 'print-label' }, ['ACTION TAKEN']),
+          el('div', { class: 'print-value' }, [data.actionTaken || el('span', { class: 'print-blank-fill' }, ['\u00A0'])])
         ]),
         el('div', { class: 'print-io-name' }, [
-          'Investigating Officer: ',
-          el('strong', {}, [
-            data.ioName ? `${data.ioName} (${data.ioRank}, ${data.ioDistrict})` : '____________________________________________________'
+          el('span', { class: 'print-label' }, ['INVESTIGATING OFFICER']),
+          el('div', { class: 'print-value' }, [
+            data.ioName ? `${data.ioName} (${data.ioRank}, ${data.ioDistrict})` : el('span', { class: 'print-blank-fill' }, ['\u00A0'])
           ])
         ]),
         el('div', { class: 'print-unit-tag' }, [
@@ -319,7 +339,9 @@ export function renderPrintableSheet(data) {
       el('div', { class: 'print-signoff-right' }, [
         el('div', { class: 'print-signature-box' }, [
           el('div', { class: 'signature-line-mark' }),
-          el('span', { class: 'sig-label' }, [`Signature of IO · Date: ${data.printDate || '____ / ____ / 20____'}`])
+          el('div', { class: 'sig-label', style: 'white-space: nowrap;' }, [
+            data.printDate ? `Signature of IO · Date: ${data.printDate}` : 'Signature of IO · Date: ____/____/20__'
+          ])
         ])
       ])
     ]),
