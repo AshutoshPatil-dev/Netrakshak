@@ -11,7 +11,7 @@ export const supabase = supabaseConfigured ? createClient(url, anonKey) : null;
  * Calls the secure PostgreSQL RPC function create_officer_account which creates the user
  * with auto-confirmed email so they can log in immediately.
  */
-export async function createOfficerAccount({ email, password, name, rank, district, state, phone, role }) {
+export async function createOfficerAccount({ email, password, name, rank, district, state, phone, role, badge_no }) {
   if (!supabaseConfigured) return null;
 
   const { data: rpcUserId, error: rpcError } = await supabase.rpc('create_officer_account', {
@@ -22,7 +22,8 @@ export async function createOfficerAccount({ email, password, name, rank, distri
     p_district: district || '',
     p_state: state || 'Maharashtra',
     p_phone: phone || '',
-    p_role: role || 'case-officer'
+    p_role: role || 'case-officer',
+    p_badge_no: badge_no || ''
   });
 
   if (rpcError) {

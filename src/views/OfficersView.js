@@ -152,9 +152,15 @@ export function renderOfficers(c) {
           el('input', { name: 'email', type: 'email', required: true, placeholder: 'officer@police.gov.in', value: editingOfficer ? editingOfficer.email : '' })
         ])
       ]),
-      el('div', { class: 'form-group' }, [
-        el('label', {}, [t('phone')]),
-        el('input', { name: 'phone', type: 'tel', placeholder: '+91-…', value: editingOfficer ? editingOfficer.phone : '' })
+      el('div', { class: 'form-row-2' }, [
+        el('div', { class: 'form-group' }, [
+          el('label', {}, ['Badge / Service No']),
+          el('input', { name: 'badgeNo', placeholder: 'e.g. MH-IPS-042', value: editingOfficer ? (editingOfficer.badge_no || '') : '' })
+        ]),
+        el('div', { class: 'form-group' }, [
+          el('label', {}, [t('phone')]),
+          el('input', { name: 'phone', type: 'tel', placeholder: '+91-…', value: editingOfficer ? editingOfficer.phone : '' })
+        ])
       ]),
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('initialPassword') + ' *']),
@@ -213,6 +219,7 @@ export function renderOfficers(c) {
       const district = form.querySelector('[name="district"]').value.trim();
       const stateVal = form.querySelector('[name="state"]').value.trim();
       const email = form.querySelector('[name="email"]').value.trim();
+      const badgeNo = form.querySelector('[name="badgeNo"]')?.value?.trim() || '';
       const phone = form.querySelector('[name="phone"]').value.trim();
       const password = form.querySelector('[name="password"]')?.value?.trim() || '';
       const role = state.officerFormRole || 'case-officer';
@@ -231,6 +238,7 @@ export function renderOfficers(c) {
           editingOfficer.state = stateVal;
           editingOfficer.email = email;
           editingOfficer.phone = phone;
+          editingOfficer.badge_no = badgeNo;
           if (password && password !== '********') {
             editingOfficer.password = password;
           }
@@ -247,6 +255,7 @@ export function renderOfficers(c) {
               state: stateVal,
               email,
               phone,
+              badge_no: badgeNo,
               role_name: role
             }).eq('id', editingOfficer.id);
           }
@@ -264,7 +273,8 @@ export function renderOfficers(c) {
                 district,
                 state: stateVal,
                 phone,
-                role
+                role,
+                badge_no: badgeNo
               });
               if (createdId) newId = createdId;
               await loadSupabaseData();
@@ -282,6 +292,7 @@ export function renderOfficers(c) {
             state: stateVal || 'Maharashtra',
             email,
             phone,
+            badge_no: badgeNo,
             password: password || 'password123',
             role,
             isYou: false
