@@ -24,6 +24,7 @@ import { showToast } from '../components/Toast.js';
 import { performAIAnalysis } from './AIAnalysisView.js';
 
 let sigmaInstance = null;
+let currentGraph = null;
 
 export const objectTypeColors = {
   Person: '#1E293B',
@@ -127,12 +128,125 @@ export function graphContainer(visibleNodes) {
 
 export function mountSigma(visibleNodes) {
   const container = document.querySelector('.sigma-container');
-  if (!container || container.classList.contains('empty-graph-shell')) return;
-  sigmaInstance?.kill();
-  const graph = new Graph();
+  if (!container || container.classList.contains('empty-graph-shell')) {
+    if (sigmaInstance) {
+      sigmaInstance.kill();
+      sigmaInstance = null;
+      currentGraph = null;
+    }
+    return;
+  }
 
   const seedId = state.graphExploration?.seedId;
   const isFocused = state.graphExploration?.mode === 'focused';
+  const visibleIds = new Set(visibleNodes.map(n => n.id));
+
+  // If Sigma is already mounted and running in this container, update graph in-place without canvas teardown!
+  if (sigmaInstance && currentGraph && container.querySelector('.sigma-stage')) {
+    // 1. Drop nodes no longer visible
+    currentGraph.nodes().forEach(nodeId => {
+      if (!visibleIds.has(nodeId)) {
+        currentGraph.dropNode(nodeId);
+      }
+    });
+
+    // 2. Add new nodes or update existing node attributes
+    visibleNodes.forEach((entity, index) => {
+      const isSeed = entity.id === seedId;
+      const isSelected = state.selected === entity.id;
+      const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || '#1E293B';
+      const allLinks = getConnectedLinks(entity.id);
+      const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
+
+      let nodeLabel = `[${entity.type}] ${entity.name}`;
+      if (unexploredCount > 0) {
+        nodeLabel += ` (+${unexploredCount})`;
+      }
+
+      let nodeSize = 8 + (entity.degree || 0) * 0.8;
+      if (isSeed) nodeSize = 15;
+      else if (isSelected) nodeSize = 12;
+
+      if (currentGraph.hasNode(entity.id)) {
+        currentGraph.mergeNodeAttributes(entity.id, {
+          label: nodeLabel,
+          size: nodeSize,
+          color: isSelected ? '#2563EB' : nodeColor,
+          isSeed,
+          isSelected,
+          unexploredCount
+        });
+      } else {
+        let x = 0;
+        let y = 0;
+        if (state.customNodePositions && state.customNodePositions[entity.id]) {
+          x = state.customNodePositions[entity.id].x;
+          y = state.customNodePositions[entity.id].y;
+        } else if (isFocused && isSeed) {
+          x = 0;
+          y = 0;
+        } else if (isFocused) {
+          const otherNodes = visibleNodes.filter(n => n.id !== seedId);
+          const posIndex = otherNodes.findIndex(n => n.id === entity.id);
+          const totalOthers = Math.max(otherNodes.length, 1);
+          const angle = (posIndex / totalOthers) * Math.PI * 2;
+          const radius = 0.35 + (posIndex % 2) * 0.12;
+          x = Math.cos(angle) * radius;
+          y = Math.sin(angle) * radius;
+        } else {
+          const angle = (index / Math.max(visibleNodes.length, 1)) * Math.PI * 2;
+          const radius = 0.28 + (index % 3) * 0.14;
+          x = entity.x ? entity.x / 700 - 0.5 : Math.cos(angle) * radius;
+          y = entity.y ? entity.y / 520 - 0.5 : Math.sin(angle) * radius;
+        }
+
+        currentGraph.addNode(entity.id, {
+          label: nodeLabel,
+          x,
+          y,
+          size: nodeSize,
+          color: isSelected ? '#2563EB' : nodeColor,
+          risk: entity.risk,
+          entityId: entity.id,
+          entityType: entity.type,
+          isSeed,
+          isSelected,
+          unexploredCount
+        });
+      }
+    });
+
+    // 3. Update / add edges
+    edges.forEach((edge) => {
+      const source = edge[0];
+      const target = edge[1];
+      const label = edge[2] || '';
+      if (visibleIds.has(source) && visibleIds.has(target)) {
+        const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+        if (!currentGraph.hasEdge(source, target)) {
+          currentGraph.addEdge(source, target, {
+            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            size: isConnectedToSelected ? 2.5 : 1.2,
+            type: 'line',
+            label
+          });
+        } else {
+          currentGraph.mergeEdgeAttributes(source, target, {
+            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            size: isConnectedToSelected ? 2.5 : 1.2
+          });
+        }
+      }
+    });
+
+    sigmaInstance.refresh();
+    return;
+  }
+
+  // Initial setup when canvas is newly rendered
+  sigmaInstance?.kill();
+  const graph = new Graph();
+  currentGraph = graph;
 
   visibleNodes.forEach((entity, index) => {
     const isSeed = entity.id === seedId;
@@ -164,7 +278,6 @@ export function mountSigma(visibleNodes) {
     }
 
     const allLinks = getConnectedLinks(entity.id);
-    const visibleIds = new Set(visibleNodes.map(n => n.id));
     const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
 
     let nodeLabel = `[${entity.type}] ${entity.name}`;
@@ -181,16 +294,16 @@ export function mountSigma(visibleNodes) {
       x,
       y,
       size: nodeSize,
-      color: nodeColor,
+      color: isSelected ? '#2563EB' : nodeColor,
       risk: entity.risk,
       entityId: entity.id,
       entityType: entity.type,
       isSeed,
+      isSelected,
       unexploredCount
     });
   });
 
-  const visibleIds = new Set(visibleNodes.map(n => n.id));
   edges.forEach((edge) => {
     const source = edge[0];
     const target = edge[1];
@@ -1072,6 +1185,27 @@ export function renderActiveNetworkWorkspace(c) {
     ].filter(Boolean))
   ]);
 
+  const existingWorkspace = c.querySelector('.network-workspace');
+  if (existingWorkspace) {
+    existingWorkspace.className = `network-workspace ${state.graphFullscreen ? 'fullscreen' : ''}`;
+    
+    const oldTopStrip = existingWorkspace.querySelector('.network-top-strip');
+    if (oldTopStrip) oldTopStrip.replaceWith(topStrip);
+
+    const oldInspector = existingWorkspace.querySelector('.graph-inspector');
+    const newInspector = renderGraphInspector(selectedEntity, analyticalEntities, visibleIds);
+    if (oldInspector) {
+      oldInspector.replaceWith(newInspector);
+    }
+
+    if (visibleNodes.length > 0) {
+      mountSigma(visibleNodes);
+    }
+    return;
+  }
+
+  // Full first-time render
+  c.innerHTML = '';
   const graph = el('section', { class: 'graph-panel' }, [
     graphContainer(visibleNodes),
     visibleNodes.length > 0 ? el('div', { class: 'graph-legend' }, [
@@ -1103,10 +1237,15 @@ export function renderActiveNetworkWorkspace(c) {
 // MAIN ENTRY POINT
 // --------------------------------------------------------------------------
 export function renderNetwork(c) {
-  c.innerHTML = '';
   if (state.graphExploration?.active) {
     renderActiveNetworkWorkspace(c);
   } else {
+    c.innerHTML = '';
+    if (sigmaInstance) {
+      sigmaInstance.kill();
+      sigmaInstance = null;
+      currentGraph = null;
+    }
     renderInvestigationLaunchpad(c);
   }
 }
