@@ -5145,7 +5145,7 @@
    ========================================================================== */
 @page {
   size: A4 portrait;
-  margin: 0;
+  margin: 0mm !important;
 }
 
 @media print {
@@ -5153,8 +5153,11 @@
     background: #FFFFFF !important;
     padding: 0 !important;
     margin: 0 !important;
-    height: auto !important;
-    font-size: 12px !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    font-size: 11px !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -5169,17 +5172,24 @@
     padding: 0 !important;
     display: block !important;
     margin: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
   }
 
   .fir-export-modal-dialog {
     max-width: 100% !important;
-    max-height: none !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
     display: block !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
   }
 
   .fir-export-modal-header,
@@ -5194,114 +5204,151 @@
     background: #FFFFFF !important;
     padding: 0 !important;
     display: block !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     margin: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
   }
 
   .fir-printable-sheet-root {
-    max-width: 100% !important;
-    min-height: auto !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 10mm 14mm 8mm !important;
+    padding: 6mm 12mm 4mm 12mm !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
     page-break-inside: avoid !important;
+    page-break-after: avoid !important;
     break-inside: avoid !important;
+    break-after: avoid !important;
   }
 
   .print-header-block {
-    padding-bottom: 8px !important;
-    margin-bottom: 10px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+    border-bottom: 1.5px solid #0F172A !important;
   }
 
   .print-gov-title {
-    font-size: 10px !important;
+    font-size: 8.5px !important;
+    margin-bottom: 2px !important;
   }
 
   .print-main-title {
-    font-size: 18px !important;
-    margin: 0 0 4px !important;
+    font-size: 15px !important;
+    margin: 0 0 2px !important;
+  }
+
+  .print-subtitle-legal {
+    font-size: 8px !important;
   }
 
   .print-station-sub-grid {
-    gap: 16px !important;
-    margin-top: 6px !important;
+    gap: 12px !important;
+    margin-top: 4px !important;
+    font-size: 10.5px !important;
+  }
+
+  .print-sub-label {
+    font-size: 10px !important;
+  }
+
+  .print-sub-line {
+    font-size: 10.5px !important;
+    min-height: 14px !important;
   }
 
   .print-field-row-3,
   .print-field-row-2,
   .print-field-row-1 {
-    gap: 14px !important;
-    margin-bottom: 6px !important;
+    gap: 10px !important;
+    margin-bottom: 3px !important;
   }
 
   .print-label {
-    font-size: 9px !important;
-    margin-bottom: 2px !important;
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
   }
 
   .print-value {
-    font-size: 12px !important;
-    padding-bottom: 2px !important;
-    min-height: 18px !important;
+    font-size: 10.5px !important;
+    padding-bottom: 1px !important;
+    min-height: 15px !important;
+    border-bottom-width: 1px !important;
   }
 
   .print-section-divider {
-    font-size: 10.5px !important;
-    padding-top: 6px !important;
-    margin: 10px 0 6px !important;
+    font-size: 9px !important;
+    padding-top: 4px !important;
+    margin: 6px 0 3px !important;
+    border-top: 1px solid #0F172A !important;
   }
 
   .print-narrative-block {
-    margin-bottom: 8px !important;
+    margin-bottom: 4px !important;
   }
 
   .print-boxed-content {
-    min-height: 65px !important;
-    padding: 6px 10px !important;
-    margin-top: 3px !important;
+    min-height: 40px !important;
+    height: 42px !important;
+    padding: 4px 8px !important;
+    margin-top: 2px !important;
   }
 
   .print-boxed-content.compact {
-    min-height: 48px !important;
+    min-height: 30px !important;
+    height: 32px !important;
   }
 
   .print-paragraph {
-    font-size: 11.5px !important;
-    line-height: 1.45 !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
   }
 
   .print-ruled-lines-container {
-    gap: 14px !important;
-    padding: 4px 2px 2px !important;
+    gap: 10px !important;
+    padding: 2px 0 0 !important;
   }
 
   .print-footer-signoff-row {
-    margin-top: 14px !important;
-    padding-top: 10px !important;
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid #94A3B8 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .print-signoff-left {
-    font-size: 11px !important;
-    gap: 4px !important;
+    font-size: 9.5px !important;
+    gap: 2px !important;
   }
 
   .print-signoff-right {
-    min-width: 200px !important;
+    min-width: 180px !important;
+  }
+
+  .signature-line-mark {
+    width: 170px !important;
+    margin-bottom: 3px !important;
   }
 
   .sig-label {
-    font-size: 10px !important;
+    font-size: 9px !important;
     white-space: nowrap !important;
   }
 
   .print-bottom-watermark {
-    margin-top: 10px !important;
-    padding-top: 6px !important;
-    font-size: 8.5px !important;
+    margin-top: 4px !important;
+    padding-top: 3px !important;
+    font-size: 7.5px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }

@@ -35,8 +35,8 @@ export function getExportFirData() {
       policeStation: '',
       district: '',
       state: '',
-      incidentDate: '',
-      incidentTime: '',
+      incidentDate: 'DD / MM / YYYY',
+      incidentTime: '____:____ HRS',
       sections: '',
       complainantName: '',
       complainantAge: '',
@@ -105,13 +105,13 @@ export function getExportFirData() {
   // Current draft from form
   const draft = state.firDraft || {};
   return {
-    firNumber: draft.firNumber || 'FIR-MH-2026-DRAFT',
-    policeStation: draft.policeStation || 'Cyber Crime Police Station, Shivajinagar',
-    district: draft.district || 'Pune HQ',
-    state: draft.state || 'Maharashtra',
+    firNumber: draft.firNumber || '',
+    policeStation: draft.policeStation || '',
+    district: draft.district || '',
+    state: draft.state || '',
     incidentDate: draft.incidentDate || '',
-    incidentTime: draft.incidentTime || '',
-    sections: draft.sections || 'IPC 420, 468, 471, 120B · IT Act 66D',
+    incidentTime: draft.incidentTime ? `${draft.incidentTime}${draft.incidentTime.includes('HRS') ? '' : ' HRS'}` : '',
+    sections: draft.sections || '',
     complainantName: draft.complainantName || '',
     complainantAge: draft.complainantAge || '',
     complainantFather: draft.complainantFather || '',
@@ -124,14 +124,14 @@ export function getExportFirData() {
     phone: draft.phone || '',
     vehicle: draft.vehicle || '',
     bank: draft.bank || '',
-    tower: 'Cell Tower PN-CY-482 (FC Road Sector)',
+    tower: draft.tower || '',
     incidentSummary: draft.incidentSummary || '',
     propertySummary: draft.propertySummary || '',
     evidenceItems: state.manualEvidence || [],
-    actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
-    ioName: officer.name || 'Ashutosh Patil',
-    ioRank: officer.rank || 'Superintendent of Police',
-    ioDistrict: officer.district || 'Pune HQ',
+    actionTaken: draft.actionTaken || (draft.subjectName ? 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.' : ''),
+    ioName: officer.name || '',
+    ioRank: officer.rank || '',
+    ioDistrict: officer.district || '',
     printDate: new Date().toISOString().split('T')[0]
   };
 }
@@ -333,14 +333,14 @@ export function renderPrintableSheet(data) {
           ])
         ]),
         el('div', { class: 'print-unit-tag' }, [
-          'Unit: Crime & Criminal Network Command · Pune HQ'
+          isBlank ? 'Unit: ________________________________________________' : 'Unit: Crime & Criminal Network Command · Pune HQ'
         ])
       ]),
       el('div', { class: 'print-signoff-right' }, [
         el('div', { class: 'print-signature-box' }, [
           el('div', { class: 'signature-line-mark' }),
           el('div', { class: 'sig-label', style: 'white-space: nowrap;' }, [
-            data.printDate ? `Signature of IO · Date: ${data.printDate}` : 'Signature of IO · Date: ____/____/20__'
+            isBlank ? 'Signature of IO · Date: ____/____/20__' : (data.printDate ? `Signature of IO · Date: ${data.printDate}` : 'Signature of IO · Date: ____/____/20__')
           ])
         ])
       ])
