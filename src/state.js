@@ -837,6 +837,28 @@ export function setFirCases(val) {
   firCases = val;
 }
 
+export function loadSavedMapConfig() {
+  try {
+    const raw = localStorage.getItem('netrakshak_graph_map_config');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {
+    enabled: false,
+    lat: 18.5204,
+    lng: 73.8567,
+    zoom: 14,
+    locationName: 'Pune City (Shivajinagar Sector)',
+    locked: true,
+    layerType: 'satellite'
+  };
+}
+
+export function saveMapConfig(cfg) {
+  try {
+    localStorage.setItem('netrakshak_graph_map_config', JSON.stringify(cfg));
+  } catch (e) {}
+}
+
 export const riskColor = { high: '#DC2626', medium: '#F59E0B', low: '#16A34A' };
 
 export const state = {
@@ -852,7 +874,8 @@ export const state = {
   fileHash: '',
   filePath: '',
   graphFullscreen: false,
-  graphSatelliteMode: true,
+  graphSatelliteMode: false,
+  graphMapConfig: loadSavedMapConfig(),
   sidebarCollapsed: false,
   fontScale: parseFloat(localStorage.getItem('font_scale')) || 1,
   firMode: 'upload',
@@ -1046,8 +1069,35 @@ export function showFullGraphUniverse() {
   notifyStateChange();
 }
 
-export function toggleGraphSatelliteMode() {
-  state.graphSatelliteMode = !state.graphSatelliteMode;
+export function toggleGraphSatelliteMode(forcedVal) {
+  if (forcedVal !== undefined) {
+    state.graphSatelliteMode = !!forcedVal;
+  } else {
+    state.graphSatelliteMode = !state.graphSatelliteMode;
+  }
+  state.graphMapConfig.enabled = state.graphSatelliteMode;
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function setGraphMapLocation(lat, lng, zoom, name) {
+  state.graphMapConfig.lat = lat;
+  state.graphMapConfig.lng = lng;
+  if (zoom !== undefined) state.graphMapConfig.zoom = zoom;
+  if (name) state.graphMapConfig.locationName = name;
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function toggleGraphMapLock(locked) {
+  state.graphMapConfig.locked = (locked !== undefined) ? locked : !state.graphMapConfig.locked;
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function setGraphMapLayerType(type) {
+  state.graphMapConfig.layerType = type;
+  saveMapConfig(state.graphMapConfig);
   notifyStateChange();
 }
 

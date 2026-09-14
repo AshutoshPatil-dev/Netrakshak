@@ -1,5 +1,7 @@
 import Graph from 'graphology';
 import Sigma from 'sigma';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import {
@@ -19,6 +21,10 @@ import {
   resetGraphExploration,
   showFullGraphUniverse,
   toggleGraphSatelliteMode,
+  setGraphMapLocation,
+  toggleGraphMapLock,
+  setGraphMapLayerType,
+  saveMapConfig,
   openEntityProfile
 } from '../state.js';
 import { graphMetrics } from '../lib/analysis.js';
@@ -28,6 +34,114 @@ import { performAIAnalysis } from './AIAnalysisView.js';
 let sigmaInstance = null;
 let currentGraph = null;
 let lastRenderedGraphSignature = '';
+let leafletMapInstance = null;
+let currentTileLayer = null;
+let currentLabelLayer = null;
+
+export const GEO_PRESETS = [
+  { name: 'Pune: Shivajinagar & FC Road', lat: 18.5284, lng: 73.8415, zoom: 15 },
+  { name: 'Pune: Swargate Timber Market', lat: 18.5018, lng: 73.8580, zoom: 15 },
+  { name: 'Pune: Kothrud Paud Road', lat: 18.5074, lng: 73.8077, zoom: 15 },
+  { name: 'Pune: Deccan Gymkhana', lat: 18.5167, lng: 73.8410, zoom: 15 },
+  { name: 'Mumbai: Bandra Kurla Complex (BKC)', lat: 19.0674, lng: 72.8687, zoom: 15 },
+  { name: 'Mumbai: Nariman Point & Fort', lat: 18.9256, lng: 72.8242, zoom: 15 },
+  { name: 'Mumbai: Cyber Station (Bandra)', lat: 19.0596, lng: 72.8295, zoom: 15 },
+  { name: 'Thane: Cyber Sector', lat: 19.2183, lng: 72.9781, zoom: 14 },
+  { name: 'New Delhi: Connaught Place', lat: 28.6315, lng: 77.2167, zoom: 14 },
+  { name: 'Bengaluru: Tech Corridor', lat: 12.9716, lng: 77.5946, zoom: 14 }
+];
+
+export function updateLeafletTileLayer(layerType) {
+  if (!leafletMapInstance) return;
+
+  if (currentTileLayer) {
+    leafletMapInstance.removeLayer(currentTileLayer);
+    currentTileLayer = null;
+  }
+  if (currentLabelLayer) {
+    leafletMapInstance.removeLayer(currentLabelLayer);
+    currentLabelLayer = null;
+  }
+
+  if (layerType === 'streets') {
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(leafletMapInstance);
+  } else if (layerType === 'hybrid') {
+    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }).addTo(leafletMapInstance);
+    currentLabelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19
+    }).addTo(leafletMapInstance);
+  } else {
+    // default: satellite
+    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }).addTo(leafletMapInstance);
+  }
+}
+
+export function applyMapLockState() {
+  if (!leafletMapInstance) return;
+  const isLocked = !!state.graphMapConfig?.locked;
+  if (isLocked) {
+    leafletMapInstance.dragging.disable();
+    leafletMapInstance.scrollWheelZoom.disable();
+    leafletMapInstance.doubleClickZoom.disable();
+    leafletMapInstance.boxZoom.disable();
+    leafletMapInstance.touchZoom.disable();
+  } else {
+    leafletMapInstance.dragging.enable();
+    leafletMapInstance.scrollWheelZoom.enable();
+    leafletMapInstance.doubleClickZoom.enable();
+    leafletMapInstance.boxZoom.enable();
+    leafletMapInstance.touchZoom.enable();
+  }
+}
+
+export function mountLeafletMap() {
+  const mapContainer = document.getElementById('graph-leaflet-map');
+  if (!mapContainer) return;
+
+  if (leafletMapInstance) {
+    leafletMapInstance.remove();
+    leafletMapInstance = null;
+  }
+
+  const { lat, lng, zoom, layerType, locked } = state.graphMapConfig || {};
+
+  leafletMapInstance = L.map(mapContainer, {
+    center: [lat || 18.5204, lng || 73.8567],
+    zoom: zoom || 14,
+    zoomControl: false,
+    attributionControl: false,
+    dragging: !locked,
+    scrollWheelZoom: !locked,
+    doubleClickZoom: !locked,
+    boxZoom: !locked,
+    touchZoom: !locked
+  });
+
+  updateLeafletTileLayer(layerType || 'satellite');
+
+  leafletMapInstance.on('moveend', () => {
+    if (!leafletMapInstance) return;
+    const center = leafletMapInstance.getCenter();
+    const curZoom = leafletMapInstance.getZoom();
+    state.graphMapConfig.lat = center.lat;
+    state.graphMapConfig.lng = center.lng;
+    state.graphMapConfig.zoom = curZoom;
+    saveMapConfig(state.graphMapConfig);
+  });
+
+  setTimeout(() => {
+    if (leafletMapInstance) leafletMapInstance.invalidateSize();
+  }, 100);
+}
 
 export const objectTypeColors = {
   Person: '#1E293B',
@@ -122,10 +236,153 @@ export function getConnectedLinks(entityId) {
   return links;
 }
 
+export function renderMapLocationController() {
+  const mapConfig = state.graphMapConfig || {};
+  const isLocked = !!mapConfig.locked;
+
+  const searchInput = el('input', {
+    type: 'text',
+    class: 'map-search-input',
+    placeholder: 'Search location, landmark, city, or lat,lng...',
+    value: ''
+  });
+
+  const performSearch = async () => {
+    const q = searchInput.value.trim();
+    if (!q) return;
+
+    // Check presets first
+    const matchedPreset = GEO_PRESETS.find(p => p.name.toLowerCase().includes(q.toLowerCase()));
+    if (matchedPreset) {
+      setGraphMapLocation(matchedPreset.lat, matchedPreset.lng, matchedPreset.zoom, matchedPreset.name);
+      if (leafletMapInstance) {
+        leafletMapInstance.setView([matchedPreset.lat, matchedPreset.lng], matchedPreset.zoom);
+      }
+      showToast(`Map centered to ${matchedPreset.name}`);
+      return;
+    }
+
+    // Check coordinates pattern (e.g. 18.5204, 73.8567)
+    const coordMatch = q.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[3]);
+      setGraphMapLocation(lat, lng, 15, `Sector: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      if (leafletMapInstance) {
+        leafletMapInstance.setView([lat, lng], 15);
+      }
+      showToast(`Map centered to target coordinates`);
+      return;
+    }
+
+    // Geocoding query via OpenStreetMap Nominatim
+    try {
+      showToast(`Searching location "${q}"...`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const item = data[0];
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
+        const name = item.display_name.split(',').slice(0, 3).join(',');
+        setGraphMapLocation(lat, lng, 14, name);
+        if (leafletMapInstance) {
+          leafletMapInstance.setView([lat, lng], 14);
+        }
+        showToast(`Map location set to ${name}`);
+      } else {
+        showToast(`No matching locations found for "${q}"`);
+      }
+    } catch (e) {
+      showToast(`Location search lookup failed. Please enter coordinates.`);
+    }
+  };
+
+  searchInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performSearch();
+    }
+  };
+
+  const presetSelect = el('select', { class: 'map-preset-select' }, [
+    el('option', { value: '' }, ['Quick Case Presets...']),
+    ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
+  ]);
+
+  presetSelect.onchange = (e) => {
+    if (!e.target.value) return;
+    try {
+      const p = JSON.parse(e.target.value);
+      setGraphMapLocation(p.lat, p.lng, p.zoom, p.name);
+      if (leafletMapInstance) {
+        leafletMapInstance.setView([p.lat, p.lng], p.zoom);
+      }
+      showToast(`Map location centered to ${p.name}`);
+    } catch (err) {}
+  };
+
+  const layerSelect = el('select', { class: 'map-layer-select' }, [
+    el('option', { value: 'satellite' }, ['🛰 Satellite Imagery']),
+    el('option', { value: 'hybrid' }, ['🗺 Hybrid (Satellite + Roads)']),
+    el('option', { value: 'streets' }, ['🏙 Street Map'])
+  ]);
+  layerSelect.value = mapConfig.layerType || 'satellite';
+  layerSelect.onchange = (e) => {
+    setGraphMapLayerType(e.target.value);
+    updateLeafletTileLayer(e.target.value);
+    showToast(`Map layer set to ${e.target.value}`);
+  };
+
+  const lockBtn = el('button', {
+    class: `map-action-btn ${isLocked ? 'btn-locked' : 'btn-unlocked'}`,
+    title: isLocked ? 'Map position is locked. Click to enable panning and zooming the map' : 'Map navigation active. Click to lock position and return to node dragging',
+    onclick: () => {
+      toggleGraphMapLock();
+      applyMapLockState();
+      showToast(state.graphMapConfig.locked ? '🔒 Map Location Locked (Node Positioning Mode)' : '🔓 Map Navigation Active (Pan & Zoom Map)');
+    }
+  }, [
+    isLocked ? '🔒 Map Locked' : '🔓 Pan Map Active',
+    el('span', { class: 'btn-subtext' }, [isLocked ? ' (Click to Pan)' : ' (Click to Lock)'])
+  ]);
+
+  const exitBtn = el('button', {
+    class: 'map-close-btn',
+    title: 'Exit Satellite Map View (Return to Clean Canvas)',
+    onclick: () => {
+      toggleGraphSatelliteMode(false);
+      showToast('Standard Clean Graph Canvas Enabled');
+    }
+  }, ['✕ Exit Map']);
+
+  return el('div', { class: 'graph-map-controller-hud' }, [
+    el('div', { class: 'hud-search-group' }, [
+      el('span', { class: 'hud-search-icon' }, [icon('search')]),
+      searchInput,
+      el('button', { class: 'hud-search-submit', onclick: performSearch }, ['Find']),
+      presetSelect
+    ]),
+    el('div', { class: 'hud-info-group' }, [
+      el('span', { class: 'hud-location-tag' }, [
+        icon('pulse'),
+        ` ${mapConfig.locationName || 'Reference Sector'} (${mapConfig.lat ? mapConfig.lat.toFixed(4) : '18.5204'}°, ${mapConfig.lng ? mapConfig.lng.toFixed(4) : '73.8567'}°)`
+      ])
+    ]),
+    el('div', { class: 'hud-controls-group' }, [
+      layerSelect,
+      lockBtn,
+      exitBtn
+    ])
+  ]);
+}
+
 export function graphContainer(visibleNodes) {
   const isSat = !!state.graphSatelliteMode;
+  const isLocked = !!state.graphMapConfig?.locked;
+
   if (visibleNodes.length === 0) {
-    return el('div', { class: `sigma-container empty-graph-shell ${isSat ? 'satellite-mode' : ''}` }, [
+    return el('div', { class: `sigma-container empty-graph-shell ${isSat ? 'satellite-active' : ''}` }, [
       el('div', { class: 'empty-shell-content' }, [
         el('span', { class: 'empty-shell-icon' }, [icon('network')]),
         el('strong', {}, ['No Entities in Active Exploration']),
@@ -134,27 +391,11 @@ export function graphContainer(visibleNodes) {
     ]);
   }
   return el('div', {
-    class: `sigma-container ${isSat ? 'satellite-mode' : ''}`,
+    class: `sigma-container ${isSat ? 'satellite-active' : ''} ${isSat && !isLocked ? 'map-nav-mode' : ''}`,
     'data-graph-count': String(visibleNodes.length)
   }, [
-    isSat ? el('div', { class: 'satellite-hud-overlay' }, [
-      el('div', { class: 'sat-hud-top-left' }, [
-        el('div', { class: 'sat-live-indicator' }, [el('span', { class: 'sat-pulse-dot' }), el('strong', {}, ['GEO-SAT RECON // TACTICAL OVERLAY'])]),
-        el('span', { class: 'sat-coords' }, ['18.5204° N, 73.8567° E · MAHARASHTRA TACTICAL ORBIT'])
-      ]),
-      el('div', { class: 'sat-hud-top-right' }, [
-        el('span', { class: 'sat-telemetry' }, ['HR SENTINEL-2 COMPOSITE (0.5M/PX)']),
-        el('span', { class: 'sat-sector-badge' }, ['SECTOR: PUNE-MUMBAI CORRIDOR'])
-      ]),
-      el('div', { class: 'sat-hud-crosshair sat-ch-tl' }),
-      el('div', { class: 'sat-hud-crosshair sat-ch-tr' }),
-      el('div', { class: 'sat-hud-crosshair sat-ch-bl' }),
-      el('div', { class: 'sat-hud-crosshair sat-ch-br' }),
-      el('div', { class: 'sat-hud-radar-grid' }),
-      el('div', { class: 'sat-hud-scan-line' })
-    ]) : null,
     el('div', { class: 'graph-node-tooltip', id: 'graphNodeTooltip' })
-  ].filter(Boolean));
+  ]);
 }
 
 export function mountSigma(visibleNodes) {
@@ -165,7 +406,19 @@ export function mountSigma(visibleNodes) {
       sigmaInstance = null;
       currentGraph = null;
     }
+    if (leafletMapInstance) {
+      leafletMapInstance.remove();
+      leafletMapInstance = null;
+    }
     return;
+  }
+
+  const isSat = !!state.graphSatelliteMode;
+  if (isSat) {
+    mountLeafletMap();
+  } else if (leafletMapInstance) {
+    leafletMapInstance.remove();
+    leafletMapInstance = null;
   }
 
   const seedId = state.graphExploration?.seedId;
@@ -185,7 +438,7 @@ export function mountSigma(visibleNodes) {
     visibleNodes.forEach((entity, index) => {
       const isSeed = entity.id === seedId;
       const isSelected = state.selected === entity.id;
-      const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || '#1E293B';
+      const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || (isSat ? '#38BDF8' : '#1E293B');
       const allLinks = getConnectedLinks(entity.id);
       const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
 
@@ -202,7 +455,7 @@ export function mountSigma(visibleNodes) {
         currentGraph.mergeNodeAttributes(entity.id, {
           label: nodeLabel,
           size: nodeSize,
-          color: isSelected ? '#2563EB' : nodeColor,
+          color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
           isSeed,
           isSelected,
           unexploredCount
@@ -236,7 +489,7 @@ export function mountSigma(visibleNodes) {
           x,
           y,
           size: nodeSize,
-          color: isSelected ? '#2563EB' : nodeColor,
+          color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
           risk: entity.risk,
           entityId: entity.id,
           entityType: entity.type,
@@ -248,7 +501,6 @@ export function mountSigma(visibleNodes) {
     });
 
     // 3. Update / add edges
-    const isSat = !!state.graphSatelliteMode;
     edges.forEach((edge) => {
       const source = edge[0];
       const target = edge[1];
@@ -256,7 +508,7 @@ export function mountSigma(visibleNodes) {
       if (visibleIds.has(source) && visibleIds.has(target)) {
         const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
         const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
-        const defaultEdgeColor = isSat ? '#475569' : '#94A3B8';
+        const defaultEdgeColor = isSat ? '#94A3B8' : '#CBD5E1';
         if (!currentGraph.hasEdge(source, target)) {
           currentGraph.addEdge(source, target, {
             color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
@@ -281,7 +533,6 @@ export function mountSigma(visibleNodes) {
   sigmaInstance?.kill();
   const graph = new Graph();
   currentGraph = graph;
-  const isSat = !!state.graphSatelliteMode;
 
   visibleNodes.forEach((entity, index) => {
     const isSeed = entity.id === seedId;
@@ -346,7 +597,7 @@ export function mountSigma(visibleNodes) {
     if (visibleIds.has(source) && visibleIds.has(target) && !graph.hasEdge(source, target)) {
       const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
       const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
-      const defaultEdgeColor = isSat ? '#475569' : '#94A3B8';
+      const defaultEdgeColor = isSat ? '#94A3B8' : '#CBD5E1';
       graph.addEdge(source, target, {
         color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
         size: isConnectedToSelected ? 2.5 : 1.2,
@@ -360,9 +611,9 @@ export function mountSigma(visibleNodes) {
     renderLabels: true,
     labelFont: 'Inter, system-ui, sans-serif',
     labelSize: 11,
-    labelColor: { color: isSat ? '#F8FAFC' : '#0F172A' },
+    labelColor: { color: isSat ? '#FFFFFF' : '#0F172A' },
     defaultNodeColor: isSat ? '#38BDF8' : '#1E293B',
-    defaultEdgeColor: isSat ? '#475569' : '#CBD5E1',
+    defaultEdgeColor: isSat ? '#94A3B8' : '#CBD5E1',
     minCameraRatio: 0.15,
     maxCameraRatio: 5,
     allowInvalidContainer: true
@@ -938,14 +1189,6 @@ export function renderInvestigationLaunchpad(c) {
     ]),
     el('div', { class: 'heading-actions' }, [
       el('button', {
-        class: `outline-btn launchpad-sat-btn ${state.graphSatelliteMode ? 'active-sat' : ''}`,
-        title: state.graphSatelliteMode ? 'Switch graph background to standard grid' : 'Switch graph background to tactical satellite map',
-        onclick: () => {
-          toggleGraphSatelliteMode();
-          showToast(state.graphSatelliteMode ? '🛰 Tactical Satellite Map Enabled' : 'Standard Vector Grid Enabled');
-        }
-      }, [icon('network'), state.graphSatelliteMode ? ' 🛰 Satellite Map: ON' : ' 🗺 Satellite Map: OFF']),
-      el('button', {
         class: 'primary-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
@@ -1257,13 +1500,13 @@ export function renderActiveNetworkWorkspace(c) {
       }, [icon('plus'), ` Expand (${getConnectedLinks(selectedEntity.id).length})`]) : null,
       el('div', { class: 'strip-divider' }),
       el('button', {
-        class: `strip-btn strip-sat-btn ${state.graphSatelliteMode ? 'active' : ''}`,
-        title: state.graphSatelliteMode ? 'Switch graph background to standard grid' : 'Switch graph background to tactical satellite map',
+        class: `strip-btn strip-sat-btn ${isSat ? 'active' : ''}`,
+        title: isSat ? 'Disable satellite map background and return to clean canvas' : 'Enable interactive satellite map background for geographic reference',
         onclick: () => {
           toggleGraphSatelliteMode();
-          showToast(state.graphSatelliteMode ? '🛰 Tactical Satellite Map Enabled' : 'Standard Vector Grid Enabled');
+          showToast(state.graphSatelliteMode ? '🛰 Satellite Map Background Enabled' : 'Standard Clean Graph Canvas Enabled');
         }
-      }, [icon('network'), state.graphSatelliteMode ? ' 🛰 Satellite Map' : ' 🗺 Vector Grid']),
+      }, [icon('network'), isSat ? ' 🛰 Satellite Map: ON' : ' 🗺 Satellite Map: OFF']),
       el('span', { class: 'strip-count' }, [
         `${visibleNodes.length}/${entities.length} nodes`
       ]),
@@ -1276,7 +1519,33 @@ export function renderActiveNetworkWorkspace(c) {
   ]);
 
   const seedId = state.graphExploration?.seedId;
-  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${state.graphSatelliteMode ? 'sat' : 'std'}`;
+  const mapConfig = state.graphMapConfig || {};
+  const isLocked = !!mapConfig.locked;
+  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${mapConfig.locked ? '1' : '0'}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
+
+  const renderGraphPanel = () => {
+    return el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
+      isSat ? el('div', {
+        id: 'graph-leaflet-map',
+        class: `graph-leaflet-map ${isLocked ? 'map-locked' : 'map-interactive'}`
+      }) : null,
+      isSat ? renderMapLocationController() : null,
+      graphContainer(visibleNodes),
+      visibleNodes.length > 0 ? el('div', { class: `graph-legend ${isSat ? 'sat-legend' : ''}` }, [
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Vehicle}` }), 'Vehicle']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Bank}` }), 'Bank Account']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors['FIR Case']}` }), 'FIR Case']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Location}` }), 'Cell Tower'])
+      ]) : null,
+      visibleNodes.length > 0 ? el('div', { class: `graph-controls ${isSat ? 'sat-controls' : ''}` }, [
+        el('button', { class: 'icon-btn', title: 'Zoom in', onclick: () => sigmaInstance?.getCamera().animatedZoom() }, ['＋']),
+        el('button', { class: 'icon-btn', title: 'Zoom out', onclick: () => sigmaInstance?.getCamera().animatedUnzoom() }, ['−']),
+        el('button', { class: 'icon-btn', title: 'Reset view', onclick: () => sigmaInstance?.getCamera().animatedReset({ duration: 300 }) }, ['⌖'])
+      ]) : null
+    ].filter(Boolean));
+  };
 
   const existingWorkspace = c.querySelector('.network-workspace');
   if (existingWorkspace) {
@@ -1291,7 +1560,14 @@ export function renderActiveNetworkWorkspace(c) {
       oldInspector.replaceWith(newInspector);
     }
 
-    if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
+    const oldGraphPanel = existingWorkspace.querySelector('.graph-panel');
+    const wasSat = oldGraphPanel ? oldGraphPanel.classList.contains('satellite-view-active') : false;
+    if (oldGraphPanel && (wasSat !== isSat || graphSignature !== lastRenderedGraphSignature)) {
+      const newGraphPanel = renderGraphPanel();
+      oldGraphPanel.replaceWith(newGraphPanel);
+      lastRenderedGraphSignature = graphSignature;
+      mountSigma(visibleNodes);
+    } else if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
     }
@@ -1300,23 +1576,7 @@ export function renderActiveNetworkWorkspace(c) {
 
   // Full first-time render
   c.innerHTML = '';
-  const graph = el('section', { class: 'graph-panel' }, [
-    graphContainer(visibleNodes),
-    visibleNodes.length > 0 ? el('div', { class: 'graph-legend' }, [
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Vehicle}` }), 'Vehicle']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Bank}` }), 'Bank Account']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors['FIR Case']}` }), 'FIR Case']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Location}` }), 'Cell Tower'])
-    ]) : null,
-    visibleNodes.length > 0 ? el('div', { class: 'graph-controls' }, [
-      el('button', { class: 'icon-btn', title: 'Zoom in', onclick: () => sigmaInstance?.getCamera().animatedZoom() }, ['＋']),
-      el('button', { class: 'icon-btn', title: 'Zoom out', onclick: () => sigmaInstance?.getCamera().animatedUnzoom() }, ['−']),
-      el('button', { class: 'icon-btn', title: 'Reset view', onclick: () => sigmaInstance?.getCamera().animatedReset({ duration: 300 }) }, ['⌖'])
-    ]) : null
-  ].filter(Boolean));
-
+  const graph = renderGraphPanel();
   const entityAside = renderGraphInspector(selectedEntity, analyticalEntities, visibleIds);
 
   n.append(topStrip, el('div', { class: 'network-grid' }, [graph, entityAside]));
