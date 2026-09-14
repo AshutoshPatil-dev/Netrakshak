@@ -1,5 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js';
 import { hashText } from './lib/crypto.js';
+import { getAccusedPhoto } from './lib/avatars.js';
 
 let renderCallback = null;
 
@@ -55,6 +56,59 @@ export function loadSavedAuditLogs() {
   }
 }
 
+export const DEFAULT_EVIDENCE_ITEMS = [
+  {
+    id: 'ev-0001',
+    fir_id: 'f0000001-0000-0000-0000-000000000001',
+    fir_number: 'FIR-MH-2026-4821',
+    evidence_type: 'document',
+    description: 'Forged Bond Certificate PDF (Apex Digital Asset)',
+    storage_path: 'evidence/forged_bond_apex.pdf',
+    sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    created_at: '2026-09-13T20:32:50Z'
+  },
+  {
+    id: 'ev-0002',
+    fir_id: 'f0000001-0000-0000-0000-000000000001',
+    fir_number: 'FIR-MH-2026-4821',
+    evidence_type: 'telephony',
+    description: 'Tower Dump CDR Sector PN-CY-482 (FC Road)',
+    storage_path: 'evidence/cdr_dump_pn_cy_482.csv',
+    sha256: '8a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809',
+    created_at: '2026-09-13T20:32:50Z'
+  },
+  {
+    id: 'ev-0003',
+    fir_id: 'f0000001-0000-0000-0000-000000000002',
+    fir_number: 'FIR-MH-2026-1940',
+    evidence_type: 'cctv',
+    description: 'ATM CCTV Stills - Fergusson Road Branch Cash Withdrawal',
+    storage_path: 'evidence/atm_cctv_fergusson.jpg',
+    sha256: '9f837264a5d1b2c3d4e5f60718293a4b5c6d7e8f901a2b3c4d5e6f708192a3b4',
+    created_at: '2026-09-13T20:32:50Z'
+  },
+  {
+    id: 'ev-0004',
+    fir_id: 'f0000001-0000-0000-0000-000000000003',
+    fir_number: 'FIR-MH-2026-2811',
+    evidence_type: 'slip',
+    description: 'Original Handwritten Threat Slip (Swargate PS GD Entry)',
+    storage_path: 'evidence/swargate_extortion_slip.png',
+    sha256: '660badfabf7fdeced2a0dd07b8435a44388261c2655fb0e156fd662cd8440791',
+    created_at: '2026-09-13T20:32:50Z'
+  },
+  {
+    id: 'ev-0005',
+    fir_id: 'f0000001-0000-0000-0000-000000000004',
+    fir_number: 'FIR-MH-2026-0512',
+    evidence_type: 'document',
+    description: 'ROC Forged Incorporation Filings & Director Signatures',
+    storage_path: 'evidence/roc_forged_incorporation.pdf',
+    sha256: '1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809',
+    created_at: '2026-09-13T20:32:50Z'
+  }
+];
+
 export const DEFAULT_ENTITIES = [
   // Persons (10 Accused & Operatives)
   {
@@ -67,7 +121,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'high',
     city: 'Pune City (Shivajinagar)',
     phone: '+91 98811 55421',
-    identifiers: { alias: 'Baba Bhai, Sammy', aadhar: 'XXXX-XXXX-4912', status: 'Accused in 2 FIRs' },
+    imageUrl: getAccusedPhoto('Sameer Khan'),
+    identifiers: { alias: 'Baba Bhai, Sammy', aadhar: 'XXXX-XXXX-4912', status: 'Accused in 2 FIRs', imageUrl: getAccusedPhoto('Sameer Khan') },
     events: 14,
     recent: 96,
     x: 350,
@@ -83,7 +138,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'high',
     city: 'Mumbai / Pune',
     phone: '+91 98199 44312',
-    identifiers: { alias: 'Vicky', specialization: 'Forged bond portal & fake payment gateway developer' },
+    imageUrl: getAccusedPhoto('Vikram Rathi'),
+    identifiers: { alias: 'Vicky', specialization: 'Forged bond portal & fake payment gateway developer', imageUrl: getAccusedPhoto('Vikram Rathi') },
     events: 8,
     recent: 92,
     x: 480,
@@ -99,7 +155,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'medium',
     city: 'Pune (Deccan)',
     phone: '+91 97655 88910',
-    identifiers: { specialization: 'ATM cash withdrawal & SIM runner' },
+    imageUrl: getAccusedPhoto('Ajay Deshmukh'),
+    identifiers: { specialization: 'ATM cash withdrawal & SIM runner', imageUrl: getAccusedPhoto('Ajay Deshmukh') },
     events: 6,
     recent: 88,
     x: 490,
@@ -115,7 +172,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'medium',
     city: 'Pune (Swargate)',
     phone: '+91 99230 44102',
-    identifiers: { specialization: 'College student bank account recruiter' },
+    imageUrl: getAccusedPhoto('Arjun Pawar'),
+    identifiers: { specialization: 'College student bank account recruiter', imageUrl: getAccusedPhoto('Arjun Pawar') },
     events: 5,
     recent: 82,
     x: 180,
@@ -131,7 +189,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'high',
     city: 'Swargate / Market Yard',
     phone: '+91 94220 33190',
-    identifiers: { specialization: 'Protection money & physical cash pooling' },
+    imageUrl: getAccusedPhoto('Suresh Shinde'),
+    identifiers: { specialization: 'Protection money & physical cash pooling', imageUrl: getAccusedPhoto('Suresh Shinde') },
     events: 7,
     recent: 90,
     x: 120,
@@ -147,7 +206,8 @@ export const DEFAULT_ENTITIES = [
     risk: 'medium',
     city: 'Kothrud, Pune',
     phone: '+91 98224 50912',
-    identifiers: { specialization: 'Burner phone storage & SIM distribution point' },
+    imageUrl: getAccusedPhoto('Rohit Salunkhe'),
+    identifiers: { specialization: 'Burner phone storage & SIM distribution point', imageUrl: getAccusedPhoto('Rohit Salunkhe') },
     events: 3,
     recent: 70,
     x: 580,
@@ -159,63 +219,67 @@ export const DEFAULT_ENTITIES = [
     local: 'More Dada',
     type: 'Person',
     category: 'person',
-    role: 'Muscle & Intimidation',
+    role: 'Vehicle Supplier & Logistician',
     risk: 'medium',
-    city: 'Pimpri-Chinchwad',
-    phone: '+91 97300 11209',
-    identifiers: { specialization: 'Physical delivery of extortion notes' },
+    city: 'Hadapsar, Pune',
+    phone: '+91 98231 77654',
+    imageUrl: getAccusedPhoto('Pappu More'),
+    identifiers: { specialization: 'Rented getaway two-wheelers & fake number plates', imageUrl: getAccusedPhoto('Pappu More') },
     events: 4,
     recent: 75,
-    x: 110,
-    y: 460
+    x: 620,
+    y: 290
   },
   {
     id: 'e0000001-0000-0000-0000-000000000008',
-    name: 'Maya Shelar',
-    local: 'Madam, Consultant',
+    name: 'Karan Mehra',
+    local: 'Mehra, Banker',
     type: 'Person',
     category: 'person',
     role: 'Shell Company Director',
     risk: 'high',
     city: 'Mumbai (BKC)',
-    phone: '+91 98901 22345',
-    identifiers: { specialization: 'Fake fintech corporate registration' },
-    events: 5,
-    recent: 89,
-    x: 620,
-    y: 130
+    phone: '+91 98200 11984',
+    imageUrl: getAccusedPhoto('Karan Mehra'),
+    identifiers: { alias: 'Mehra', company: 'Apex Digital Asset LLP', specialization: 'Crypto off-ramping & mule bank directorship', imageUrl: getAccusedPhoto('Karan Mehra') },
+    events: 9,
+    recent: 95,
+    x: 240,
+    y: 160
   },
   {
     id: 'e0000001-0000-0000-0000-000000000009',
-    name: 'Karan Mehra',
-    local: 'Crypto Karan',
+    name: 'Maya Shelar',
+    local: 'Madam, Consultant',
     type: 'Person',
     category: 'person',
-    role: 'P2P Crypto Exchanger',
+    role: 'Hawala Channelizer',
     risk: 'high',
-    city: 'Thane / Mumbai',
-    phone: '+91 98210 99812',
-    identifiers: { specialization: 'USDT / INR off-ramp converter' },
-    events: 6,
-    recent: 91,
-    x: 640,
-    y: 240
+    city: 'Mumbai / Pune',
+    phone: '+91 98901 22345',
+    imageUrl: getAccusedPhoto('Maya Shelar'),
+    identifiers: { alias: 'Madam', specialization: 'Offshore USDT conversion & cash courier coordinator', imageUrl: getAccusedPhoto('Maya Shelar') },
+    events: 11,
+    recent: 94,
+    x: 380,
+    y: 120
   },
   {
     id: 'e0000001-0000-0000-0000-000000000010',
-    name: 'Deepak Verma',
-    local: 'DV',
+    name: 'Dinesh Jha',
+    local: 'Panditji, Caller',
     type: 'Person',
     category: 'person',
-    role: 'Call Center Team Lead',
-    risk: 'high',
-    city: 'Noida / Pune',
-    phone: '+91 98110 55432',
-    identifiers: { specialization: 'VoIP spoofing & synthetic lure scripts' },
-    events: 4,
-    recent: 85,
-    x: 420,
-    y: 110
+    role: 'Spoofed Caller / Extortion Operator',
+    risk: 'medium',
+    city: 'Noida / Pune (remote)',
+    phone: '+91 98112 33490',
+    imageUrl: getAccusedPhoto('Dinesh Jha'),
+    identifiers: { specialization: 'VoIP spoofing & police impersonation calls', imageUrl: getAccusedPhoto('Dinesh Jha') },
+    events: 5,
+    recent: 84,
+    x: 200,
+    y: 240
   },
 
   // Phone Numbers (6 Registered SIMs)
@@ -769,7 +833,7 @@ export const state = {
     expandedNodeIds: [],
     hiddenNodeIds: []
   },
-  evidenceItems: [],
+  evidenceItems: [...DEFAULT_EVIDENCE_ITEMS],
   integrityAuditResult: null,
   isIntegrityAuditing: false
 };
@@ -1079,7 +1143,11 @@ export async function loadSupabaseData() {
         risk: e.risk_level || 'low',
         city: e.identifiers?.city || e.identifiers?.address || e.identifiers?.location || e.identifiers?.zone || '',
         phone: e.identifiers?.phone || (e.entity_type === 'phone' ? e.display_name : ''),
-        identifiers: e.identifiers || {},
+        imageUrl: e.identifiers?.imageUrl || getAccusedPhoto(e.display_name),
+        identifiers: {
+          ...(e.identifiers || {}),
+          imageUrl: e.identifiers?.imageUrl || getAccusedPhoto(e.display_name)
+        },
         events: Array.isArray(e.source_refs) ? e.source_refs.length : 1,
         recent: 85,
         x: 350 + Math.cos(idx) * 180,
@@ -1110,7 +1178,12 @@ export async function loadSupabaseData() {
     }
 
     if (dbEvidence && dbEvidence.length > 0) {
-      state.evidenceItems = dbEvidence;
+      const map = new Map();
+      DEFAULT_EVIDENCE_ITEMS.forEach(item => map.set(item.id, item));
+      dbEvidence.forEach(item => map.set(item.id, item));
+      state.evidenceItems = Array.from(map.values());
+    } else {
+      state.evidenceItems = [...DEFAULT_EVIDENCE_ITEMS];
     }
 
     notifyStateChange();

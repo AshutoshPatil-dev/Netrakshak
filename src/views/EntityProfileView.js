@@ -3,6 +3,8 @@ import {
   state,
   entities,
   edges,
+  firCases,
+  DEFAULT_EVIDENCE_ITEMS,
   riskColor,
   notifyStateChange,
   openEntityProfile,
@@ -13,6 +15,8 @@ import { graphMetrics } from '../lib/analysis.js';
 import { objectTypeColors, objectTypeIcons, getConnectedLinks } from './NetworkGraphView.js';
 import { performAIAnalysis } from './AIAnalysisView.js';
 import { showToast } from '../components/Toast.js';
+import { getAccusedPhoto } from '../lib/avatars.js';
+import { openFilePreview } from '../components/FilePreviewModal.js';
 
 export function renderEntityProfile(c) {
   c.innerHTML = '';
@@ -86,6 +90,7 @@ export function renderEntityProfile(c) {
 
   // Main Header Hero Card
   const initialLetter = (entity.name || 'E').replace(/[^a-zA-Z0-9+]/g, '').charAt(0).toUpperCase() || 'E';
+  const entityPhoto = entity.imageUrl || entity.identifiers?.imageUrl || getAccusedPhoto(entity);
 
   // Build dynamic metadata entries according to entity type
   const metaFields = [];
@@ -126,10 +131,15 @@ export function renderEntityProfile(c) {
     if (entity.city) metaFields.push(['Location', entity.city]);
   }
 
+  const avatarBox = entityPhoto ? el('div', { class: 'hero-avatar-box has-photo' }, [
+    el('img', { src: entityPhoto, class: 'hero-avatar-img', alt: entity.name }),
+    el('span', { class: 'hero-photo-badge' }, ['PHOTO ON FILE'])
+  ]) : el('div', { class: 'hero-avatar-box', style: `background:${typeColor};color:#FFFFFF` }, [
+    el('span', { class: 'hero-avatar-letter' }, [initialLetter])
+  ]);
+
   const heroCard = el('div', { class: 'entity-profile-hero-card' }, [
-    el('div', { class: 'hero-avatar-box', style: `background:${typeColor};color:#FFFFFF` }, [
-      el('span', { class: 'hero-avatar-letter' }, [initialLetter])
-    ]),
+    avatarBox,
     el('div', { class: 'hero-body' }, [
       el('div', { class: 'hero-title-row' }, [
         el('h2', { class: 'hero-name' }, [entity.name]),
@@ -304,11 +314,97 @@ export function renderEntityProfile(c) {
     associatedCard
   ]);
 
+  // Related Evidentiary Assets from Registered FIRs
+  const relatedCases = firCases.filter(c => {
+    const sName = (c.subjectName || c.subject_name || '').toLowerCase();
+    const other = (c.otherAccused || c.other_accused || '').toLowerCase();
+    const eName = (entity.name || '').toLowerCase();
+    const cPhone = (c.phone || '').toLowerCase();
+    const cVeh = (c.vehicle || '').toLowerCase();
+    const cBank = (c.bank || '').toLowerCase();
+    const cFir = (c.firNumber || c.fir_number || '').toLowerCase();
+
+    if (entity.type === 'Person') {
+      return sName.includes(eName) || (eName.length > 3 && other.includes(eName));
+    }
+    if (entity.type === 'Phone') {
+      return cPhone.includes(eName) || eName.includes(cPhone);
+    }
+    if (entity.type === 'Vehicle') {
+      return cVeh.includes(eName) || eName.includes(cVeh);
+    }
+    if (entity.type === 'Bank') {
+      return cBank.includes(eName) || eName.includes(cBank);
+    }
+    if (entity.type === 'FIR Case') {
+      return cFir.includes(eName) || eName.includes(cFir) || c.id === entity.id;
+    }
+    return false;
+  });
+
+  const entityEvidenceItems = [];
+  relatedCases.forEach(c => {
+    const firNo = c.firNumber || c.fir_number || 'FIR-MH-2026';
+    const items = c.evidence_items || c.evidenceItems || DEFAULT_EVIDENCE_ITEMS[firNo] || [];
+    items.forEach(it => {
+      entityEvidenceItems.push({
+        ...it,
+        caseNumber: firNo,
+        policeStation: c.policeStation || c.police_station || 'Police Station'
+      });
+    });
+  });
+
+  const evidenceTypeLabels = {
+    call_records: 'CDR / Calls',
+    photo: 'Photo / CCTV',
+    document: 'Document',
+    device: 'Device Dump',
+    financial: 'Financial',
+    witness: 'Witness'
+  };
+
+  const evidenceSection = entityEvidenceItems.length > 0 ? el('div', { class: 'profile-evidence-section' }, [
+    el('div', { class: 'profile-evidence-header' }, [
+      el('div', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+        icon('file'),
+        el('h3', { style: 'font-size: 14px; font-weight: 800; margin: 0; color: var(--app-text);' }, [`Attached Evidentiary Forensics & Seized Files (${entityEvidenceItems.length})`])
+      ]),
+      el('span', { class: 'muted', style: 'font-size: 11px;' }, ['Read-only cryptographic chain of custody linked from police case records'])
+    ]),
+    el('div', { class: 'profile-evidence-grid' }, entityEvidenceItems.map(item => {
+      const evType = item.type || item.evidence_type || 'document';
+      const evDesc = item.description || item.name || 'Forensic Evidence Item';
+      const evSha = item.sha256 || 'e8f29c0b39';
+      const evShortSha = evSha.length > 12 ? `${evSha.slice(0, 10)}...` : evSha;
+      const typeLabel = evidenceTypeLabels[evType] || evType.toUpperCase();
+
+      return el('div', { class: 'profile-evidence-card' }, [
+        el('div', { class: 'profile-evidence-card-top' }, [
+          el('span', { class: `evidence-type ${evType}` }, [typeLabel]),
+          el('span', { class: 'profile-evidence-case-badge' }, [item.caseNumber])
+        ]),
+        el('div', { class: 'profile-evidence-card-desc', title: evDesc }, [evDesc]),
+        el('div', { class: 'profile-evidence-card-meta' }, [
+          el('span', { class: 'profile-evidence-sha', title: `SHA-256: ${evSha}` }, [`SHA: ${evShortSha}`]),
+          el('button', {
+            class: 'preview-evidence-btn small',
+            type: 'button',
+            onclick: () => {
+              openFilePreview(item);
+            }
+          }, [icon('search'), ' Preview Evidence'])
+        ])
+      ]);
+    }))
+  ]) : null;
+
   const container = el('div', { class: 'entity-profile-page-container' }, [
     topHeader,
     heroCard,
-    threeColGrid
-  ]);
+    threeColGrid,
+    evidenceSection
+  ].filter(Boolean));
 
   c.append(container);
 }

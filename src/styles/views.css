@@ -5934,6 +5934,348 @@
   transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   Accused Photo Selector, Evidence Gallery, and Criminal Profile Mugshots
+   ========================================================================== */
+
+/* FIR Intake: Accused Photo Dropdown Selector */
+.accused-photo-select-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.accused-photo-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.accused-select-preview-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #0F172A;
+  border: 2px solid #CBD5E1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.accused-photo-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+  white-space: nowrap;
+}
+
+.accused-photo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.accused-photo-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.accused-photo-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.accused-photo-dropdown:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.accused-photo-hint {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* FIR Dossier List: Accused Thumb & Attribution */
+.fir-accused-thumb-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #0F172A;
+  border: 1.5px solid #CBD5E1;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.fir-accused-thumb-img:hover {
+  transform: scale(1.06);
+  border-color: #2563EB;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.fir-attrib-photo-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+
+/* FIR Dossier List: Attached Evidentiary Assets */
+.fir-dossier-evidence-block {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.fir-dossier-evidence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fir-dossier-evidence-sub {
+  font-size: 11px;
+  color: #64748B;
+  font-style: italic;
+}
+
+.fir-dossier-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.fir-evidence-card-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  gap: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fir-evidence-card-item:hover {
+  border-color: #94A3B8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.fir-evidence-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.fir-evidence-sha-pill {
+  font-size: 10px;
+  font-family: monospace;
+  color: #64748B;
+  background: #F1F5F9;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #E2E8F0;
+}
+
+.fir-evidence-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.fir-evidence-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.preview-evidence-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #F1F5F9;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preview-evidence-btn:hover {
+  background: #2563EB;
+  color: #FFFFFF;
+  border-color: #2563EB;
+}
+
+.preview-evidence-btn.small {
+  padding: 3px 8px;
+  font-size: 10.5px;
+}
+
+/* Entity Profile View: Hero Mugshot Rendering */
+.hero-avatar-box.has-photo {
+  position: relative;
+  background: transparent !important;
+  border: 2px solid #CBD5E1;
+  overflow: hidden;
+}
+
+.hero-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-photo-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.85);
+  color: #38BDF8;
+  font-size: 8px;
+  font-weight: 800;
+  text-align: center;
+  padding: 2px 0;
+  letter-spacing: 0.05em;
+}
+
+/* Entity Profile View: Attached Evidence Section */
+.profile-evidence-section {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.profile-evidence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.profile-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.profile-evidence-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.profile-evidence-card:hover {
+  border-color: #CBD5E1;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.profile-evidence-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-evidence-case-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2563EB;
+  background: #EFF6FF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #DBEAFE;
+}
+
+.profile-evidence-card-desc {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0F172A;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.profile-evidence-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.profile-evidence-sha {
+  font-size: 10px;
+  font-family: monospace;
+  color: #64748B;
+  background: #F1F5F9;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #E2E8F0;
+}
+
 
 
 
