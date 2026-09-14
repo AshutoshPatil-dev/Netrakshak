@@ -66,6 +66,177 @@ export const GEO_PRESETS = [
   { name: 'Bengaluru: Tech Corridor', lat: 12.9716, lng: 77.5946, zoom: 14 }
 ];
 
+export function openGeoSearchModal() {
+  const existing = document.querySelector('.geo-search-modal-overlay');
+  if (existing) existing.remove();
+
+  const overlay = el('div', { class: 'geo-search-modal-overlay' });
+  const closeBtn = el('button', {
+    class: 'geo-search-modal-close',
+    title: 'Close Search',
+    onclick: () => overlay.remove()
+  }, ['✕']);
+
+  const header = el('div', { class: 'geo-search-modal-header' }, [
+    el('div', { class: 'geo-search-modal-title-group' }, [
+      el('h3', { class: 'geo-search-modal-title' }, ['🌍 Search World Location']),
+      el('p', { class: 'geo-search-modal-sub' }, [
+        'Center satellite view on any global city, sector, address, or Latitude, Longitude coordinates.'
+      ])
+    ]),
+    closeBtn
+  ]);
+
+  const searchInput = el('input', {
+    type: 'text',
+    class: 'geo-search-input',
+    placeholder: 'Search places worldwide (e.g. London, Times Square, 28.6139, 77.2090)...',
+    autofocus: true
+  });
+
+  const searchBtn = el('button', {
+    class: 'geo-search-submit-btn',
+    onclick: () => executeSearch()
+  }, ['🔍 Search Location']);
+
+  const searchBar = el('div', { class: 'geo-search-bar-row' }, [
+    searchInput,
+    searchBtn
+  ]);
+
+  const quickCities = [
+    'Pune', 'Mumbai', 'New Delhi', 'Bengaluru', 'Hyderabad',
+    'London', 'Dubai', 'Singapore', 'New York', 'Tokyo'
+  ];
+
+  const suggestionsRow = el('div', { class: 'geo-search-suggestions-row' }, [
+    el('span', { class: 'geo-search-suggestions-label' }, ['Quick Presets:']),
+    ...quickCities.map(city => el('button', {
+      class: 'geo-search-chip',
+      onclick: () => {
+        searchInput.value = city;
+        executeSearch();
+      }
+    }, [city]))
+  ]);
+
+  const resultsContainer = el('div', { class: 'geo-search-results-container' }, [
+    el('div', { class: 'geo-search-empty-hint' }, [
+      'Type any location name or paste coordinates to navigate the satellite map.'
+    ])
+  ]);
+
+  const selectLocation = (lat, lng, name) => {
+    setGraphMapLocation(lat, lng, 15, name);
+    if (leafletMapInstance) {
+      leafletMapInstance.flyTo([lat, lng], 15, { duration: 1.2 });
+    }
+    overlay.remove();
+    showToast(`📍 Satellite centered to: ${name}`);
+  };
+
+  const executeSearch = async () => {
+    const q = (searchInput.value || '').trim();
+    if (!q) return;
+
+    // Check for direct lat/lng coordinates (e.g., "18.5204, 73.8567" or "18.5204 73.8567")
+    const coordMatch = q.match(/^([-+]?\d+(\.\d+)?)[,\s]+([-+]?\d+(\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[3]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        resultsContainer.innerHTML = '';
+        const card = el('div', {
+          class: 'geo-search-result-item coordinate-match',
+          onclick: () => selectLocation(lat, lng, `Coordinates (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)`)
+        }, [
+          el('div', { class: 'geo-result-icon' }, ['📍']),
+          el('div', { class: 'geo-result-info' }, [
+            el('div', { class: 'geo-result-name' }, [`Direct Coordinates: ${lat.toFixed(5)}°, ${lng.toFixed(5)}°`]),
+            el('div', { class: 'geo-result-address' }, ['Click to fly satellite camera to these exact global coordinates'])
+          ]),
+          el('div', { class: 'geo-result-badge' }, ['GO ➔'])
+        ]);
+        resultsContainer.append(card);
+        return;
+      }
+    }
+
+    resultsContainer.innerHTML = '';
+    const loadingEl = el('div', { class: 'geo-search-loading' }, [
+      el('span', { class: 'geo-spinner' }, []),
+      el('span', {}, ['Searching global OpenStreetMap registry...'])
+    ]);
+    resultsContainer.append(loadingEl);
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6&addressdetails=1`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error('Search network error');
+      const data = await res.json();
+      resultsContainer.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        resultsContainer.append(el('div', { class: 'geo-search-empty-hint' }, [
+          `No places found matching "${q}". Try a broader city, district, or landmark name.`
+        ]));
+        return;
+      }
+
+      data.forEach(item => {
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
+        const parts = (item.display_name || '').split(',').map(s => s.trim());
+        const primaryName = parts[0] || item.name || 'Location';
+        const address = parts.slice(1).join(', ') || 'Global Region';
+
+        const itemCard = el('div', {
+          class: 'geo-search-result-item',
+          onclick: () => selectLocation(lat, lng, primaryName)
+        }, [
+          el('div', { class: 'geo-result-icon' }, ['🌐']),
+          el('div', { class: 'geo-result-info' }, [
+            el('div', { class: 'geo-result-name' }, [primaryName]),
+            el('div', { class: 'geo-result-address' }, [address]),
+            el('div', { class: 'geo-result-coords' }, [`Lat: ${lat.toFixed(4)}°, Lng: ${lng.toFixed(4)}°`])
+          ]),
+          el('div', { class: 'geo-result-badge' }, ['Fly To ➔'])
+        ]);
+        resultsContainer.append(itemCard);
+      });
+    } catch (err) {
+      resultsContainer.innerHTML = '';
+      resultsContainer.append(el('div', { class: 'geo-search-error-hint' }, [
+        'Could not reach global geocoder. You can also paste exact coordinates (e.g. 18.5204, 73.8567) to jump immediately.'
+      ]));
+    }
+  };
+
+  searchInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSearch();
+    }
+  };
+
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+
+  const dialog = el('div', { class: 'geo-search-modal-card' }, [
+    header,
+    searchBar,
+    suggestionsRow,
+    resultsContainer
+  ]);
+
+  overlay.append(dialog);
+  document.body.append(overlay);
+
+  setTimeout(() => searchInput.focus(), 50);
+}
+
 export function updateLeafletTileLayer(layerType) {
   if (!leafletMapInstance) return;
 
@@ -1657,14 +1828,21 @@ export function renderActiveNetworkWorkspace(c) {
   // Satellite-specific controls for the top strip
   let satControls = [];
   if (isSat) {
-    const presetSelect = el('select', { class: 'strip-select map-preset-select', title: 'Center satellite map on predefined sector preset' }, [
+    const presetSelect = el('select', { class: 'strip-select map-preset-select', title: 'Center satellite map on predefined sector preset or search any worldwide location' }, [
       el('option', { value: '' }, ['📍 Preset Sector...']),
+      el('option', { value: '__search_worldwide__' }, ['🔍 Search Any Place (World)...']),
       ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
     ]);
     presetSelect.onchange = (e) => {
-      if (!e.target.value) return;
+      const val = e.target.value;
+      if (!val) return;
+      if (val === '__search_worldwide__') {
+        presetSelect.value = '';
+        openGeoSearchModal();
+        return;
+      }
       try {
-        const p = JSON.parse(e.target.value);
+        const p = JSON.parse(val);
         setGraphMapLocation(p.lat, p.lng, p.zoom, p.name);
         if (leafletMapInstance) {
           leafletMapInstance.setView([p.lat, p.lng], p.zoom);
