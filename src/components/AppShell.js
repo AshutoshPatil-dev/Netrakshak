@@ -42,9 +42,16 @@ export function renderAppShell(renderCurrentView) {
     }
   }
 
+  const lastActiveView = shell.getAttribute('data-active-view');
+  const viewChanged = lastActiveView !== state.view;
+  shell.setAttribute('data-active-view', state.view);
+
   const content = shell.querySelector('.main-area > .content');
   if (content) {
     content.className = `content ${state.view === 'network' ? 'network-mode' : ''}`;
+    if (viewChanged) {
+      content.innerHTML = '';
+    }
     if (typeof renderCurrentView === 'function') {
       renderCurrentView(content);
     }

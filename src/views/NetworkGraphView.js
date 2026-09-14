@@ -554,7 +554,6 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
           el('div', { class: 'inspector-hero-main' }, [
             el('div', { class: 'inspector-pill-row' }, [
               el('span', { class: 'inspector-type-pill', style: `background:${typeColor}15;color:${typeColor}` }, [entity.type]),
-              isSeed ? el('span', { class: 'inspector-seed-pill' }, [icon('target'), ' FOCAL SEED']) : null,
               el('span', { class: `risk-badge ${entity.risk || 'low'}` }, [`${(entity.risk || 'LOW').toUpperCase()} RISK`])
             ].filter(Boolean)),
             el('h3', { class: 'inspector-entity-name' }, [entity.name]),
@@ -610,18 +609,6 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
               showToast(`Scanning linkages for ${entity.name}...`);
             }
           }, [icon('sparkle'), ' AI Scan']),
-          el('button', {
-            class: `inspector-action-btn ${isSeed ? 'active-seed-btn' : ''}`,
-            title: isSeed ? 'Click to turn off focal seed and return to previous view' : 'Set this object as focal exploration seed',
-            onclick: () => {
-              toggleGraphSeed(entity.id);
-              if (isSeed) {
-                showToast('Toggled focal seed OFF - returned to previous view');
-              } else {
-                showToast(`Set ${entity.name} as Investigation Focal Seed`);
-              }
-            }
-          }, [icon('target'), isSeed ? ' Seed (ON)' : ' Focal Seed']),
           isExpanded ? el('button', {
             class: 'inspector-action-btn',
             title: 'Collapse 1-hop branch',
@@ -862,13 +849,6 @@ export function renderInvestigationLaunchpad(c) {
     ]),
     el('div', { class: 'heading-actions' }, [
       el('button', {
-        class: 'outline-btn',
-        onclick: () => {
-          showFullGraphUniverse();
-          showToast('Loaded full database universe');
-        }
-      }, [icon('grid'), ' Explore Entire Database Universe']),
-      el('button', {
         class: 'primary-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
@@ -1082,35 +1062,6 @@ export function renderActiveNetworkWorkspace(c) {
   }));
   typeSelect.onchange = e => { state.type = e.target.value; notifyStateChange(); };
 
-  // Seed Selector Dropdown
-  const seedOptions = [
-    { label: '--- FIR Cases ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'FIR Case').map(x => ({ label: `[Case] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id })),
-    { label: '--- Suspects & Persons ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'Person').map(x => ({ label: `[Person] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id })),
-    { label: '--- Vehicles ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'Vehicle').map(x => ({ label: `[Vehicle] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id })),
-    { label: '--- Phone Numbers ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'Phone').map(x => ({ label: `[Phone] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id })),
-    { label: '--- Bank Accounts ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'Bank').map(x => ({ label: `[Bank] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id })),
-    { label: '--- Cell Towers & Locations ---', disabled: true, value: '' },
-    ...entities.filter(x => x.type === 'Location').map(x => ({ label: `[Tower] ${x.name} (${getConnectedLinks(x.id).length} links)`, value: x.id }))
-  ];
-
-  const seedSelect = el('select', { class: 'seed-select-input' }, seedOptions.map(opt => {
-    const o = el('option', { value: opt.value }, [opt.label]);
-    if (opt.disabled) o.disabled = true;
-    if (opt.value === state.graphExploration?.seedId) o.selected = true;
-    return o;
-  }));
-  seedSelect.onchange = (e) => {
-    if (e.target.value) {
-      setGraphSeed(e.target.value);
-      showToast('Set new investigation focal point');
-    }
-  };
-
   const isFocusedMode = state.graphExploration?.mode === 'focused';
 
   const toggleFullscreen = () => {
@@ -1140,32 +1091,16 @@ export function renderActiveNetworkWorkspace(c) {
       }, [icon('undo'), ' Launchpad']),
       el('div', { class: 'strip-divider' }),
       el('div', { class: 'strip-select-wrap' }, [
-        el('span', { class: 'strip-label' }, [icon('target'), ' Seed:']),
-        seedSelect
-      ]),
-      el('div', { class: 'strip-select-wrap' }, [
-        el('span', { class: 'strip-label' }, ['Type:']),
+        el('span', { class: 'strip-label' }, ['Filter Type:']),
         typeSelect
       ])
     ]),
     el('div', { class: 'network-strip-right' }, [
-      el('div', { class: 'strip-mode-group' }, [
-        el('button', {
-          class: `strip-mode-btn ${isFocusedMode ? 'active' : ''}`,
-          title: 'Focus on progressive multi-hop discovery',
-          onclick: () => { resetGraphExploration(); showToast('Switched to progressive exploration'); }
-        }, [icon('network'), ' Progressive']),
-        el('button', {
-          class: `strip-mode-btn ${!isFocusedMode ? 'active' : ''}`,
-          title: 'View all connected entities across database',
-          onclick: () => { showFullGraphUniverse(); showToast('Showing entire criminal universe'); }
-        }, [icon('grid'), ' Full Universe'])
-      ]),
-      isFocusedMode ? el('button', {
+      el('button', {
         class: 'strip-btn',
-        title: 'Reset graph to focal seed node',
-        onclick: () => { resetGraphExploration(); showToast('Reset exploration to seed'); }
-      }, [icon('undo'), ' Reset']) : null,
+        title: 'Reset graph to starting investigation entity',
+        onclick: () => { resetGraphExploration(); showToast('Reset exploration to start node'); }
+      }, [icon('undo'), ' Reset']),
       selectedEntity ? el('button', {
         class: 'strip-btn strip-highlight-btn',
         title: `Expand direct 1-hop connections for ${selectedEntity.name}`,
