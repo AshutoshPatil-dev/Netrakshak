@@ -313,192 +313,10 @@ export function renderSatelliteMapPins(visibleNodes) {
     state.graphMapConfig.nodeGeoPositions = {};
   }
 
-  const markersMap = new Map();
-  const polylineMap = new Map();
-  const isGroupingMode = !!state.graphMapConfig?.groupingMode;
-  const selectedForGroup = new Set(state.graphMapConfig?.selectedForGrouping || []);
-  const rawGroups = state.graphMapConfig?.markerGroups || [];
-  const activeGroups = [];
-  const groupedNodeIdSet = new Set();
-
-  rawGroups.forEach(grp => {
-    const members = (grp.nodeIds || []).map(id => visibleNodes.find(n => n.id === id)).filter(Boolean);
-    if (members.length >= 2) {
-      activeGroups.push({ group: grp, members });
-      members.forEach(m => groupedNodeIdSet.add(m.id));
-    }
-  });
-
-  const ungroupedNodes = visibleNodes.filter(n => !groupedNodeIdSet.has(n.id));
-
-  // 1. Render Active Groups (Stepped Overlapping Heads & Combined Info Pill)
-  activeGroups.forEach(({ group, members }) => {
-    let gLat = group.lat;
-    let gLng = group.lng;
-    if (gLat === undefined || gLng === undefined) {
-      const firstGeo = state.graphMapConfig.nodeGeoPositions[members[0].id];
-      gLat = firstGeo?.lat || baseLat;
-      gLng = firstGeo?.lng || baseLng;
-      group.lat = gLat;
-      group.lng = gLng;
-    }
-
-    // Ensure all member entities share the group coordinates
-    members.forEach(m => {
-      state.graphMapConfig.nodeGeoPositions[m.id] = { lat: gLat, lng: gLng };
-    });
-
-    const isAnyMemberSelected = members.some(m => m.id === state.selected);
-    const isGroupLocked = members.every(m => isPinLocked(m.id)) || !!state.graphMapConfig?.pinsLockedAll;
-    const headsWidth = (members.length - 1) * 26 + 42;
-    const iconWidth = Math.max(headsWidth + 20, 200);
-    const iconHeight = 60 + members.length * 28;
-    const anchorX = iconWidth / 2;
-    const anchorY = 46;
-
-    const groupHtml = `
-      <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}">
-        <div class="pin-group-heads-container" style="width: ${headsWidth}px;">
-          ${members.map((m, idx) => {
-            const mColor = objectTypeColors[m.type] || '#1E293B';
-            const mIcon = objectTypeIcons[m.type] || 'shield';
-            const isSel = state.selected === m.id;
-            return `
-              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 26}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name}">
-                <span class="pin-icon">${icon(mIcon)}</span>
-                <span class="pin-risk-dot ${m.risk || 'low'}"></span>
-              </div>
-            `;
-          }).join('')}
-        </div>
-        <div class="pin-needle group-needle"></div>
-        <div class="pin-shadow group-shadow"></div>
-        <div class="pin-group-combined-pill">
-          <div class="pin-group-pill-header">
-            <span class="pin-group-count-badge">👥 ${members.length} Grouped</span>
-            <button class="pin-ungroup-btn" data-group-id="${group.id}" title="Ungroup these pins">✕ Ungroup</button>
-          </div>
-          <div class="pin-group-members-list">
-            ${members.map(m => {
-              const mColor = objectTypeColors[m.type] || '#38BDF8';
-              const isSel = state.selected === m.id;
-              const mLocked = isPinLocked(m.id);
-              return `
-                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}">
-                  <span class="pin-member-type-tag" style="color: ${mColor};">${m.type}</span>
-                  <span class="pin-member-name-text">${m.name}</span>
-                  <button class="pin-lock-badge-btn" data-node-id="${m.id}" title="${mLocked ? 'Pin locked' : 'Pin draggable'}">${mLocked ? '🔒' : '🔓'}</button>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-
-    const groupIcon = L.divIcon({
-      className: 'map-pin-group-div-icon',
-      html: groupHtml,
-      iconSize: [iconWidth, iconHeight],
-      iconAnchor: [anchorX, anchorY],
-      popupAnchor: [0, -48]
-    });
-
-    const marker = L.marker([gLat, gLng], {
-      icon: groupIcon,
-      draggable: !isGroupLocked,
-      zIndexOffset: isAnyMemberSelected ? 1200 : 300
-    });
-
-    marker.on('drag', () => {
-      const curPos = marker.getLatLng();
-      group.lat = curPos.lat;
-      group.lng = curPos.lng;
-      members.forEach(m => {
-        state.graphMapConfig.nodeGeoPositions[m.id] = { lat: curPos.lat, lng: curPos.lng };
-      });
-      // Update connected lines in real-time
-      edges.forEach(edge => {
-        const source = edge[0];
-        const target = edge[1];
-        if (members.some(m => m.id === source || m.id === target)) {
-          const edgeKey = `${source}_${target}`;
-          const pl = polylineMap.get(edgeKey);
-          if (pl) {
-            const p1 = state.graphMapConfig.nodeGeoPositions[source];
-            const p2 = state.graphMapConfig.nodeGeoPositions[target];
-            if (p1 && p2) {
-              pl.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
-            }
-          }
-        }
-      });
-    });
-
-    marker.on('dragend', () => {
-      const curPos = marker.getLatLng();
-      group.lat = curPos.lat;
-      group.lng = curPos.lng;
-      members.forEach(m => {
-        setNodeGeoPosition(m.id, curPos.lat, curPos.lng);
-      });
-      saveMapConfig(state.graphMapConfig);
-      showToast(`📍 Pinned group (${members.length} items) to ${curPos.lat.toFixed(4)}°, ${curPos.lng.toFixed(4)}°`);
-    });
-
-    marker.addTo(leafletMarkersGroup);
-
-    // Event delegation for internal buttons & member rows in group marker
-    requestAnimationFrame(() => {
-      const mEl = marker.getElement();
-      if (mEl) {
-        // Ungroup button
-        const ungroupBtn = mEl.querySelector('.pin-ungroup-btn');
-        if (ungroupBtn) {
-          L.DomEvent.disableClickPropagation(ungroupBtn);
-          ungroupBtn.onclick = (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            removeMarkerGroup(group.id);
-            showToast('Ungrouped pins');
-          };
-        }
-
-        // Per-member head clicks & row clicks
-        const clickableItems = mEl.querySelectorAll('[data-node-id]');
-        clickableItems.forEach(item => {
-          L.DomEvent.disableClickPropagation(item);
-          item.onclick = (e) => {
-            e.stopPropagation();
-            const lockBtn = e.target.closest('.pin-lock-badge-btn');
-            if (lockBtn) {
-              const nid = lockBtn.getAttribute('data-node-id');
-              togglePinLock(nid);
-              showToast(isPinLocked(nid) ? '🔒 Locked pin' : '🔓 Unlocked pin');
-              return;
-            }
-            const nid = item.getAttribute('data-node-id');
-            if (nid) {
-              state.selected = nid;
-              notifyStateChange();
-              const ent = members.find(m => m.id === nid);
-              if (ent) showToast(`Selected ${ent.name}`);
-            }
-          };
-          item.ondblclick = (e) => {
-            e.stopPropagation();
-            const nid = item.getAttribute('data-node-id');
-            if (nid) openEntityProfile(nid);
-          };
-        });
-      }
-    });
-  });
-
-  // 2. Render Ungrouped Individual Pins
-  ungroupedNodes.forEach((entity, index) => {
+  // 1. Ensure all visible nodes have valid geo positions first
+  visibleNodes.forEach((entity) => {
     let geo = state.graphMapConfig.nodeGeoPositions[entity.id];
-    if (!geo) {
+    if (!geo || typeof geo.lat !== 'number' || typeof geo.lng !== 'number') {
       if (entity.identifiers?.lat && entity.identifiers?.lng) {
         geo = { lat: entity.identifiers.lat, lng: entity.identifiers.lng };
       } else {
@@ -519,9 +337,209 @@ export function renderSatelliteMapPins(visibleNodes) {
         }
       }
       state.graphMapConfig.nodeGeoPositions[entity.id] = geo;
-      saveMapConfig(state.graphMapConfig);
+    }
+  });
+
+  const markersMap = new Map();
+  const polylineMap = new Map();
+  const isGroupingMode = !!state.graphMapConfig?.groupingMode;
+  const selectedForGroup = new Set(state.graphMapConfig?.selectedForGrouping || []);
+  const rawGroups = state.graphMapConfig?.markerGroups || [];
+  const activeGroups = [];
+  const groupedNodeIdSet = new Set();
+
+  rawGroups.forEach(grp => {
+    const members = (grp.nodeIds || []).map(id => visibleNodes.find(n => n.id === id)).filter(Boolean);
+    if (members.length >= 2) {
+      activeGroups.push({ group: grp, members });
+      members.forEach(m => groupedNodeIdSet.add(m.id));
+    }
+  });
+
+  const ungroupedNodes = visibleNodes.filter(n => !groupedNodeIdSet.has(n.id));
+
+  // Helper to live-update all connected lines for a list of node IDs
+  const updateConnectedPolylines = (nodeIds) => {
+    edges.forEach(edge => {
+      const source = edge[0];
+      const target = edge[1];
+      if (nodeIds.includes(source) || nodeIds.includes(target)) {
+        const pl = polylineMap.get(`${source}_${target}`) || polylineMap.get(`${target}_${source}`);
+        if (pl) {
+          const p1 = state.graphMapConfig.nodeGeoPositions[source];
+          const p2 = state.graphMapConfig.nodeGeoPositions[target];
+          if (p1 && p2) {
+            pl.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
+          }
+        }
+      }
+    });
+  };
+
+  // 2. Render Active Groups (Stepped Overlapping Heads & Combined Info Pill)
+  activeGroups.forEach(({ group, members }) => {
+    let gLat = group.lat;
+    let gLng = group.lng;
+    if (typeof gLat !== 'number' || typeof gLng !== 'number') {
+      const firstGeo = state.graphMapConfig.nodeGeoPositions[members[0].id];
+      gLat = firstGeo?.lat || baseLat;
+      gLng = firstGeo?.lng || baseLng;
+      group.lat = gLat;
+      group.lng = gLng;
     }
 
+    // Synchronize all member entity coordinates to group anchor
+    members.forEach(m => {
+      state.graphMapConfig.nodeGeoPositions[m.id] = { lat: gLat, lng: gLng };
+    });
+
+    const isAnyMemberSelected = members.some(m => m.id === state.selected);
+    const isGroupLocked = members.every(m => isPinLocked(m.id)) || !!state.graphMapConfig?.pinsLockedAll;
+    const headsWidth = (members.length - 1) * 26 + 42;
+    const iconWidth = Math.max(headsWidth + 20, 210);
+    const iconHeight = 65 + members.length * 28;
+    const anchorX = iconWidth / 2;
+    const anchorY = 46;
+
+    const groupHtml = `
+      <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}">
+        <div class="pin-group-heads-container" style="width: ${headsWidth}px;">
+          ${members.map((m, idx) => {
+            const mColor = objectTypeColors[m.type] || '#1E293B';
+            const mIcon = objectTypeIcons[m.type] || 'shield';
+            const isSel = state.selected === m.id;
+            return `
+              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 26}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag to move group)">
+                <span class="pin-icon">${icon(mIcon)}</span>
+                <span class="pin-risk-dot ${m.risk || 'low'}"></span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="pin-needle group-needle"></div>
+        <div class="pin-shadow group-shadow"></div>
+        <div class="pin-group-combined-pill">
+          <div class="pin-group-pill-header">
+            <span class="pin-group-count-badge">👥 ${members.length} Grouped</span>
+            <button class="pin-ungroup-btn" data-group-id="${group.id}" title="Ungroup these pins">✕ Ungroup</button>
+          </div>
+          <div class="pin-group-members-list">
+            ${members.map(m => {
+              const mColor = objectTypeColors[m.type] || '#38BDF8';
+              const isSel = state.selected === m.id;
+              const mLocked = isPinLocked(m.id);
+              return `
+                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}" title="Click to inspect ${m.name}">
+                  <span class="pin-member-type-tag" style="color: ${mColor};">${m.type}</span>
+                  <span class="pin-member-name-text">${m.name}</span>
+                  <button class="pin-lock-badge-btn" data-node-id="${m.id}" title="${mLocked ? 'Pin locked' : 'Pin draggable'}">${mLocked ? '🔒' : '🔓'}</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const groupIcon = L.divIcon({
+      className: 'map-pin-group-div-icon',
+      html: groupHtml,
+      iconSize: [iconWidth, iconHeight],
+      iconAnchor: [anchorX, anchorY],
+      popupAnchor: [0, -48]
+    });
+
+    let isDraggingGroup = false;
+    const marker = L.marker([gLat, gLng], {
+      icon: groupIcon,
+      draggable: !isGroupLocked,
+      zIndexOffset: isAnyMemberSelected ? 1200 : 300
+    });
+
+    marker.on('dragstart', () => {
+      isDraggingGroup = true;
+    });
+
+    marker.on('drag', () => {
+      const curPos = marker.getLatLng();
+      group.lat = curPos.lat;
+      group.lng = curPos.lng;
+      members.forEach(m => {
+        state.graphMapConfig.nodeGeoPositions[m.id] = { lat: curPos.lat, lng: curPos.lng };
+      });
+      updateConnectedPolylines(members.map(m => m.id));
+    });
+
+    marker.on('dragend', () => {
+      const curPos = marker.getLatLng();
+      group.lat = curPos.lat;
+      group.lng = curPos.lng;
+      members.forEach(m => {
+        setNodeGeoPosition(m.id, curPos.lat, curPos.lng);
+      });
+      saveMapConfig(state.graphMapConfig);
+      showToast(`📍 Moved group (${members.length} pins)`);
+      setTimeout(() => { isDraggingGroup = false; }, 80);
+    });
+
+    marker.addTo(leafletMarkersGroup);
+
+    // Event delegation for internal buttons & member clicks
+    requestAnimationFrame(() => {
+      const mEl = marker.getElement();
+      if (mEl) {
+        // Ungroup button
+        const ungroupBtn = mEl.querySelector('.pin-ungroup-btn');
+        if (ungroupBtn) {
+          ungroupBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeMarkerGroup(group.id);
+            showToast('Ungrouped pins');
+          };
+        }
+
+        // Lock buttons
+        const lockBtns = mEl.querySelectorAll('.pin-lock-badge-btn');
+        lockBtns.forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const nid = btn.getAttribute('data-node-id');
+            if (nid) {
+              togglePinLock(nid);
+              showToast(isPinLocked(nid) ? '🔒 Locked pin' : '🔓 Unlocked pin');
+            }
+          };
+        });
+
+        // Member head & row clicks (only fires if not actively dragging)
+        const clickableItems = mEl.querySelectorAll('[data-node-id]');
+        clickableItems.forEach(item => {
+          item.onclick = (e) => {
+            if (isDraggingGroup) return;
+            if (e.target.closest('.pin-lock-badge-btn') || e.target.closest('.pin-ungroup-btn')) return;
+            e.stopPropagation();
+            const nid = item.getAttribute('data-node-id');
+            if (nid) {
+              state.selected = nid;
+              notifyStateChange();
+              const ent = members.find(m => m.id === nid);
+              if (ent) showToast(`Selected ${ent.name}`);
+            }
+          };
+          item.ondblclick = (e) => {
+            if (isDraggingGroup) return;
+            e.stopPropagation();
+            const nid = item.getAttribute('data-node-id');
+            if (nid) openEntityProfile(nid);
+          };
+        });
+      }
+    });
+  });
+
+  // 3. Render Ungrouped Individual Pins
+  ungroupedNodes.forEach((entity) => {
+    const geo = state.graphMapConfig.nodeGeoPositions[entity.id];
     const nodeLocked = isPinLocked(entity.id);
     const typeColor = objectTypeColors[entity.type] || '#1E293B';
     const typeIcon = objectTypeIcons[entity.type] || 'shield';
@@ -562,41 +580,33 @@ export function renderSatelliteMapPins(visibleNodes) {
       popupAnchor: [0, -48]
     });
 
+    let isDraggingPin = false;
     const marker = L.marker([geo.lat, geo.lng], {
       icon: customIcon,
       draggable: !nodeLocked && !isGroupingMode,
       zIndexOffset: isSelected ? 1000 : (isSeed ? 500 : 100)
     });
 
+    marker.on('dragstart', () => {
+      isDraggingPin = true;
+    });
+
     marker.on('drag', () => {
       const curPos = marker.getLatLng();
       state.graphMapConfig.nodeGeoPositions[entity.id] = { lat: curPos.lat, lng: curPos.lng };
-      // Update connected lines in real-time
-      edges.forEach(edge => {
-        const source = edge[0];
-        const target = edge[1];
-        if (source === entity.id || target === entity.id) {
-          const edgeKey = `${source}_${target}`;
-          const pl = polylineMap.get(edgeKey);
-          if (pl) {
-            const p1 = state.graphMapConfig.nodeGeoPositions[source];
-            const p2 = state.graphMapConfig.nodeGeoPositions[target];
-            if (p1 && p2) {
-              pl.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
-            }
-          }
-        }
-      });
+      updateConnectedPolylines([entity.id]);
     });
 
     marker.on('dragend', () => {
       const curPos = marker.getLatLng();
       setNodeGeoPosition(entity.id, curPos.lat, curPos.lng);
-      showToast(`📍 Pinned ${entity.name} to ${curPos.lat.toFixed(4)}°, ${curPos.lng.toFixed(4)}°`);
+      showToast(`📍 Pinned ${entity.name}`);
+      setTimeout(() => { isDraggingPin = false; }, 80);
     });
 
     marker.on('click', (e) => {
       L.DomEvent.stopPropagation(e);
+      if (isDraggingPin) return;
       if (isGroupingMode) {
         togglePinSelectionForGrouping(entity.id);
         const count = (state.graphMapConfig.selectedForGrouping || []).length;
@@ -610,14 +620,14 @@ export function renderSatelliteMapPins(visibleNodes) {
 
     marker.on('dblclick', (e) => {
       L.DomEvent.stopPropagation(e);
-      if (!isGroupingMode) {
+      if (!isGroupingMode && !isDraggingPin) {
         openEntityProfile(entity.id);
       }
     });
 
     // Tooltip integration
     marker.on('mouseover', () => {
-      if (isGroupingMode) return;
+      if (isGroupingMode || isDraggingPin) return;
       let tooltipEl = document.getElementById('graphNodeTooltip');
       if (!tooltipEl) return;
 
@@ -663,10 +673,8 @@ export function renderSatelliteMapPins(visibleNodes) {
       if (mEl) {
         const lockBtn = mEl.querySelector('.pin-lock-badge-btn');
         if (lockBtn) {
-          L.DomEvent.disableClickPropagation(lockBtn);
           lockBtn.onclick = (e) => {
             e.stopPropagation();
-            e.preventDefault();
             togglePinLock(entity.id);
             showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
           };
@@ -675,7 +683,7 @@ export function renderSatelliteMapPins(visibleNodes) {
     });
   });
 
-  // 3. Render Polylines for edges between visible nodes
+  // 4. Render Polylines for edges between visible nodes
   edges.forEach(edge => {
     const source = edge[0];
     const target = edge[1];
@@ -686,9 +694,9 @@ export function renderSatelliteMapPins(visibleNodes) {
       if (p1 && p2) {
         const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
         const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
-          color: isConnectedToSelected ? '#38BDF8' : '#E2E8F0',
+          color: isConnectedToSelected ? '#38BDF8' : '#94A3B8',
           weight: isConnectedToSelected ? 3.5 : 2,
-          opacity: isConnectedToSelected ? 0.95 : 0.65,
+          opacity: isConnectedToSelected ? 1 : 0.75,
           dashArray: isConnectedToSelected ? null : '6, 6'
         });
 
@@ -702,6 +710,7 @@ export function renderSatelliteMapPins(visibleNodes) {
 
         polyline.addTo(leafletEdgesGroup);
         polylineMap.set(`${source}_${target}`, polyline);
+        polylineMap.set(`${target}_${source}`, polyline);
       }
     }
   });
