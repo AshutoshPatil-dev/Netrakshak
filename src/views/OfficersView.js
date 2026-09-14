@@ -121,7 +121,7 @@ export function renderOfficers(c) {
   const form = el('form', { class: 'officer-form' }, [
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('fullName') + ' *']),
-        el('input', { name: 'fullName', required: true, placeholder: 'Inspector Anil Singh', value: editingOfficer ? editingOfficer.name : '' })
+        el('input', { name: 'fullName', required: true, placeholder: 'e.g. Officer Name', value: editingOfficer ? editingOfficer.name : '' })
       ]),
       el('div', { class: 'form-row-2' }, [
         el('div', { class: 'form-group' }, [
