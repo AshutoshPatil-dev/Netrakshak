@@ -1174,6 +1174,95 @@ export function setGraphMapLayerType(type) {
   notifyStateChange();
 }
 
+export function setMapGroupingMode(active) {
+  if (!state.graphMapConfig) state.graphMapConfig = {};
+  state.graphMapConfig.groupingMode = !!active;
+  if (!active) {
+    state.graphMapConfig.selectedForGrouping = [];
+  } else {
+    state.graphMapConfig.selectedForGrouping = state.graphMapConfig.selectedForGrouping || [];
+  }
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function togglePinSelectionForGrouping(nodeId) {
+  if (!state.graphMapConfig) state.graphMapConfig = {};
+  if (!state.graphMapConfig.selectedForGrouping) state.graphMapConfig.selectedForGrouping = [];
+  const idx = state.graphMapConfig.selectedForGrouping.indexOf(nodeId);
+  if (idx >= 0) {
+    state.graphMapConfig.selectedForGrouping.splice(idx, 1);
+  } else {
+    state.graphMapConfig.selectedForGrouping.push(nodeId);
+  }
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function createMarkerGroup(nodeIds, name) {
+  if (!nodeIds || nodeIds.length < 2) return null;
+  if (!state.graphMapConfig) state.graphMapConfig = {};
+  if (!state.graphMapConfig.markerGroups) state.graphMapConfig.markerGroups = [];
+
+  // Remove any of these nodes from existing groups
+  state.graphMapConfig.markerGroups = state.graphMapConfig.markerGroups.map(grp => {
+    return {
+      ...grp,
+      nodeIds: grp.nodeIds.filter(id => !nodeIds.includes(id))
+    };
+  }).filter(grp => grp.nodeIds.length >= 2);
+
+  // Compute common anchor position from the first selected node or average
+  const positions = nodeIds.map(id => state.graphMapConfig.nodeGeoPositions?.[id]).filter(Boolean);
+  let anchorLat = 18.5204;
+  let anchorLng = 73.8567;
+  if (positions.length > 0) {
+    anchorLat = positions.reduce((acc, p) => acc + p.lat, 0) / positions.length;
+    anchorLng = positions.reduce((acc, p) => acc + p.lng, 0) / positions.length;
+  }
+  if (!state.graphMapConfig.nodeGeoPositions) state.graphMapConfig.nodeGeoPositions = {};
+  nodeIds.forEach(id => {
+    state.graphMapConfig.nodeGeoPositions[id] = { lat: anchorLat, lng: anchorLng };
+  });
+
+  const newGroup = {
+    id: `grp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    name: name || `Cluster (${nodeIds.length})`,
+    nodeIds: [...nodeIds],
+    lat: anchorLat,
+    lng: anchorLng
+  };
+
+  state.graphMapConfig.markerGroups.push(newGroup);
+  state.graphMapConfig.selectedForGrouping = [];
+  state.graphMapConfig.groupingMode = false;
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+  return newGroup;
+}
+
+export function removeMarkerGroup(groupId) {
+  if (!state.graphMapConfig?.markerGroups) return;
+  const targetGroup = state.graphMapConfig.markerGroups.find(g => g.id === groupId);
+  if (targetGroup) {
+    // Slightly scatter member pins so they don't sit directly on top of each other
+    const total = targetGroup.nodeIds.length;
+    const baseLat = targetGroup.lat || 18.5204;
+    const baseLng = targetGroup.lng || 73.8567;
+    targetGroup.nodeIds.forEach((id, idx) => {
+      const angle = (idx / total) * Math.PI * 2;
+      const radius = 0.003;
+      state.graphMapConfig.nodeGeoPositions[id] = {
+        lat: baseLat + Math.sin(angle) * radius,
+        lng: baseLng + Math.cos(angle) * radius * 1.15
+      };
+    });
+  }
+  state.graphMapConfig.markerGroups = state.graphMapConfig.markerGroups.filter(g => g.id !== groupId);
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
 export function getActiveOfficer() {
   const you = state.officers.find(o => o.isYou);
   if (you) {

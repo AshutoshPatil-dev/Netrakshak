@@ -6976,6 +6976,260 @@
   flex-shrink: 0;
 }
 
+/* Tactical Pin Group (Cluster Stack with Stepped Heads) */
+.map-tactical-pin-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.map-pin-group-div-icon {
+  background: transparent;
+  border: none;
+}
+
+.pin-group-heads-container {
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.pin-group-head-item {
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0.15s ease;
+}
+
+.pin-group-head-item .pin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+}
+
+.pin-group-head-item .pin-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pin-group-head-item:hover {
+  transform: translateY(-5px) scale(1.15);
+  z-index: 999 !important;
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.6);
+  border-color: #38BDF8;
+}
+
+.pin-group-head-item.selected {
+  border-color: #38BDF8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.5), 0 6px 16px rgba(0, 0, 0, 0.6);
+  transform: translateY(-3px);
+}
+
+.pin-needle.group-needle {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 11px solid #1E293B;
+  transform: translateX(-50%);
+}
+
+.pin-shadow.group-shadow {
+  position: absolute;
+  top: 47px;
+  left: 50%;
+  width: 22px;
+  height: 7px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  filter: blur(2px);
+  transform: translateX(-50%);
+}
+
+.pin-group-combined-pill {
+  margin-top: 14px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 9px;
+  padding: 6px 9px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.15);
+  min-width: 175px;
+  max-width: 250px;
+}
+
+.pin-group-pill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pin-group-count-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #38BDF8;
+  letter-spacing: 0.02em;
+}
+
+.pin-ungroup-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pin-ungroup-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #FFFFFF;
+  border-color: #EF4444;
+}
+
+.pin-group-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pin-group-member-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.pin-group-member-row:hover {
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.pin-group-member-row.active-selected {
+  background: rgba(56, 189, 248, 0.22);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+}
+
+.pin-member-type-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.pin-member-name-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #F8FAFC;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Grouping Selection Mode on Single Pins */
+.map-tactical-pin.grouping-selectable {
+  cursor: pointer;
+}
+
+.map-tactical-pin.grouping-selectable:hover .pin-circle {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px #38BDF8;
+}
+
+.map-tactical-pin.selected-for-group .pin-circle {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 3px #10B981, 0 0 16px rgba(16, 185, 129, 0.7);
+  animation: pulseGreen 1.4s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 2px #10B981, 0 0 8px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 4px #10B981, 0 0 18px rgba(16, 185, 129, 0.85); }
+  100% { box-shadow: 0 0 0 2px #10B981, 0 0 8px rgba(16, 185, 129, 0.4); }
+}
+
+.pin-group-select-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0F172A;
+  border: 1.5px solid #64748B;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.pin-group-select-badge.checked {
+  background: #10B981;
+  border-color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.6);
+}
+
+/* Top Strip Group Buttons */
+.strip-group-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #E2E8F0;
+}
+
+.strip-group-btn:hover {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: #38BDF8;
+  color: #38BDF8;
+}
+
+.strip-group-active-btn {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
+  font-weight: 700;
+}
+
+.strip-group-cancel-btn {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #FCA5A5 !important;
+  padding: 0 8px !important;
+}
+
+.strip-group-cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.35) !important;
+  color: #FFFFFF !important;
+}
+
 
 
 
