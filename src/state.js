@@ -112,6 +112,20 @@ export const DEFAULT_OFFICERS = [
     phone: '+91 9112222108',
     role: 'admin',
     isYou: true
+  },
+  {
+    id: 'dbf89a8a-3b6d-4b14-baa0-3e875f0c3460',
+    name: 'Yash Chaudhari',
+    rank: 'Sub-Inspector',
+    cadre: 'MH Cadre',
+    badge_no: 'MH-ACP-011',
+    district: 'Pune HQ',
+    state: 'Maharashtra',
+    email: 'chaudhariyash3006@gmail.com',
+    password: 'password123',
+    phone: '+91 9579137558',
+    role: 'case-officer',
+    isYou: false
   }
 ];
 
@@ -122,7 +136,12 @@ export function loadSavedOfficers() {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const filtered = parsed.filter(o => !['off_anil', 'off_priya', 'off_vikas', 'off_neha', 'off_ashutosh'].includes(o.id));
-        if (filtered.length > 0) return filtered;
+        if (filtered.length > 0) {
+          const map = new Map();
+          DEFAULT_OFFICERS.forEach(d => map.set(d.id, { ...d }));
+          filtered.forEach(f => map.set(f.id, { ...(map.get(f.id) || {}), ...f }));
+          return Array.from(map.values());
+        }
       }
     }
     return [...DEFAULT_OFFICERS];
@@ -913,6 +932,50 @@ export const DEFAULT_FIR_CASES = [
     extraction_status: 'approved',
     syndicateGroup: 'Apex Offshore Bond Syndicate',
     sourceRefs: ['FIR-MH-2026-0512', 'ROC-Records', 'PMLA-ED-2026']
+  },
+  {
+    id: '4f6ef501-bda1-49ec-ba43-8b21d79a6acd',
+    firNumber: 'FIR-MH-2026-6274',
+    fir_number: 'FIR-MH-2026-6274',
+    policeStation: 'Cyber Crime Police Station, Shivajinagar',
+    police_station: 'Cyber Crime Police Station, Shivajinagar',
+    district: 'Pune City',
+    state: 'Maharashtra',
+    incidentDate: '2026-08-14',
+    incident_date: '2026-08-14',
+    incidentTime: '14:30',
+    incident_time: '14:30',
+    sections: 'IPC 420, IPC 468, IPC 471, IT Act 66D',
+    complainantName: 'Rajesh Kulkarni',
+    complainant_name: 'Rajesh Kulkarni',
+    complainantAge: '42',
+    complainant_age: '42',
+    complainantFather: 'Madhavrao Kulkarni',
+    complainant_father: 'Madhavrao Kulkarni',
+    complainantPhone: '+91 98220 11984',
+    complainant_phone: '+91 98220 11984',
+    complainantAddress: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
+    complainant_address: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
+    subjectName: 'Sameer Khan',
+    subject_name: 'Sameer Khan',
+    alias: 'Baba Bhai, Sammy, SK',
+    otherAccused: 'Vikram Rathi, Ajay Deshmukh',
+    other_accused: 'Vikram Rathi, Ajay Deshmukh',
+    phone: '+91 98811 55421',
+    vehicle: 'MH-12-PQ-9081',
+    bank: 'HDFC-50100492817291',
+    accusedImage: getAccusedPhoto('Sameer Khan'),
+    accused_image: getAccusedPhoto('Sameer Khan'),
+    incidentLocation: 'FC Road Commercial Complex, Shivajinagar, Pune',
+    incident_location: 'FC Road Commercial Complex, Shivajinagar, Pune',
+    incidentSummary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
+    incident_summary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
+    propertySummary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.',
+    property_summary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.',
+    extractionStatus: 'approved',
+    extraction_status: 'approved',
+    syndicateGroup: 'ShadowFlow Cyber Racket',
+    sourceRefs: ['FIR-MH-2026-6274', 'CDR-JIO-PN', 'SFinDSet-Fraud-Batch']
   }
 ];
 
@@ -1416,8 +1479,8 @@ export async function loadSupabaseData() {
   if (!supabaseConfigured) return;
   try {
     const { data } = await supabase.auth.getSession();
-    const user = data?.session?.user;
-    if (!user) return;
+    const user = data?.session?.user || null;
+    const activeEmail = user?.email || localStorage.getItem('activeOfficerEmail') || '';
 
     // Load all data concurrently in parallel
     const [
@@ -1444,7 +1507,7 @@ export async function loadSupabaseData() {
       state.auditLogs = events.map(e => {
         const d = new Date(e.created_at);
         const timeStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        const isSelf = e.actor_id === user.id;
+        const isSelf = user ? e.actor_id === user.id : false;
         const actorName = isSelf ? (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Officer') : 'Officer';
         const actorInitials = isSelf ? (actorName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()) : 'OF';
         return {
@@ -1474,7 +1537,7 @@ export async function loadSupabaseData() {
         email: p.email || '',
         phone: p.phone || '',
         role: p.role_name || 'case-officer',
-        isYou: user.id === p.id || user.email === p.email
+        isYou: (user && (user.id === p.id || user.email === p.email)) || (activeEmail && (p.email || '').toLowerCase() === activeEmail.toLowerCase())
       }));
       saveOfficers();
     }
@@ -1896,11 +1959,13 @@ export async function bootstrapAuth() {
             o.isYou = (o.id === matched.id);
           });
           state.loggedIn = true;
+          await loadSupabaseData().catch(() => {});
         } else {
           state.loggedIn = false;
         }
       } else {
         state.loggedIn = true;
+        await loadSupabaseData().catch(() => {});
       }
     } else {
       state.loggedIn = false;
