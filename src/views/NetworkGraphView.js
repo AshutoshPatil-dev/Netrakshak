@@ -396,11 +396,11 @@ export function renderSatelliteMapPins(visibleNodes) {
 
     const isAnyMemberSelected = members.some(m => m.id === state.selected);
     const isGroupLocked = members.every(m => isPinLocked(m.id)) || !!state.graphMapConfig?.pinsLockedAll;
-    const headsWidth = (members.length - 1) * 26 + 42;
-    const iconWidth = Math.max(headsWidth + 20, 210);
-    const iconHeight = 65 + members.length * 28;
+    const headsWidth = (members.length - 1) * 18 + 28;
+    const iconWidth = Math.max(headsWidth + 16, 150);
+    const iconHeight = 44 + members.length * 20;
     const anchorX = iconWidth / 2;
-    const anchorY = 46;
+    const anchorY = 32;
 
     const groupHtml = `
       <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}">
@@ -410,7 +410,7 @@ export function renderSatelliteMapPins(visibleNodes) {
             const mIcon = objectTypeIcons[m.type] || 'shield';
             const isSel = state.selected === m.id;
             return `
-              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 26}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag to move group)">
+              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 18}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag to move group)">
                 <span class="pin-icon">${icon(mIcon)}</span>
                 <span class="pin-risk-dot ${m.risk || 'low'}"></span>
               </div>
@@ -447,7 +447,7 @@ export function renderSatelliteMapPins(visibleNodes) {
       html: groupHtml,
       iconSize: [iconWidth, iconHeight],
       iconAnchor: [anchorX, anchorY],
-      popupAnchor: [0, -48]
+      popupAnchor: [0, -36]
     });
 
     let isDraggingGroup = false;
@@ -576,9 +576,9 @@ export function renderSatelliteMapPins(visibleNodes) {
     const customIcon = L.divIcon({
       className: 'map-pin-div-icon',
       html: pinHtml,
-      iconSize: [44, 56],
-      iconAnchor: [22, 46],
-      popupAnchor: [0, -48]
+      iconSize: [32, 42],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34]
     });
 
     let isDraggingPin = false;
