@@ -6137,6 +6137,123 @@
   gap: 4px;
 }
 
+/* ==========================================================================
+   Explainable Risk Signals Styles
+   ========================================================================== */
+.explainable-risk-card {
+  background: #FFFFFF;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.explainable-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.explainable-severity-pill {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.explainable-severity-pill.high {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.explainable-severity-pill.medium {
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.explainable-severity-pill.low {
+  background: #F0FDF4;
+  color: #16A34A;
+  border: 1px solid #BBF7D0;
+}
+
+.explainable-signals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.explainable-signal-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.explainable-signal-item.high {
+  border-left: 3px solid #DC2626;
+  background: #FFFBFB;
+}
+
+.explainable-signal-item.medium {
+  border-left: 3px solid #D97706;
+  background: #FFFDF8;
+}
+
+.signal-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.signal-category-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748B;
+  letter-spacing: 0.5px;
+}
+
+.signal-points-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #BE123C;
+  background: #FFE4E6;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.signal-title {
+  font-size: 12.5px;
+  color: var(--app-text);
+}
+
+.signal-reason {
+  font-size: 11.5px;
+  color: var(--app-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.empty-signals-box {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--app-text-secondary);
+  background: #F8FAFC;
+  border-radius: 6px;
+}
+
+
 
 
 

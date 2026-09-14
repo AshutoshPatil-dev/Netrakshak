@@ -105,3 +105,135 @@ export function suspiciousPatterns(nodes, links) {
     explanation: node.degree >= 8 ? 'High connectivity and recent activity' : 'Connectivity is higher than recorded risk',
   }));
 }
+
+export function computeExplainableRiskSignals(entity, allEntities = [], allEdges = [], allFIRs = []) {
+  if (!entity) return { totalScore: 0, severity: 'low', signals: [], summary: 'No entity data' };
+
+  const signals = [];
+  let score = 0;
+
+  // 1. Cross-Case FIR Analysis
+  const eName = (entity.name || '').toLowerCase();
+  const eLocal = (entity.local || '').toLowerCase();
+  const matchedCases = allFIRs.filter(c => {
+    const sName = (c.subjectName || c.subject_name || '').toLowerCase();
+    const oAcc = (c.otherAccused || c.other_accused || '').toLowerCase();
+    const phone = (c.phone || '').replace(/[^0-9]/g, '');
+    const veh = (c.vehicle || '').toLowerCase();
+    const bnk = (c.bank || '').toLowerCase();
+    const ePhone = (entity.phone || entity.name || '').replace(/[^0-9]/g, '');
+
+    return sName.includes(eName) || 
+      oAcc.includes(eName) || 
+      (eLocal && (sName.includes(eLocal) || oAcc.includes(eLocal))) ||
+      (ePhone.length >= 10 && phone.includes(ePhone)) ||
+      (veh && (eName.includes(veh) || veh.includes(eName))) ||
+      (bnk && (eName.includes(bnk) || bnk.includes(eName)));
+  });
+
+  if (matchedCases.length >= 2) {
+    score += 35;
+    signals.push({
+      category: 'Multi-Jurisdiction Crime',
+      severity: 'high',
+      points: '+35 pts',
+      title: 'Multi-FIR Syndicate Operative',
+      reason: `Directly named across ${matchedCases.length} separate registered police FIR dossiers across multiple police stations.`
+    });
+  } else if (matchedCases.length === 1) {
+    score += 20;
+    signals.push({
+      category: 'Police Case Registration',
+      severity: 'medium',
+      points: '+20 pts',
+      title: 'Active Case Subject',
+      reason: `Formally cited as suspect/asset in case (${matchedCases[0].firNumber || matchedCases[0].fir_number}).`
+    });
+  }
+
+  // 2. Hardware / Burner Telephony intersection
+  if (entity.type === 'Phone' || entity.identifiers?.imei) {
+    const imei = entity.identifiers?.imei;
+    const isSharedImei = allEntities.some(other => other.id !== entity.id && other.identifiers?.imei && other.identifiers.imei === imei);
+    if (isSharedImei) {
+      score += 30;
+      signals.push({
+        category: 'Hardware Forensics',
+        severity: 'high',
+        points: '+30 pts',
+        title: 'Shared IMEI Burner Swap',
+        reason: `Physical device IMEI (${imei || 'Shared Handset'}) is reused across multiple suspect phone lines to bypass individual wiretap surveillance.`
+      });
+    } else {
+      score += 15;
+      signals.push({
+        category: 'Telephony',
+        severity: 'medium',
+        points: '+15 pts',
+        title: 'Burner Telephony Line',
+        reason: 'Active cellular subscriber identity registered under syndicate communications network.'
+      });
+    }
+  }
+
+  // 3. Money Laundering & Financial Mule Routing
+  if (entity.type === 'Bank' || (entity.role && entity.role.toLowerCase().includes('mule'))) {
+    score += 30;
+    signals.push({
+      category: 'Financial Intelligence',
+      severity: 'high',
+      points: '+30 pts',
+      title: 'Layering Mule Financial Route',
+      reason: 'Identified money laundering terminal for rapid IMPS/P2P fund layering and cashout dispersal.'
+    });
+  }
+
+  // 4. Vehicle Mobility & ANPR Hits
+  if (entity.type === 'Vehicle') {
+    const sightings = Number(entity.identifiers?.anprSightings) || entity.events || 0;
+    if (sightings >= 15) {
+      score += 25;
+      signals.push({
+        category: 'Mobility Intelligence',
+        severity: 'high',
+        points: '+25 pts',
+        title: 'High-Frequency ANPR Corridor Sightings',
+        reason: `Tracked in ${sightings} automated number plate recognition (ANPR) sightings across crime scene corridors.`
+      });
+    } else {
+      score += 15;
+      signals.push({
+        category: 'Mobility Intelligence',
+        severity: 'medium',
+        points: '+15 pts',
+        title: 'Syndicate Logistics Asset',
+        reason: 'Identified getaway or executive conveyance vehicle linked to active syndicate operatives.'
+      });
+    }
+  }
+
+  // 5. Network Graph Topology / Degree & Betweenness
+  const connectedEdges = allEdges.filter(([u, v]) => u === entity.id || v === entity.id);
+  if (connectedEdges.length >= 4) {
+    score += 20;
+    signals.push({
+      category: 'Network Topology',
+      severity: 'high',
+      points: '+20 pts',
+      title: 'Central Hub Node',
+      reason: `Directly interconnected with ${connectedEdges.length} separate criminal operatives, shell entities, and logistics assets.`
+    });
+  }
+
+  // 6. Base risk clamp & severity
+  const computedTotal = Math.min(100, Math.max(15, score + (entity.risk === 'high' ? 25 : entity.risk === 'medium' ? 10 : 0)));
+  const finalSeverity = computedTotal >= 70 ? 'high' : computedTotal >= 40 ? 'medium' : 'low';
+
+  return {
+    totalScore: computedTotal,
+    severity: finalSeverity,
+    signals,
+    summary: `${signals.length} algorithmic risk signals detected based on FIR registrations, hardware CDRs, and graph topology.`
+  };
+}
+

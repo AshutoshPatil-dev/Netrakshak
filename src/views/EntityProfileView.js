@@ -10,7 +10,7 @@ import {
   startGraphInvestigation,
   findCrossLinkedCases
 } from '../state.js';
-import { graphMetrics } from '../lib/analysis.js';
+import { graphMetrics, computeExplainableRiskSignals } from '../lib/analysis.js';
 import { objectTypeColors, objectTypeIcons, getConnectedLinks } from './NetworkGraphView.js';
 import { performAIAnalysis } from './AIAnalysisView.js';
 import { showToast } from '../components/Toast.js';
@@ -328,9 +328,34 @@ export function renderEntityProfile(c) {
     ])
   ]);
 
+  // Explainable AI Risk Signals Card
+  const explainableSignals = computeExplainableRiskSignals(entity, entities, edges, state.firDraft ? [state.firDraft] : []);
+  const explainableRiskCard = el('div', { class: 'profile-column-card explainable-risk-card', style: 'margin-top: 16px;' }, [
+    el('div', { class: 'explainable-header-row' }, [
+      el('div', {}, [
+        el('h3', { class: 'col-card-title', style: 'margin: 0;' }, ['Explainable Risk Signals']),
+        el('p', { class: 'muted', style: 'font-size: 11px; margin: 2px 0 0;' }, ['Algorithmic evidence provenance & score breakdown'])
+      ]),
+      el('span', { class: `explainable-severity-pill ${entity.risk || 'high'}` }, [
+        `${riskScore}/100 Composite Risk`
+      ])
+    ]),
+    explainableSignals.signals.length > 0 ? el('div', { class: 'explainable-signals-list' }, explainableSignals.signals.map(sig => {
+      return el('div', { class: `explainable-signal-item ${sig.severity}` }, [
+        el('div', { class: 'signal-item-top' }, [
+          el('span', { class: 'signal-category-tag' }, [sig.category]),
+          el('span', { class: 'signal-points-badge' }, [sig.points])
+        ]),
+        el('strong', { class: 'signal-title' }, [sig.title]),
+        el('p', { class: 'signal-reason' }, [sig.reason])
+      ]);
+    })) : el('div', { class: 'empty-signals-box' }, ['No anomalous risk signals flagged for this entity.'])
+  ]);
+
   const col1Wrapper = el('div', { class: 'profile-column-wrapper' }, [
     influenceCard,
-    aliasesCard
+    aliasesCard,
+    explainableRiskCard
   ].filter(Boolean));
 
   const col2Wrapper = el('div', { class: 'profile-column-wrapper' }, [
@@ -352,3 +377,4 @@ export function renderEntityProfile(c) {
 
   c.append(container);
 }
+
