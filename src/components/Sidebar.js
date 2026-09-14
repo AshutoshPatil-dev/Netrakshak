@@ -46,10 +46,10 @@ export function renderSidebar() {
     navItem('ai_analysis', t('aiAnalysis'), 'sparkle'),
     ...(activeOfficer.isAdmin ? [
       navItem('officers', t('officers'), 'users'),
-      navItem('audit_logs', t('auditLogs'), 'database')
+      navItem('audit_logs', t('auditLogs'), 'database'),
+      el('div', { class: 'nav-section-label' }, [t('governance')]),
+      navItem('sources', t('sources'), 'database')
     ] : []),
-    el('div', { class: 'nav-section-label' }, [t('governance')]),
-    navItem('sources', t('sources'), 'database'),
 
     el('div', { class: 'sidebar-bottom' }, [
       el('div', { class: 'profile-mini' }, [

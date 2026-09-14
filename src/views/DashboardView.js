@@ -202,7 +202,7 @@ export function renderOverview(c) {
       card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
       card(t('entities'), String(entities.length), 'Entities in database', 'metric-blue'),
       card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
-      card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
+      card(t('fir'), String(firCases.length), 'Registered FIR dossiers', 'metric-purple')
     ]),
     state.womenSafetyFilter ? womenSafetyCommandPanel() : null,
     el('div', { class: 'dashboard-grid' }, [intelligenceSummaryPanel(), riskPanel()]),
