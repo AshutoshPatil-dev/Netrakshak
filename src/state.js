@@ -1767,63 +1767,43 @@ export async function signInOfficer(form) {
   }
 
   try {
-    if (supabaseConfigured) {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error || !authData?.user) {
-        setLoginInlineError('Invalid email address or password. Please verify your credentials.');
-        return;
-      }
-
-      const check = await verifyOfficerAuthorization(authData.user);
-      if (!check.authorized) {
-        supabase.auth.signOut().catch(() => {});
-        state.loggedIn = false;
-        setLoginInlineError(`Access Denied: ${check.reason}`);
-        return;
-      }
-
-      // Mark matching officer profile as active
-      state.officers.forEach(o => {
-        o.isYou = ((o.email || '').toLowerCase() === email.toLowerCase() || o.id === authData.user.id);
-      });
-      localStorage.setItem('activeOfficerEmail', email);
-      saveOfficers();
-
-      state.loggedIn = true;
-      state.loginError = '';
-      await loadSupabaseData();
-      notifyStateChange();
-      recordAudit('Login event', `Signed in (${email}).`, 'info', 'login').catch(() => {});
+    if (!email || !password) {
+      setLoginInlineError('Please enter both email and password.');
       return;
     }
 
-    // Local / Offline authentication: strictly verify against registered officers
-    const matchedOfficer = state.officers.find(o => (o.email || '').toLowerCase() === email.toLowerCase());
-    if (!matchedOfficer) {
-      setLoginInlineError(`Account "${email}" is not registered in the Law Enforcement Officer Directory.`);
+    if (!supabaseConfigured) {
+      setLoginInlineError('Database connection error: Supabase is not configured.');
       return;
     }
 
-    const expectedPassword = matchedOfficer.password || 'password123';
-    if (password !== expectedPassword && !(matchedOfficer.email === 'ashutosh.patil9750@gmail.com' && (password === 'Ashu123' || password === 'password123'))) {
-      setLoginInlineError('Invalid password for this officer account. Please verify credentials.');
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !authData?.user) {
+      setLoginInlineError(error?.message || 'Invalid email address or password. Please verify your credentials.');
       return;
     }
 
-    // Set the matched officer as active user
-    state.officers.forEach(o => {
-      o.isYou = (o.id === matchedOfficer.id);
-    });
-    localStorage.setItem('demoSession', 'true');
-    localStorage.setItem('activeOfficerEmail', matchedOfficer.email);
-    saveOfficers();
+    const check = await verifyOfficerAuthorization(authData.user);
+    if (!check.authorized) {
+      await supabase.auth.signOut().catch(() => {});
+      state.loggedIn = false;
+      setLoginInlineError(`Access Denied: ${check.reason}`);
+      return;
+    }
 
+    localStorage.setItem('activeOfficerEmail', email);
     state.loggedIn = true;
     state.loginError = '';
+    await loadSupabaseData().catch(() => {});
+    state.officers.forEach(o => {
+      o.isYou = ((o.email || '').toLowerCase() === email.toLowerCase() || o.id === authData.user.id);
+    });
+    saveOfficers();
     notifyStateChange();
-    recordAudit('Login event', `Officer ${matchedOfficer.name} (${matchedOfficer.rank}) signed in.`, 'info', 'login').catch(() => {});
+    recordAudit('Login event', `Officer ${check.profile?.display_name || email} signed in.`, 'info', 'login').catch(() => {});
   } catch (err) {
-    setLoginInlineError('An error occurred during authentication. Please try again.');
+    console.error('Authentication error:', err);
+    setLoginInlineError(err.message || 'An error occurred during authentication. Please try again.');
   } finally {
     isAuthActionInProgress = false;
     if (submitBtn && !state.loggedIn) {
@@ -1866,11 +1846,12 @@ export async function bootstrapAuth() {
       if (data?.session?.user) {
         const check = await verifyOfficerAuthorization(data.session.user);
         if (check.authorized) {
+          state.loggedIn = true;
+          state.loginError = '';
+          await loadSupabaseData().catch(() => {});
           state.officers.forEach(o => {
             o.isYou = ((o.email || '').toLowerCase() === (data.session.user.email || '').toLowerCase() || o.id === data.session.user.id);
           });
-          state.loggedIn = true;
-          await loadSupabaseData().catch(() => {});
         } else {
           await supabase.auth.signOut().catch(() => {});
           state.loggedIn = false;
@@ -1893,12 +1874,12 @@ export async function bootstrapAuth() {
             return;
           }
           if (!state.loggedIn) {
+            state.loggedIn = true;
+            state.loginError = '';
+            await loadSupabaseData().catch(() => {});
             state.officers.forEach(o => {
               o.isYou = ((o.email || '').toLowerCase() === (session.user.email || '').toLowerCase() || o.id === session.user.id);
             });
-            state.loggedIn = true;
-            state.loginError = '';
-            await loadSupabaseData();
             notifyStateChange();
           }
         } else {
@@ -1908,23 +1889,6 @@ export async function bootstrapAuth() {
           }
         }
       });
-    } else if (localStorage.getItem('demoSession') === 'true') {
-      const savedEmail = localStorage.getItem('activeOfficerEmail');
-      if (savedEmail) {
-        const matched = state.officers.find(o => (o.email || '').toLowerCase() === savedEmail.toLowerCase());
-        if (matched) {
-          state.officers.forEach(o => {
-            o.isYou = (o.id === matched.id);
-          });
-          state.loggedIn = true;
-          await loadSupabaseData().catch(() => {});
-        } else {
-          state.loggedIn = false;
-        }
-      } else {
-        state.loggedIn = true;
-        await loadSupabaseData().catch(() => {});
-      }
     } else {
       state.loggedIn = false;
     }
