@@ -26,15 +26,19 @@ export function renderAppShell(renderCurrentView) {
   } else {
     shell.className = `app-shell ${state.sidebarCollapsed ? 'sidebar-collapsed' : ''}`;
     
-    // Update active navigation state in sidebar and topbar
+    // Update active navigation state in sidebar without tearing down DOM
     const existingSidebar = shell.querySelector('.sidebar');
     if (existingSidebar) {
-      existingSidebar.replaceWith(renderSidebar());
-    }
-
-    const existingTopbar = shell.querySelector('.topbar');
-    if (existingTopbar) {
-      existingTopbar.replaceWith(renderTopbar());
+      existingSidebar.querySelectorAll('.nav-item').forEach(item => {
+        const viewAttr = item.getAttribute('data-view');
+        if (viewAttr) {
+          item.classList.toggle('active', viewAttr === state.view);
+        }
+      });
+      const toggleIcon = existingSidebar.querySelector('.toggle-icon');
+      if (toggleIcon) {
+        toggleIcon.textContent = state.sidebarCollapsed ? '▶' : '◀';
+      }
     }
   }
 

@@ -25,6 +25,7 @@ import { performAIAnalysis } from './AIAnalysisView.js';
 
 let sigmaInstance = null;
 let currentGraph = null;
+let lastRenderedGraphSignature = '';
 
 export const objectTypeColors = {
   Person: '#1E293B',
@@ -1185,6 +1186,9 @@ export function renderActiveNetworkWorkspace(c) {
     ].filter(Boolean))
   ]);
 
+  const seedId = state.graphExploration?.seedId;
+  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}`;
+
   const existingWorkspace = c.querySelector('.network-workspace');
   if (existingWorkspace) {
     existingWorkspace.className = `network-workspace ${state.graphFullscreen ? 'fullscreen' : ''}`;
@@ -1198,7 +1202,8 @@ export function renderActiveNetworkWorkspace(c) {
       oldInspector.replaceWith(newInspector);
     }
 
-    if (visibleNodes.length > 0) {
+    if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
+      lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
     }
     return;
@@ -1229,6 +1234,7 @@ export function renderActiveNetworkWorkspace(c) {
   c.append(n);
 
   if (visibleNodes.length > 0) {
+    lastRenderedGraphSignature = graphSignature;
     requestAnimationFrame(() => mountSigma(visibleNodes));
   }
 }
@@ -1245,6 +1251,7 @@ export function renderNetwork(c) {
       sigmaInstance.kill();
       sigmaInstance = null;
       currentGraph = null;
+      lastRenderedGraphSignature = '';
     }
     renderInvestigationLaunchpad(c);
   }

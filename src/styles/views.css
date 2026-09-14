@@ -18,6 +18,15 @@
   animation: viewFadeIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.network-workspace,
+.network-workspace *,
+.graph-panel,
+.sigma-container,
+.graph-inspector,
+.network-top-strip {
+  animation: none !important;
+}
+
 /* ---- Login ---- */
 .login-page {
   display: flex !important;
