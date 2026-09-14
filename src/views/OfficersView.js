@@ -6,6 +6,10 @@ import { showToast } from '../components/Toast.js';
 
 export function renderOfficers(c) {
   c.innerHTML = '';
+  if (supabaseConfigured && !c._hasSyncedOfficers) {
+    c._hasSyncedOfficers = true;
+    loadSupabaseData().catch(() => {});
+  }
   const activeOfficer = getActiveOfficer();
   const isAdmin = activeOfficer ? (activeOfficer.isAdmin !== false) : true;
 

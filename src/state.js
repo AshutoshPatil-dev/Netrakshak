@@ -1904,6 +1904,7 @@ export async function signOutOfficer() {
 export async function bootstrapAuth() {
   try {
     if (supabaseConfigured) {
+      await loadSupabaseData().catch(() => {});
       const { data } = await supabase.auth.getSession();
       if (data?.session?.user) {
         const check = await verifyOfficerAuthorization(data.session.user);
@@ -1912,7 +1913,7 @@ export async function bootstrapAuth() {
             o.isYou = ((o.email || '').toLowerCase() === (data.session.user.email || '').toLowerCase() || o.id === data.session.user.id);
           });
           state.loggedIn = true;
-          await loadSupabaseData();
+          await loadSupabaseData().catch(() => {});
         } else {
           await supabase.auth.signOut().catch(() => {});
           state.loggedIn = false;
