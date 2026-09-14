@@ -19,7 +19,6 @@ import {
   setGraphSeed,
   toggleGraphSeed,
   resetGraphExploration,
-  showFullGraphUniverse,
   toggleGraphSatelliteMode,
   setGraphMapLocation,
   toggleGraphMapLock,
@@ -1362,14 +1361,6 @@ export function renderInvestigationLaunchpad(c) {
       ])
     ]),
     el('div', { class: 'heading-actions' }, [
-      el('button', {
-        class: 'primary-btn highlight launch-all-btn',
-        title: 'Open all connected criminal entities in full interactive graph',
-        onclick: () => {
-          showFullGraphUniverse();
-          showToast('Loaded full network universe');
-        }
-      }, [icon('network'), ` ${t('openFullGraphCanvas')} →`]),
       el('button', {
         class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
