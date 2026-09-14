@@ -12,6 +12,7 @@ import { renderSources } from './views/DataIntegrityView.js';
 import { renderAIAnalysis } from './views/AIAnalysisView.js';
 import { renderEntityProfile } from './views/EntityProfileView.js';
 import { renderEntities } from './views/EntitiesView.js';
+import { renderTimeline } from './views/TimelineView.js';
 
 // Ensure zoom is normalized
 document.body.style.zoom = '1';
@@ -23,6 +24,7 @@ function getViewRenderer() {
     case 'entities':       return renderEntities;
     case 'network':        return renderNetwork;
     case 'patterns':       return renderPatternsAnomalies;
+    case 'timeline':       return renderTimeline;
     case 'entity_profile': return renderEntityProfile;
     case 'fir':            return renderFIR;
     case 'ai_analysis':    return renderAIAnalysis;

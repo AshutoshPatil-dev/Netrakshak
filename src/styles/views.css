@@ -6253,6 +6253,245 @@
   border-radius: 6px;
 }
 
+/* ==========================================================================
+   Investigation Timeline Styles
+   ========================================================================== */
+.timeline-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.timeline-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.timeline-chip:hover {
+  background: #F1F5F9;
+  color: var(--app-text);
+}
+
+.timeline-chip.active {
+  background: var(--app-text);
+  color: #FFFFFF;
+  border-color: var(--app-text);
+}
+
+.timeline-stream-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.timeline-event-card {
+  display: grid;
+  grid-template-columns: 140px 48px 1fr;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.timeline-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  padding-top: 4px;
+}
+
+.event-date {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--app-text);
+}
+
+.event-time {
+  font-size: 11.5px;
+  color: var(--app-text-secondary);
+  margin-top: 2px;
+}
+
+.event-severity-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.event-severity-tag.high {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.event-severity-tag.medium {
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.timeline-spine-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.timeline-node-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #EFF6FF;
+  border: 2px solid #3B82F6;
+  color: #2563EB;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.timeline-connecting-spine {
+  position: absolute;
+  top: 36px;
+  bottom: -4px;
+  width: 2px;
+  background: #CBD5E1;
+  z-index: 1;
+}
+
+.timeline-content-col {
+  background: #FFFFFF;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-case-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.event-station-name {
+  font-size: 11.5px;
+  color: var(--app-text-secondary);
+}
+
+.event-category-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: #F1F5F9;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.event-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--app-text);
+  margin: 2px 0 0;
+}
+
+.event-description {
+  font-size: 13px;
+  color: var(--app-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.event-involved-entities {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.event-entity-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1E293B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.event-entity-btn:hover {
+  background: #EFF6FF;
+  border-color: #93C5FD;
+  color: #1D4ED8;
+}
+
+.entity-tag-type {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.entity-tag-role {
+  font-weight: 500;
+  color: #64748B;
+}
+
+.empty-timeline-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: #FFFFFF;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+}
+
+
 
 
 
