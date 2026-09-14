@@ -3,6 +3,8 @@ import { state } from '../state.js';
 import { renderTopbar } from './Topbar.js';
 import { renderSidebar } from './Sidebar.js';
 
+let lastRenderedLocale = null;
+
 export function renderAppShell(renderCurrentView) {
   const root = document.querySelector('#app');
   let shell = root.querySelector('.app-shell');
@@ -10,7 +12,10 @@ export function renderAppShell(renderCurrentView) {
   // Ensure any leftover floating widget is cleaned up
   document.querySelector('.a11y-floating')?.remove();
 
-  if (!shell) {
+  const localeChanged = lastRenderedLocale !== state.locale;
+  lastRenderedLocale = state.locale;
+
+  if (!shell || localeChanged) {
     root.innerHTML = '';
     const topbar = renderTopbar();
     const sidebar = renderSidebar();
@@ -22,23 +27,28 @@ export function renderAppShell(renderCurrentView) {
         el('div', { class: 'main-area' }, [content])
       ])
     ]);
+    shell.setAttribute('data-active-view', state.view);
     root.append(shell);
-  } else {
-    shell.className = `app-shell ${state.sidebarCollapsed ? 'sidebar-collapsed' : ''}`;
-    
-    // Update active navigation state in sidebar without tearing down DOM
-    const existingSidebar = shell.querySelector('.sidebar');
-    if (existingSidebar) {
-      existingSidebar.querySelectorAll('.nav-item').forEach(item => {
-        const viewAttr = item.getAttribute('data-view');
-        if (viewAttr) {
-          item.classList.toggle('active', viewAttr === state.view);
-        }
-      });
-      const toggleIcon = existingSidebar.querySelector('.toggle-icon');
-      if (toggleIcon) {
-        toggleIcon.textContent = state.sidebarCollapsed ? '▶' : '◀';
+    if (typeof renderCurrentView === 'function') {
+      renderCurrentView(content);
+    }
+    return;
+  }
+
+  shell.className = `app-shell ${state.sidebarCollapsed ? 'sidebar-collapsed' : ''}`;
+  
+  // Update active navigation state in sidebar without tearing down DOM
+  const existingSidebar = shell.querySelector('.sidebar');
+  if (existingSidebar) {
+    existingSidebar.querySelectorAll('.nav-item').forEach(item => {
+      const viewAttr = item.getAttribute('data-view');
+      if (viewAttr) {
+        item.classList.toggle('active', viewAttr === state.view);
       }
+    });
+    const toggleIcon = existingSidebar.querySelector('.toggle-icon');
+    if (toggleIcon) {
+      toggleIcon.textContent = state.sidebarCollapsed ? '▶' : '◀';
     }
   }
 
