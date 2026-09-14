@@ -23,6 +23,10 @@ import {
   toggleGraphSatelliteMode,
   setGraphMapLocation,
   toggleGraphMapLock,
+  isPinLocked,
+  togglePinLock,
+  toggleLockAllPins,
+  setNodeGeoPosition,
   setGraphMapLayerType,
   saveMapConfig,
   openEntityProfile
@@ -37,6 +41,8 @@ let lastRenderedGraphSignature = '';
 let leafletMapInstance = null;
 let currentTileLayer = null;
 let currentLabelLayer = null;
+let leafletMarkersGroup = null;
+let leafletEdgesGroup = null;
 
 export const GEO_PRESETS = [
   { name: 'Pune: Shivajinagar & FC Road', lat: 18.5284, lng: 73.8415, zoom: 15 },
@@ -89,26 +95,256 @@ export function applyMapLockState() {
   if (!leafletMapInstance) return;
   const isLocked = !!state.graphMapConfig?.locked;
   if (isLocked) {
-    leafletMapInstance.dragging.disable();
-    leafletMapInstance.scrollWheelZoom.disable();
-    leafletMapInstance.doubleClickZoom.disable();
-    leafletMapInstance.boxZoom.disable();
-    leafletMapInstance.touchZoom.disable();
+    leafletMapInstance.dragging?.disable();
+    leafletMapInstance.scrollWheelZoom?.disable();
+    leafletMapInstance.touchZoom?.disable();
   } else {
-    leafletMapInstance.dragging.enable();
-    leafletMapInstance.scrollWheelZoom.enable();
-    leafletMapInstance.doubleClickZoom.enable();
-    leafletMapInstance.boxZoom.enable();
-    leafletMapInstance.touchZoom.enable();
+    leafletMapInstance.dragging?.enable();
+    leafletMapInstance.scrollWheelZoom?.enable();
+    leafletMapInstance.touchZoom?.enable();
   }
 }
 
-export function mountLeafletMap() {
+export function renderSatelliteMapPins(visibleNodes) {
+  if (!leafletMapInstance || !visibleNodes || visibleNodes.length === 0) return;
+
+  if (leafletMarkersGroup) {
+    leafletMapInstance.removeLayer(leafletMarkersGroup);
+    leafletMarkersGroup = null;
+  }
+  if (leafletEdgesGroup) {
+    leafletMapInstance.removeLayer(leafletEdgesGroup);
+    leafletEdgesGroup = null;
+  }
+
+  leafletEdgesGroup = L.layerGroup().addTo(leafletMapInstance);
+  leafletMarkersGroup = L.layerGroup().addTo(leafletMapInstance);
+
+  const visibleIds = new Set(visibleNodes.map(n => n.id));
+  const mapCenter = leafletMapInstance.getCenter();
+  const baseLat = mapCenter.lat || state.graphMapConfig.lat || 18.5204;
+  const baseLng = mapCenter.lng || state.graphMapConfig.lng || 73.8567;
+
+  if (!state.graphMapConfig.nodeGeoPositions) {
+    state.graphMapConfig.nodeGeoPositions = {};
+  }
+
+  const markersMap = new Map();
+  const polylineMap = new Map();
+
+  visibleNodes.forEach((entity, index) => {
+    let geo = state.graphMapConfig.nodeGeoPositions[entity.id];
+    if (!geo) {
+      if (entity.identifiers?.lat && entity.identifiers?.lng) {
+        geo = { lat: entity.identifiers.lat, lng: entity.identifiers.lng };
+      } else {
+        const seedId = state.graphExploration?.seedId;
+        const isSeed = entity.id === seedId;
+        if (isSeed) {
+          geo = { lat: baseLat, lng: baseLng };
+        } else {
+          const others = visibleNodes.filter(n => n.id !== seedId);
+          const posIdx = Math.max(0, others.findIndex(n => n.id === entity.id));
+          const total = Math.max(others.length, 1);
+          const angle = (posIdx / total) * Math.PI * 2;
+          const radius = 0.005 + (posIdx % 2) * 0.0035;
+          geo = {
+            lat: baseLat + Math.sin(angle) * radius,
+            lng: baseLng + Math.cos(angle) * radius * 1.15
+          };
+        }
+      }
+      state.graphMapConfig.nodeGeoPositions[entity.id] = geo;
+      saveMapConfig(state.graphMapConfig);
+    }
+
+    const nodeLocked = isPinLocked(entity.id);
+    const typeColor = objectTypeColors[entity.type] || '#1E293B';
+    const typeIcon = objectTypeIcons[entity.type] || 'shield';
+    const isSelected = state.selected === entity.id;
+    const isSeed = state.graphExploration?.seedId === entity.id;
+    const allLinks = getConnectedLinks(entity.id);
+    const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
+
+    // Pin HTML (Circle with pin pointer needle at bottom and per-pin lock button)
+    const pinHtml = `
+      <div class="map-tactical-pin ${isSelected ? 'selected' : ''} ${isSeed ? 'seed' : ''} ${nodeLocked ? 'locked' : 'draggable'}">
+        <div class="pin-circle" style="background: ${typeColor};">
+          <span class="pin-icon">${icon(typeIcon)}</span>
+          ${unexploredCount > 0 ? `<span class="pin-badge">+${unexploredCount}</span>` : ''}
+          <span class="pin-risk-dot ${entity.risk || 'low'}"></span>
+        </div>
+        <div class="pin-needle" style="border-top-color: ${typeColor};"></div>
+        <div class="pin-shadow"></div>
+        <div class="pin-label-pill">
+          <span class="pin-label-type">${entity.type}</span>
+          <span class="pin-label-name">${entity.name}</span>
+          <button class="pin-lock-badge-btn" data-node-id="${entity.id}" title="${nodeLocked ? 'Pin locked in place. Click to unlock & drag' : 'Pin draggable. Click to lock in place'}">
+            ${nodeLocked ? '🔒' : '🔓'}
+          </button>
+        </div>
+      </div>
+    `;
+
+    const customIcon = L.divIcon({
+      className: 'map-pin-div-icon',
+      html: pinHtml,
+      iconSize: [44, 56],
+      iconAnchor: [22, 46],
+      popupAnchor: [0, -48]
+    });
+
+    const marker = L.marker([geo.lat, geo.lng], {
+      icon: customIcon,
+      draggable: !nodeLocked,
+      zIndexOffset: isSelected ? 1000 : (isSeed ? 500 : 100)
+    });
+
+    marker.on('drag', () => {
+      const curPos = marker.getLatLng();
+      state.graphMapConfig.nodeGeoPositions[entity.id] = { lat: curPos.lat, lng: curPos.lng };
+      // Update connected lines in real-time
+      edges.forEach(edge => {
+        const source = edge[0];
+        const target = edge[1];
+        if (source === entity.id || target === entity.id) {
+          const edgeKey = `${source}_${target}`;
+          const pl = polylineMap.get(edgeKey);
+          if (pl) {
+            const p1 = state.graphMapConfig.nodeGeoPositions[source];
+            const p2 = state.graphMapConfig.nodeGeoPositions[target];
+            if (p1 && p2) {
+              pl.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
+            }
+          }
+        }
+      });
+    });
+
+    marker.on('dragend', () => {
+      const curPos = marker.getLatLng();
+      setNodeGeoPosition(entity.id, curPos.lat, curPos.lng);
+      showToast(`📍 Pinned ${entity.name} to ${curPos.lat.toFixed(4)}°, ${curPos.lng.toFixed(4)}°`);
+    });
+
+    marker.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      state.selected = entity.id;
+      notifyStateChange();
+      showToast(`Selected ${entity.name}`);
+    });
+
+    marker.on('dblclick', (e) => {
+      L.DomEvent.stopPropagation(e);
+      openEntityProfile(entity.id);
+    });
+
+    // Tooltip integration
+    marker.on('mouseover', () => {
+      let tooltipEl = document.getElementById('graphNodeTooltip');
+      if (!tooltipEl) return;
+
+      const summary = getEntityHoverSummary(entity);
+      const links = getConnectedLinks(entity.id);
+
+      tooltipEl.innerHTML = `
+        <div class="tooltip-header">
+          <span class="tooltip-type-pill" style="background:${typeColor}15;color:${typeColor};border-color:${typeColor}40">
+            ${icon(typeIcon)} ${entity.type}
+          </span>
+          <span class="tooltip-risk-badge ${entity.risk || 'low'}">${(entity.risk || 'LOW').toUpperCase()} RISK</span>
+        </div>
+        <h4 class="tooltip-title">${entity.name}</h4>
+        <p class="tooltip-summary">${summary}</p>
+        <div class="tooltip-footer">
+          <span class="tooltip-links-count">${icon('pulse')} ${links.length} Connected Links</span>
+          <span class="tooltip-action-hint">${nodeLocked ? '🔒 Location locked · Click to inspect' : '📍 Drag pin to place · Click to inspect'}</span>
+        </div>
+      `;
+
+      const pt = leafletMapInstance.latLngToContainerPoint(marker.getLatLng());
+      const tipWidth = 280;
+      let posX = pt.x + 24;
+      let posY = pt.y - 60;
+      if (posX + tipWidth > window.innerWidth - 380) posX = pt.x - tipWidth - 24;
+      if (posY < 10) posY = 10;
+      tooltipEl.style.transform = `translate(${posX}px, ${posY}px)`;
+      tooltipEl.classList.add('visible');
+    });
+
+    marker.on('mouseout', () => {
+      const tooltipEl = document.getElementById('graphNodeTooltip');
+      if (tooltipEl) tooltipEl.classList.remove('visible');
+    });
+
+    marker.addTo(leafletMarkersGroup);
+    markersMap.set(entity.id, marker);
+
+    // Attach click event for per-pin lock toggle button
+    requestAnimationFrame(() => {
+      const mEl = marker.getElement();
+      if (mEl) {
+        const lockBtn = mEl.querySelector('.pin-lock-badge-btn');
+        if (lockBtn) {
+          L.DomEvent.disableClickPropagation(lockBtn);
+          lockBtn.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            togglePinLock(entity.id);
+            renderSatelliteMapPins(visibleNodes);
+            showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
+          };
+        }
+      }
+    });
+  });
+
+  // Render Polylines for edges between visible nodes
+  edges.forEach(edge => {
+    const source = edge[0];
+    const target = edge[1];
+    const label = edge[2] || '';
+    if (visibleIds.has(source) && visibleIds.has(target)) {
+      const p1 = state.graphMapConfig.nodeGeoPositions[source];
+      const p2 = state.graphMapConfig.nodeGeoPositions[target];
+      if (p1 && p2) {
+        const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+        const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
+          color: isConnectedToSelected ? '#38BDF8' : '#E2E8F0',
+          weight: isConnectedToSelected ? 3.5 : 2,
+          opacity: isConnectedToSelected ? 0.95 : 0.65,
+          dashArray: isConnectedToSelected ? null : '6, 6'
+        });
+
+        if (label) {
+          polyline.bindTooltip(label, {
+            permanent: false,
+            direction: 'center',
+            className: 'tactical-edge-tooltip'
+          });
+        }
+
+        polyline.addTo(leafletEdgesGroup);
+        polylineMap.set(`${source}_${target}`, polyline);
+      }
+    }
+  });
+}
+
+export function mountLeafletMap(visibleNodes) {
   const mapContainer = document.getElementById('graph-leaflet-map');
   if (!mapContainer) return;
 
   try {
     if (leafletMapInstance) {
+      if (leafletMarkersGroup) {
+        try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+        leafletMarkersGroup = null;
+      }
+      if (leafletEdgesGroup) {
+        try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+        leafletEdgesGroup = null;
+      }
       try { leafletMapInstance.remove(); } catch (e) {}
       leafletMapInstance = null;
     }
@@ -116,21 +352,29 @@ export function mountLeafletMap() {
       delete mapContainer._leaflet_id;
     }
 
-    const { lat, lng, zoom, layerType, locked } = state.graphMapConfig || {};
+    const { lat, lng, zoom, layerType } = state.graphMapConfig || {};
 
     leafletMapInstance = L.map(mapContainer, {
       center: [lat || 18.5204, lng || 73.8567],
       zoom: zoom || 14,
       zoomControl: false,
       attributionControl: false,
-      dragging: !locked,
-      scrollWheelZoom: !locked,
-      doubleClickZoom: !locked,
-      boxZoom: !locked,
-      touchZoom: !locked
+      dragging: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: false,
+      boxZoom: true,
+      touchZoom: true,
+      wheelDebounceTime: 30,
+      wheelPxPerZoomLevel: 50
     });
 
+    applyMapLockState();
+
     updateLeafletTileLayer(layerType || 'satellite');
+
+    if (visibleNodes && visibleNodes.length > 0) {
+      renderSatelliteMapPins(visibleNodes);
+    }
 
     leafletMapInstance.on('moveend', () => {
       if (!leafletMapInstance) return;
@@ -243,146 +487,6 @@ export function getConnectedLinks(entityId) {
   return links;
 }
 
-export function renderMapLocationController() {
-  const mapConfig = state.graphMapConfig || {};
-  const isLocked = !!mapConfig.locked;
-
-  const searchInput = el('input', {
-    type: 'text',
-    class: 'map-search-input',
-    placeholder: 'Search location, landmark, city, or lat,lng...',
-    value: ''
-  });
-
-  const performSearch = async () => {
-    const q = searchInput.value.trim();
-    if (!q) return;
-
-    // Check presets first
-    const matchedPreset = GEO_PRESETS.find(p => p.name.toLowerCase().includes(q.toLowerCase()));
-    if (matchedPreset) {
-      setGraphMapLocation(matchedPreset.lat, matchedPreset.lng, matchedPreset.zoom, matchedPreset.name);
-      if (leafletMapInstance) {
-        leafletMapInstance.setView([matchedPreset.lat, matchedPreset.lng], matchedPreset.zoom);
-      }
-      showToast(`Map centered to ${matchedPreset.name}`);
-      return;
-    }
-
-    // Check coordinates pattern (e.g. 18.5204, 73.8567)
-    const coordMatch = q.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
-    if (coordMatch) {
-      const lat = parseFloat(coordMatch[1]);
-      const lng = parseFloat(coordMatch[3]);
-      setGraphMapLocation(lat, lng, 15, `Sector: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-      if (leafletMapInstance) {
-        leafletMapInstance.setView([lat, lng], 15);
-      }
-      showToast(`Map centered to target coordinates`);
-      return;
-    }
-
-    // Geocoding query via OpenStreetMap Nominatim
-    try {
-      showToast(`Searching location "${q}"...`);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const item = data[0];
-        const lat = parseFloat(item.lat);
-        const lng = parseFloat(item.lon);
-        const name = item.display_name.split(',').slice(0, 3).join(',');
-        setGraphMapLocation(lat, lng, 14, name);
-        if (leafletMapInstance) {
-          leafletMapInstance.setView([lat, lng], 14);
-        }
-        showToast(`Map location set to ${name}`);
-      } else {
-        showToast(`No matching locations found for "${q}"`);
-      }
-    } catch (e) {
-      showToast(`Location search lookup failed. Please enter coordinates.`);
-    }
-  };
-
-  searchInput.onkeydown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      performSearch();
-    }
-  };
-
-  const presetSelect = el('select', { class: 'map-preset-select' }, [
-    el('option', { value: '' }, ['Quick Case Presets...']),
-    ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
-  ]);
-
-  presetSelect.onchange = (e) => {
-    if (!e.target.value) return;
-    try {
-      const p = JSON.parse(e.target.value);
-      setGraphMapLocation(p.lat, p.lng, p.zoom, p.name);
-      if (leafletMapInstance) {
-        leafletMapInstance.setView([p.lat, p.lng], p.zoom);
-      }
-      showToast(`Map location centered to ${p.name}`);
-    } catch (err) {}
-  };
-
-  const layerSelect = el('select', { class: 'map-layer-select' }, [
-    el('option', { value: 'satellite' }, ['🛰 Satellite Imagery']),
-    el('option', { value: 'hybrid' }, ['🗺 Hybrid (Satellite + Roads)']),
-    el('option', { value: 'streets' }, ['🏙 Street Map'])
-  ]);
-  layerSelect.value = mapConfig.layerType || 'satellite';
-  layerSelect.onchange = (e) => {
-    setGraphMapLayerType(e.target.value);
-    updateLeafletTileLayer(e.target.value);
-    showToast(`Map layer set to ${e.target.value}`);
-  };
-
-  const lockBtn = el('button', {
-    class: `map-action-btn ${isLocked ? 'btn-locked' : 'btn-unlocked'}`,
-    title: isLocked ? 'Map position is locked. Click to enable panning and zooming the map' : 'Map navigation active. Click to lock position and return to node dragging',
-    onclick: () => {
-      toggleGraphMapLock();
-      applyMapLockState();
-      showToast(state.graphMapConfig.locked ? '🔒 Map Location Locked (Node Positioning Mode)' : '🔓 Map Navigation Active (Pan & Zoom Map)');
-    }
-  }, [
-    isLocked ? '🔒 Map Locked' : '🔓 Pan Map Active',
-    el('span', { class: 'btn-subtext' }, [isLocked ? ' (Click to Pan)' : ' (Click to Lock)'])
-  ]);
-
-  const exitBtn = el('button', {
-    class: 'map-close-btn',
-    title: 'Exit Satellite Map View (Return to Clean Canvas)',
-    onclick: () => {
-      toggleGraphSatelliteMode(false);
-      showToast('Standard Clean Graph Canvas Enabled');
-    }
-  }, ['✕ Exit Map']);
-
-  return el('div', { class: 'graph-map-controller-hud' }, [
-    el('div', { class: 'hud-search-group' }, [
-      el('span', { class: 'hud-search-icon' }, [icon('search')]),
-      searchInput,
-      el('button', { class: 'hud-search-submit', onclick: performSearch }, ['Find']),
-      presetSelect
-    ]),
-    el('div', { class: 'hud-info-group' }, [
-      el('span', { class: 'hud-location-tag' }, [
-        icon('pulse'),
-        ` ${mapConfig.locationName || 'Reference Sector'} (${mapConfig.lat ? mapConfig.lat.toFixed(4) : '18.5204'}°, ${mapConfig.lng ? mapConfig.lng.toFixed(4) : '73.8567'}°)`
-      ])
-    ]),
-    el('div', { class: 'hud-controls-group' }, [
-      layerSelect,
-      lockBtn,
-      exitBtn
-    ])
-  ]);
-}
 
 export function graphContainer(visibleNodes) {
   const isSat = !!state.graphSatelliteMode;
@@ -414,7 +518,15 @@ export function mountSigma(visibleNodes) {
       currentGraph = null;
     }
     if (leafletMapInstance) {
-      leafletMapInstance.remove();
+      if (leafletMarkersGroup) {
+        try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+        leafletMarkersGroup = null;
+      }
+      if (leafletEdgesGroup) {
+        try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+        leafletEdgesGroup = null;
+      }
+      try { leafletMapInstance.remove(); } catch (e) {}
       leafletMapInstance = null;
     }
     return;
@@ -422,9 +534,18 @@ export function mountSigma(visibleNodes) {
 
   const isSat = !!state.graphSatelliteMode;
   if (isSat) {
-    mountLeafletMap();
+    mountLeafletMap(visibleNodes);
+    return;
   } else if (leafletMapInstance) {
-    leafletMapInstance.remove();
+    if (leafletMarkersGroup) {
+      try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+      leafletMarkersGroup = null;
+    }
+    if (leafletEdgesGroup) {
+      try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+      leafletEdgesGroup = null;
+    }
+    try { leafletMapInstance.remove(); } catch (e) {}
     leafletMapInstance = null;
   }
 
@@ -903,6 +1024,28 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
               showToast(`Scanning linkages for ${entity.name}...`);
             }
           }, [icon('sparkle'), ' AI Scan']),
+          state.graphSatelliteMode ? el('button', {
+            class: `inspector-action-btn ${isPinLocked(entity.id) ? 'btn-pin-locked' : 'btn-pin-unlocked'}`,
+            title: isPinLocked(entity.id) ? 'Pin is locked in place. Click to allow dragging.' : 'Pin can be dragged to any location. Click to lock in place.',
+            onclick: () => {
+              togglePinLock(entity.id);
+              const visibleIds = getVisibleGraphNodeIds();
+              const visibleNodes = graphMetrics(entities, edges).filter(e => visibleIds.has(e.id));
+              renderSatelliteMapPins(visibleNodes);
+              showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
+            }
+          }, [isPinLocked(entity.id) ? '🔒 Pin: Locked' : '🔓 Pin: Moveable']) : null,
+          state.graphSatelliteMode ? el('button', {
+            class: 'inspector-action-btn',
+            title: 'Center satellite map view on this pinned entity',
+            onclick: () => {
+              const geo = state.graphMapConfig?.nodeGeoPositions?.[entity.id];
+              if (geo && leafletMapInstance) {
+                leafletMapInstance.flyTo([geo.lat, geo.lng], 16, { duration: 0.8 });
+                showToast(`Centered map on ${entity.name}`);
+              }
+            }
+          }, [icon('network'), ' 📍 Focus Pin']) : null,
           isExpanded ? el('button', {
             class: 'inspector-action-btn',
             title: 'Collapse 1-hop branch',
@@ -1473,6 +1616,77 @@ export function renderActiveNetworkWorkspace(c) {
     notifyStateChange();
   };
 
+  const seedId = state.graphExploration?.seedId;
+  const mapConfig = state.graphMapConfig || {};
+  const isMapLocked = !!mapConfig.locked;
+  const isAllPinsLocked = !!mapConfig.pinsLockedAll;
+
+  // Satellite-specific controls for the top strip
+  let satControls = [];
+  if (isSat) {
+    const presetSelect = el('select', { class: 'strip-select map-preset-select', title: 'Center satellite map on predefined sector preset' }, [
+      el('option', { value: '' }, ['📍 Preset Sector...']),
+      ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
+    ]);
+    presetSelect.onchange = (e) => {
+      if (!e.target.value) return;
+      try {
+        const p = JSON.parse(e.target.value);
+        setGraphMapLocation(p.lat, p.lng, p.zoom, p.name);
+        if (leafletMapInstance) {
+          leafletMapInstance.setView([p.lat, p.lng], p.zoom);
+        }
+        showToast(`Map centered to ${p.name}`);
+      } catch (err) {}
+    };
+
+    const layerSelect = el('select', { class: 'strip-select map-layer-select', title: 'Switch satellite tile imagery layer' }, [
+      el('option', { value: 'satellite' }, ['🛰 Satellite']),
+      el('option', { value: 'hybrid' }, ['🗺 Hybrid']),
+      el('option', { value: 'streets' }, ['🏙 Streets'])
+    ]);
+    layerSelect.value = mapConfig.layerType || 'satellite';
+    layerSelect.onchange = (e) => {
+      setGraphMapLayerType(e.target.value);
+      updateLeafletTileLayer(e.target.value);
+      showToast(`Map layer: ${e.target.value}`);
+    };
+
+    const pinLockBtn = el('button', {
+      class: `strip-btn ${isAllPinsLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
+      title: isAllPinsLocked 
+        ? 'All pins are locked in place at their geographic coordinates. Click to allow dragging.' 
+        : 'Pins can be dragged freely. Click to lock all pins in place on the map.',
+      onclick: () => {
+        toggleLockAllPins();
+        const visibleIds = getVisibleGraphNodeIds();
+        const visibleNodes = graphMetrics(entities, edges).filter(e => visibleIds.has(e.id));
+        renderSatelliteMapPins(visibleNodes);
+        showToast(state.graphMapConfig.pinsLockedAll ? '🔒 All Pins Locked in Place' : '📍 Pins Draggable');
+      }
+    }, [isAllPinsLocked ? '🔒 Pins: Locked' : '📍 Pins: Moveable']);
+
+    const mapLockBtn = el('button', {
+      class: `strip-btn ${isMapLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
+      title: isMapLocked 
+        ? 'Map position is locked. Click to enable panning and zooming.' 
+        : 'Map navigation is interactive. Click to lock position.',
+      onclick: () => {
+        toggleGraphMapLock();
+        applyMapLockState();
+        showToast(state.graphMapConfig.locked ? '🔒 Map Viewport Locked' : '🗺 Pan Map (Interactive)');
+      }
+    }, [isMapLocked ? '🔒 Map Locked' : '🗺 Pan Map']);
+
+    satControls = [
+      el('div', { class: 'strip-divider' }),
+      presetSelect,
+      layerSelect,
+      pinLockBtn,
+      mapLockBtn
+    ];
+  }
+
   const topStrip = el('div', { class: 'network-top-strip' }, [
     el('div', { class: 'network-strip-left' }, [
       el('button', {
@@ -1485,9 +1699,10 @@ export function renderActiveNetworkWorkspace(c) {
       }, [icon('undo'), ' Launchpad']),
       el('div', { class: 'strip-divider' }),
       el('div', { class: 'strip-select-wrap' }, [
-        el('span', { class: 'strip-label' }, ['Filter Type:']),
+        el('span', { class: 'strip-label' }, ['Filter:']),
         typeSelect
-      ])
+      ]),
+      ...satControls
     ]),
     el('div', { class: 'network-strip-right' }, [
       el('button', {
@@ -1523,10 +1738,8 @@ export function renderActiveNetworkWorkspace(c) {
     ].filter(Boolean))
   ]);
 
-  const seedId = state.graphExploration?.seedId;
-  const mapConfig = state.graphMapConfig || {};
-  const isLocked = !!mapConfig.locked;
-  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${mapConfig.locked ? '1' : '0'}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
+  const isPinsLocked = !!mapConfig.pinsLocked;
+  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${isLocked ? '1' : '0'}|${isPinsLocked ? '1' : '0'}|${mapConfig.pinsLockedAll ? '1' : '0'}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
 
   const renderGraphPanel = () => {
     return el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
@@ -1534,7 +1747,6 @@ export function renderActiveNetworkWorkspace(c) {
         id: 'graph-leaflet-map',
         class: `graph-leaflet-map ${isLocked ? 'map-locked' : 'map-interactive'}`
       }) : null,
-      isSat ? renderMapLocationController() : null,
       graphContainer(visibleNodes),
       visibleNodes.length > 0 ? el('div', { class: `graph-legend ${isSat ? 'sat-legend' : ''}` }, [
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
@@ -1545,9 +1757,21 @@ export function renderActiveNetworkWorkspace(c) {
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Location}` }), 'Cell Tower'])
       ]) : null,
       visibleNodes.length > 0 ? el('div', { class: `graph-controls ${isSat ? 'sat-controls' : ''}` }, [
-        el('button', { class: 'icon-btn', title: 'Zoom in', onclick: () => sigmaInstance?.getCamera().animatedZoom() }, ['＋']),
-        el('button', { class: 'icon-btn', title: 'Zoom out', onclick: () => sigmaInstance?.getCamera().animatedUnzoom() }, ['−']),
-        el('button', { class: 'icon-btn', title: 'Reset view', onclick: () => sigmaInstance?.getCamera().animatedReset({ duration: 300 }) }, ['⌖'])
+        el('button', {
+          class: 'icon-btn',
+          title: 'Zoom in',
+          onclick: () => isSat ? leafletMapInstance?.zoomIn() : sigmaInstance?.getCamera().animatedZoom()
+        }, ['＋']),
+        el('button', {
+          class: 'icon-btn',
+          title: 'Zoom out',
+          onclick: () => isSat ? leafletMapInstance?.zoomOut() : sigmaInstance?.getCamera().animatedUnzoom()
+        }, ['−']),
+        el('button', {
+          class: 'icon-btn',
+          title: 'Reset view',
+          onclick: () => isSat ? (leafletMapInstance?.setView([mapConfig.lat || 18.5204, mapConfig.lng || 73.8567], mapConfig.zoom || 14)) : sigmaInstance?.getCamera().animatedReset({ duration: 300 })
+        }, ['⌖'])
       ]) : null
     ].filter(Boolean));
   };
@@ -1567,11 +1791,14 @@ export function renderActiveNetworkWorkspace(c) {
 
     const oldGraphPanel = existingWorkspace.querySelector('.graph-panel');
     const wasSat = oldGraphPanel ? oldGraphPanel.classList.contains('satellite-view-active') : false;
-    if (oldGraphPanel && (wasSat !== isSat || graphSignature !== lastRenderedGraphSignature)) {
+    if (oldGraphPanel && (wasSat !== isSat)) {
       const newGraphPanel = renderGraphPanel();
       oldGraphPanel.replaceWith(newGraphPanel);
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
+    } else if (isSat && visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
+      lastRenderedGraphSignature = graphSignature;
+      renderSatelliteMapPins(visibleNodes);
     } else if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);

@@ -840,7 +840,16 @@ export function setFirCases(val) {
 export function loadSavedMapConfig() {
   try {
     const raw = localStorage.getItem('netrakshak_graph_map_config');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed) {
+        if (parsed.pinsLocked === undefined) parsed.pinsLocked = false;
+        if (parsed.pinsLockedAll === undefined) parsed.pinsLockedAll = false;
+        if (!parsed.lockedPinIds) parsed.lockedPinIds = {};
+        if (!parsed.nodeGeoPositions) parsed.nodeGeoPositions = {};
+        return parsed;
+      }
+    }
   } catch (e) {}
   return {
     enabled: false,
@@ -848,8 +857,12 @@ export function loadSavedMapConfig() {
     lng: 73.8567,
     zoom: 14,
     locationName: 'Pune City (Shivajinagar Sector)',
-    locked: true,
-    layerType: 'satellite'
+    locked: false,
+    pinsLocked: false,
+    pinsLockedAll: false,
+    lockedPinIds: {},
+    layerType: 'satellite',
+    nodeGeoPositions: {}
   };
 }
 
@@ -1093,6 +1106,48 @@ export function toggleGraphMapLock(locked) {
   state.graphMapConfig.locked = (locked !== undefined) ? locked : !state.graphMapConfig.locked;
   saveMapConfig(state.graphMapConfig);
   notifyStateChange();
+}
+
+export function isPinLocked(nodeId) {
+  if (state.graphMapConfig?.pinsLockedAll) return true;
+  return !!state.graphMapConfig?.lockedPinIds?.[nodeId];
+}
+
+export function togglePinLock(nodeId, locked) {
+  if (!state.graphMapConfig.lockedPinIds) {
+    state.graphMapConfig.lockedPinIds = {};
+  }
+  const current = isPinLocked(nodeId);
+  state.graphMapConfig.lockedPinIds[nodeId] = (locked !== undefined) ? locked : !current;
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function toggleLockAllPins(locked) {
+  const nextVal = (locked !== undefined) ? locked : !state.graphMapConfig.pinsLockedAll;
+  state.graphMapConfig.pinsLockedAll = nextVal;
+  state.graphMapConfig.pinsLocked = nextVal;
+  if (!state.graphMapConfig.lockedPinIds) {
+    state.graphMapConfig.lockedPinIds = {};
+  }
+  // Synchronize all individual pin locks
+  entities.forEach(e => {
+    state.graphMapConfig.lockedPinIds[e.id] = nextVal;
+  });
+  saveMapConfig(state.graphMapConfig);
+  notifyStateChange();
+}
+
+export function toggleGraphPinsLock(locked) {
+  toggleLockAllPins(locked);
+}
+
+export function setNodeGeoPosition(nodeId, lat, lng) {
+  if (!state.graphMapConfig.nodeGeoPositions) {
+    state.graphMapConfig.nodeGeoPositions = {};
+  }
+  state.graphMapConfig.nodeGeoPositions[nodeId] = { lat, lng };
+  saveMapConfig(state.graphMapConfig);
 }
 
 export function setGraphMapLayerType(type) {
