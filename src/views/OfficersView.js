@@ -6,6 +6,10 @@ import { showToast } from '../components/Toast.js';
 
 export function renderOfficers(c) {
   c.innerHTML = '';
+  if (supabaseConfigured && !c._hasSyncedOfficers) {
+    c._hasSyncedOfficers = true;
+    loadSupabaseData().catch(() => {});
+  }
   const activeOfficer = getActiveOfficer();
   const isAdmin = activeOfficer ? (activeOfficer.isAdmin !== false) : true;
 
@@ -267,7 +271,7 @@ export function renderOfficers(c) {
             try {
               const createdId = await createOfficerAccount({
                 email,
-                password: password || 'password123',
+                password,
                 name,
                 rank,
                 district,
@@ -294,7 +298,6 @@ export function renderOfficers(c) {
             email,
             phone,
             badge_no: badgeNo,
-            password: password || 'password123',
             role,
             isYou: false
           };
