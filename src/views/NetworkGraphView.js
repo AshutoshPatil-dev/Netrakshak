@@ -1190,6 +1190,11 @@ export function renderInvestigationLaunchpad(c) {
     el('div', { class: 'heading-actions' }, [
       el('button', {
         class: 'primary-btn',
+        title: 'Open full connected crime network universe',
+        onclick: () => { showFullGraphUniverse(); showToast('Opened Full Crime Network Graph'); }
+      }, [icon('network'), ' Open Full Graph Canvas']),
+      el('button', {
+        class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
     ])
@@ -1320,13 +1325,9 @@ export function renderInvestigationLaunchpad(c) {
       class: 'launchpad-entity-card',
       'data-search-text': `${item.name} ${item.type} ${item.role || ''} ${item.local || ''} ${item.phone || ''} ${item.city || ''} ${JSON.stringify(item.identifiers || {})}`.toLowerCase(),
       onclick: () => {
-        if (item.isFIR) {
-          state.view = 'fir';
-          notifyStateChange();
-        } else {
-          openEntityProfile(item.id);
-          showToast(`Opening profile for ${item.name}`);
-        }
+        const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
+        startGraphInvestigation(graphTargetId);
+        showToast(`Generated network around ${item.name}`);
       }
     }, [
       el('div', { class: 'card-header-row' }, [
@@ -1347,6 +1348,17 @@ export function renderInvestigationLaunchpad(c) {
         el('div', { class: 'card-btn-group' }, [
           el('button', {
             class: 'primary-btn small launch-btn',
+            title: 'Open network relationship graph for this entity',
+            onclick: (e) => {
+              e.stopPropagation();
+              const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
+              startGraphInvestigation(graphTargetId);
+              showToast(`Generated network around ${item.name}`);
+            }
+          }, [icon('network'), ' Launch Graph →']),
+          el('button', {
+            class: 'outline-btn small launch-btn-graph',
+            title: 'Inspect detailed entity profile record',
             onclick: (e) => {
               e.stopPropagation();
               if (item.isFIR) {
@@ -1356,17 +1368,7 @@ export function renderInvestigationLaunchpad(c) {
                 openEntityProfile(item.id);
               }
             }
-          }, [item.isFIR ? 'Inspect FIR →' : 'Inspect Profile →']),
-          el('button', {
-            class: 'outline-btn small launch-btn-graph',
-            title: 'Open directly in network graph canvas',
-            onclick: (e) => {
-              e.stopPropagation();
-              const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
-              startGraphInvestigation(graphTargetId);
-              showToast(`Generated network around ${item.name}`);
-            }
-          }, [icon('network'), ' Graph'])
+          }, ['Profile'])
         ])
       ])
     ]);
