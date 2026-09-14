@@ -712,7 +712,14 @@ async function commitFIRSave(data) {
 }
 
 function firInput(label, key, attrs = {}) {
-  const currentVal = state.firDraft[key] !== undefined ? state.firDraft[key] : '';
+  const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+  let currentVal = state.firDraft[key];
+  if (currentVal === undefined || currentVal === null || currentVal === '') {
+    currentVal = state.firDraft[snakeKey];
+  }
+  if (currentVal === undefined || currentVal === null) currentVal = '';
+  if (Array.isArray(currentVal)) currentVal = currentVal.join(', ');
+
   const inputEl = el('input', {
     ...attrs,
     name: key,
@@ -729,7 +736,13 @@ function firInput(label, key, attrs = {}) {
 }
 
 function firTextarea(label, key, attrs = {}) {
-  const currentVal = state.firDraft[key] !== undefined ? state.firDraft[key] : '';
+  const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+  let currentVal = state.firDraft[key];
+  if (currentVal === undefined || currentVal === null || currentVal === '') {
+    currentVal = state.firDraft[snakeKey];
+  }
+  if (currentVal === undefined || currentVal === null) currentVal = '';
+
   const textEl = el('textarea', {
     ...attrs,
     name: key,
@@ -951,15 +964,15 @@ export function renderFIRIntakeForm() {
         el('div', { class: 'fir-jurisdiction-banner' }, [
           el('div', { class: 'fir-jurisdiction-col' }, [
             el('span', { class: 'field-label' }, ['POLICE STATION']),
-            el('input', { name: 'policeStation', value: state.firDraft.policeStation, placeholder: 'Police Station Name', oninput: (e) => { state.firDraft.policeStation = e.target.value; } })
+            el('input', { name: 'policeStation', value: state.firDraft.policeStation || state.firDraft.police_station || '', placeholder: 'Police Station Name', oninput: (e) => { state.firDraft.policeStation = e.target.value; } })
           ]),
           el('div', { class: 'fir-jurisdiction-col' }, [
             el('span', { class: 'field-label' }, ['DISTRICT']),
-            el('input', { name: 'district', value: state.firDraft.district, placeholder: 'District', oninput: (e) => { state.firDraft.district = e.target.value; } })
+            el('input', { name: 'district', value: state.firDraft.district || '', placeholder: 'District', oninput: (e) => { state.firDraft.district = e.target.value; } })
           ]),
           el('div', { class: 'fir-jurisdiction-col' }, [
             el('span', { class: 'field-label' }, ['STATE']),
-            el('input', { name: 'state', value: state.firDraft.state, placeholder: 'State', oninput: (e) => { state.firDraft.state = e.target.value; } })
+            el('input', { name: 'state', value: state.firDraft.state || 'Maharashtra', placeholder: 'State', oninput: (e) => { state.firDraft.state = e.target.value; } })
           ])
         ])
       ]),
@@ -1362,7 +1375,37 @@ export function renderFIRDossiersList() {
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => {
-            state.firDraft = { ...c };
+            state.firDraft = {
+              policeStation: c.policeStation || c.police_station || 'Cyber Crime Police Station, Shivajinagar',
+              district: c.district || 'Pune City',
+              state: c.state || 'Maharashtra',
+              firNumber: c.firNumber || c.fir_number || firNo,
+              incidentDate: c.incidentDate || c.incident_date || '2026-08-14',
+              incidentTime: c.incidentTime || c.incident_time || '14:30',
+              sections: Array.isArray(c.sections) ? c.sections.join(', ') : (c.sections || ''),
+              complainantName: c.complainantName || c.complainant_name || '',
+              complainantAge: c.complainantAge || c.complainant_age || '',
+              complainantFather: c.complainantFather || c.complainant_father || '',
+              complainantPhone: c.complainantPhone || c.complainant_phone || '',
+              complainantAddress: c.complainantAddress || c.complainant_address || '',
+              subjectName: c.subjectName || c.subject_name || subj || '',
+              alias: c.alias || '',
+              otherAccused: c.otherAccused || c.other_accused || otherAcc || '',
+              incidentLocation: c.incidentLocation || c.incident_location || '',
+              phone: c.phone || phone || '',
+              vehicle: c.vehicle || veh || '',
+              bank: c.bank || bnk || '',
+              incidentSummary: c.incidentSummary || c.incident_summary || summary || '',
+              propertySummary: c.propertySummary || c.property_summary || propSummary || '',
+              accusedImage: c.accusedImage || c.accused_image || suspectPhoto || ''
+            };
+            const existingEvidence = c.evidence_items || c.evidenceItems || DEFAULT_EVIDENCE_ITEMS.filter(ev => ev.fir_id === c.id || ev.fir_number === firNo) || [];
+            state.manualEvidence = existingEvidence.map(ev => ({
+              type: ev.type || ev.evidence_type || 'document',
+              description: ev.description || ev.name || 'Evidence Item',
+              file: ev.file || null,
+              sha256: ev.sha256 || 'e8f29c0b39'
+            }));
             state.firActiveTab = 'intake';
             notifyStateChange();
             showToast(`Loaded ${firNo} into Form II Intake Editor`);
@@ -1371,7 +1414,30 @@ export function renderFIRDossiersList() {
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => {
-            state.firDraft = { ...c };
+            state.firDraft = {
+              policeStation: c.policeStation || c.police_station || 'Cyber Crime Police Station, Shivajinagar',
+              district: c.district || 'Pune City',
+              state: c.state || 'Maharashtra',
+              firNumber: c.firNumber || c.fir_number || firNo,
+              incidentDate: c.incidentDate || c.incident_date || '2026-08-14',
+              incidentTime: c.incidentTime || c.incident_time || '14:30',
+              sections: Array.isArray(c.sections) ? c.sections.join(', ') : (c.sections || ''),
+              complainantName: c.complainantName || c.complainant_name || '',
+              complainantAge: c.complainantAge || c.complainant_age || '',
+              complainantFather: c.complainantFather || c.complainant_father || '',
+              complainantPhone: c.complainantPhone || c.complainant_phone || '',
+              complainantAddress: c.complainantAddress || c.complainant_address || '',
+              subjectName: c.subjectName || c.subject_name || subj || '',
+              alias: c.alias || '',
+              otherAccused: c.otherAccused || c.other_accused || otherAcc || '',
+              incidentLocation: c.incidentLocation || c.incident_location || '',
+              phone: c.phone || phone || '',
+              vehicle: c.vehicle || veh || '',
+              bank: c.bank || bnk || '',
+              incidentSummary: c.incidentSummary || c.incident_summary || summary || '',
+              propertySummary: c.propertySummary || c.property_summary || propSummary || '',
+              accusedImage: c.accusedImage || c.accused_image || suspectPhoto || ''
+            };
             openFIRExportModal();
           }
         }, [icon('file'), 'Export & Print FIR']),

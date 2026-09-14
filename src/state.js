@@ -665,24 +665,37 @@ export const DEFAULT_FIR_CASES = [
     policeStation: 'Cyber Crime Police Station, Shivajinagar',
     police_station: 'Cyber Crime Police Station, Shivajinagar',
     district: 'Pune City',
+    state: 'Maharashtra',
     incidentDate: '2026-08-14',
     incident_date: '2026-08-14',
     incidentTime: '14:30',
     sections: 'IPC 420, IPC 468, IPC 471, IT Act 66D',
     complainantName: 'Rajesh Kulkarni',
+    complainant_name: 'Rajesh Kulkarni',
+    complainantAge: '42',
+    complainant_age: '42',
+    complainantFather: 'Madhavrao Kulkarni',
+    complainant_father: 'Madhavrao Kulkarni',
     complainantPhone: '+91 98220 11984',
-    complainantAddress: 'Flat 402, Shivajinagar, Pune - 411005',
+    complainant_phone: '+91 98220 11984',
+    complainantAddress: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
+    complainant_address: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
     subjectName: 'Sameer Khan',
     subject_name: 'Sameer Khan',
     alias: 'Baba Bhai, Sammy, SK',
     otherAccused: 'Vikram Rathi, Ajay Deshmukh',
+    other_accused: 'Vikram Rathi, Ajay Deshmukh',
     phone: '+91 98811 55421',
     vehicle: 'MH-12-PQ-9081',
     bank: 'HDFC-50100492817291',
+    accusedImage: getAccusedPhoto('Sameer Khan'),
+    accused_image: getAccusedPhoto('Sameer Khan'),
     incidentLocation: 'FC Road Commercial Complex, Shivajinagar, Pune',
+    incident_location: 'FC Road Commercial Complex, Shivajinagar, Pune',
     incidentSummary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
     incident_summary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-    propertySummary: 'Seized items: 1x Jio Burner SIM (+91 98811 55421), White Swift (MH-12-PQ-9081), Bank transaction slips for INR 14,50,000.',
+    propertySummary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF, 1x Jio SIM (+91 98811 55421), and White Swift (MH-12-PQ-9081) seized.',
+    property_summary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF, 1x Jio SIM (+91 98811 55421), and White Swift (MH-12-PQ-9081) seized.',
     extractionStatus: 'approved',
     extraction_status: 'approved',
     syndicateGroup: 'ShadowFlow Cyber Racket',
@@ -695,24 +708,37 @@ export const DEFAULT_FIR_CASES = [
     policeStation: 'Kothrud Police Station',
     police_station: 'Kothrud Police Station',
     district: 'Pune City',
+    state: 'Maharashtra',
     incidentDate: '2026-07-22',
     incident_date: '2026-07-22',
     incidentTime: '11:15',
     sections: 'IPC 420, IPC 120B',
     complainantName: 'Sanjay Patil',
+    complainant_name: 'Sanjay Patil',
+    complainantAge: '48',
+    complainant_age: '48',
+    complainantFather: 'Dattatray Patil',
+    complainant_father: 'Dattatray Patil',
     complainantPhone: '+91 97655 44321',
-    complainantAddress: 'Near MIT College, Paud Road, Kothrud, Pune',
+    complainant_phone: '+91 97655 44321',
+    complainantAddress: 'Near MIT College, Paud Road, Kothrud, Pune - 411038',
+    complainant_address: 'Near MIT College, Paud Road, Kothrud, Pune - 411038',
     subjectName: 'Arjun Pawar',
     subject_name: 'Arjun Pawar',
     alias: 'Student Lead',
     otherAccused: 'Rohit Salunkhe, Deepak Verma',
+    other_accused: 'Rohit Salunkhe, Deepak Verma',
     phone: '+91 99230 44102',
     vehicle: 'MH-14-EA-7712',
     bank: 'AXIS-91201004812',
+    accusedImage: getAccusedPhoto('Arjun Pawar'),
+    accused_image: getAccusedPhoto('Arjun Pawar'),
     incidentLocation: 'Paud Road, Kothrud, Pune',
+    incident_location: 'Paud Road, Kothrud, Pune',
     incidentSummary: 'Fraudulent diversion of college admission security deposits through student mule accounts. Account credentials obtained under commission promises.',
     incident_summary: 'Fraudulent diversion of college admission security deposits through student mule accounts. Account credentials obtained under commission promises.',
-    propertySummary: 'Seized items: 4x Student ID cards, 12x unlinked debit cards, 1x diary with UPI recovery handles.',
+    propertySummary: 'Seized items: 4x Student ID cards, 12x unlinked debit cards, 1x diary with UPI recovery handles, Black Pulsar (MH-14-EA-7712).',
+    property_summary: 'Seized items: 4x Student ID cards, 12x unlinked debit cards, 1x diary with UPI recovery handles, Black Pulsar (MH-14-EA-7712).',
     extractionStatus: 'approved',
     extraction_status: 'approved',
     syndicateGroup: 'Kothrud Safehouse / Mule Hub',
@@ -725,24 +751,37 @@ export const DEFAULT_FIR_CASES = [
     policeStation: 'Swargate Police Station',
     police_station: 'Swargate Police Station',
     district: 'Pune City',
+    state: 'Maharashtra',
     incidentDate: '2026-08-11',
     incident_date: '2026-08-11',
     incidentTime: '19:45',
     sections: 'IPC 384, IPC 386, IPC 120B, Arms Act 25',
     complainantName: 'Balasaheb Thorat',
+    complainant_name: 'Balasaheb Thorat',
+    complainantAge: '52',
+    complainant_age: '52',
+    complainantFather: 'Govindrao Thorat',
+    complainant_father: 'Govindrao Thorat',
     complainantPhone: '+91 94220 33190',
+    complainant_phone: '+91 94220 33190',
     complainantAddress: 'Ganesh Peth, Near Timber Market, Swargate, Pune - 411002',
+    complainant_address: 'Ganesh Peth, Near Timber Market, Swargate, Pune - 411002',
     subjectName: 'Suresh Shinde',
     subject_name: 'Suresh Shinde',
     alias: 'Surya, Anna',
     otherAccused: 'Pappu More, Arjun Pawar',
+    other_accused: 'Pappu More, Arjun Pawar',
     phone: '+91 98199 44312',
     vehicle: 'MH-14-EA-7712',
     bank: 'BOM-60129948102',
+    accusedImage: getAccusedPhoto('Suresh Shinde'),
+    accused_image: getAccusedPhoto('Suresh Shinde'),
     incidentLocation: 'Timber Market Road, Swargate, Pune',
+    incident_location: 'Timber Market Road, Swargate, Pune',
     incidentSummary: 'Handwritten extortion slips demanding protection money from timber merchants. Accused Suresh Shinde and bike-borne associates delivered threat notes.',
     incident_summary: 'Handwritten extortion slips demanding protection money from timber merchants. Accused Suresh Shinde and bike-borne associates delivered threat notes.',
-    propertySummary: 'Seized items: 1x handwritten extortion demand slip, 1x countrymade firearm, 1x SIM packaging card.',
+    propertySummary: 'Seized items: 1x handwritten extortion demand slip, 1x countrymade firearm, 1x SIM packaging card (+91 98199 44312).',
+    property_summary: 'Seized items: 1x handwritten extortion demand slip, 1x countrymade firearm, 1x SIM packaging card (+91 98199 44312).',
     extractionStatus: 'approved',
     extraction_status: 'approved',
     syndicateGroup: 'Swargate Extortion & Hawala Ring',
@@ -755,24 +794,37 @@ export const DEFAULT_FIR_CASES = [
     policeStation: 'Bandra Cyber Police Station',
     police_station: 'Bandra Cyber Police Station',
     district: 'Mumbai HQ',
+    state: 'Maharashtra',
     incidentDate: '2026-08-02',
     incident_date: '2026-08-02',
     incidentTime: '16:00',
     sections: 'IPC 420, IPC 467, IT Act 66C, PMLA 3',
     complainantName: 'Sunita Singhania',
+    complainant_name: 'Sunita Singhania',
+    complainantAge: '39',
+    complainant_age: '39',
+    complainantFather: 'Kishorilal Singhania',
+    complainant_father: 'Kishorilal Singhania',
     complainantPhone: '+91 98210 99812',
+    complainant_phone: '+91 98210 99812',
     complainantAddress: 'Bandra Kurla Complex, Mumbai - 400051',
+    complainant_address: 'Bandra Kurla Complex, Mumbai - 400051',
     subjectName: 'Maya Shelar',
     subject_name: 'Maya Shelar',
     alias: 'Madam, Consultant',
     otherAccused: 'Karan Mehra, Vikram Rathi',
+    other_accused: 'Karan Mehra, Vikram Rathi',
     phone: '+91 98901 22345',
     vehicle: 'MH-01-DK-3490',
     bank: 'KOTAK-9810284711',
+    accusedImage: getAccusedPhoto('Maya Shelar'),
+    accused_image: getAccusedPhoto('Maya Shelar'),
     incidentLocation: 'Bandra Kurla Complex (BKC), Mumbai',
+    incident_location: 'Bandra Kurla Complex (BKC), Mumbai',
     incidentSummary: 'Corporate identity theft and deployment of fake digital bond certificates via Apex Digital Asset LLP. Multi-crore crypto off-ramping.',
     incident_summary: 'Corporate identity theft and deployment of fake digital bond certificates via Apex Digital Asset LLP. Multi-crore crypto off-ramping.',
     propertySummary: 'Seized items: Forged ROC Incorporation Certificates, 2x Ledger Crypto Wallets, Black Fortuner (MH-01-DK-3490).',
+    property_summary: 'Seized items: Forged ROC Incorporation Certificates, 2x Ledger Crypto Wallets, Black Fortuner (MH-01-DK-3490).',
     extractionStatus: 'approved',
     extraction_status: 'approved',
     syndicateGroup: 'Apex Offshore Bond Syndicate',
@@ -1166,7 +1218,112 @@ export async function loadSupabaseData() {
     }
 
     if (dbCases && dbCases.length > 0) {
-      firCases = dbCases;
+      const defaultCaseMap = new Map();
+      DEFAULT_FIR_CASES.forEach(dc => {
+        defaultCaseMap.set(dc.firNumber, dc);
+        defaultCaseMap.set(dc.fir_number, dc);
+        defaultCaseMap.set(dc.id, dc);
+      });
+
+      firCases = dbCases.map(c => {
+        const firNum = c.fir_number || c.firNumber;
+        const fallback = defaultCaseMap.get(firNum) || defaultCaseMap.get(c.id) || {};
+        const sectionsStr = Array.isArray(c.sections) ? c.sections.join(', ') : (c.sections || fallback.sections || '');
+
+        let rawSummary = c.incident_summary || c.incidentSummary || fallback.incidentSummary || '';
+        let propSummary = c.property_summary || c.propertySummary || fallback.propertySummary || '';
+        let compName = c.complainant_name || c.complainantName || fallback.complainantName || '';
+        let compPhone = c.complainant_phone || c.complainantPhone || fallback.complainantPhone || '';
+        let compAge = c.complainant_age || c.complainantAge || fallback.complainantAge || '';
+        let compFather = c.complainant_father || c.complainantFather || fallback.complainantFather || '';
+        let compAddress = c.complainant_address || c.complainantAddress || fallback.complainantAddress || '';
+        let loc = c.incident_location || c.incidentLocation || fallback.incidentLocation || '';
+        let time = c.incident_time || c.incidentTime || fallback.incidentTime || '';
+
+        // If composite narrative was saved in database, parse fields out if missing
+        if (rawSummary.includes('[Complainant]:') && !compName) {
+          const compMatch = rawSummary.match(/\[Complainant\]:\s*([^(]+?)(?:\s*\(Age:\s*([^,]*),\s*S\/o:\s*([^,]*),\s*Ph:\s*([^,]*),\s*Addr:\s*([^)]*)\))?/i);
+          if (compMatch) {
+            compName = compMatch[1]?.trim() || compName;
+            if (compMatch[2]) compAge = compMatch[2].trim();
+            if (compMatch[3]) compFather = compMatch[3].trim();
+            if (compMatch[4]) compPhone = compMatch[4].trim();
+            if (compMatch[5]) compAddress = compMatch[5].trim();
+          }
+        }
+        if (rawSummary.includes('[Property Stolen / Evidence Summary]:') && !propSummary) {
+          const propMatch = rawSummary.match(/\[Property Stolen \/ Evidence Summary\]:\s*([^\n\r]+)/i);
+          if (propMatch) propSummary = propMatch[1]?.trim() || propSummary;
+        }
+        if (rawSummary.includes('[Incident Location & Time]:') && !loc) {
+          const locMatch = rawSummary.match(/\[Incident Location & Time\]:\s*([^a\n\r]+?)(?:\s+at\s+([^\n\r]+))?$/im);
+          if (locMatch) {
+            loc = locMatch[1]?.trim() || loc;
+            if (locMatch[2]) time = locMatch[2].trim();
+          }
+        }
+
+        // Clean raw summary of metadata tags for display
+        let cleanSummary = rawSummary.split('[Property Stolen')[0].split('[Complainant]')[0].trim();
+        if (!cleanSummary) cleanSummary = rawSummary;
+
+        const subj = c.subject_name || c.subjectName || fallback.subjectName || '';
+        const alias = c.alias || fallback.alias || '';
+        const otherAcc = c.other_accused || c.otherAccused || fallback.otherAccused || '';
+        const phone = c.phone || fallback.phone || '';
+        const vehicle = c.vehicle || fallback.vehicle || '';
+        const bank = c.bank || fallback.bank || '';
+        const accusedPhoto = c.accused_image || c.accusedImage || fallback.accusedImage || getAccusedPhoto(subj) || '';
+
+        return {
+          ...fallback,
+          ...c,
+          id: c.id,
+          firNumber: firNum,
+          fir_number: firNum,
+          policeStation: c.police_station || c.policeStation || fallback.policeStation || 'Cyber Crime Police Station, Shivajinagar',
+          police_station: c.police_station || c.policeStation || fallback.policeStation || 'Cyber Crime Police Station, Shivajinagar',
+          district: c.district || fallback.district || 'Pune City',
+          state: c.state || fallback.state || 'Maharashtra',
+          incidentDate: c.incident_date || c.incidentDate || fallback.incidentDate || '2026-08-14',
+          incident_date: c.incident_date || c.incidentDate || fallback.incidentDate || '2026-08-14',
+          incidentTime: time || '14:30',
+          incident_time: time || '14:30',
+          sections: sectionsStr,
+          complainantName: compName,
+          complainant_name: compName,
+          complainantAge: compAge,
+          complainant_age: compAge,
+          complainantFather: compFather,
+          complainant_father: compFather,
+          complainantPhone: compPhone,
+          complainant_phone: compPhone,
+          complainantAddress: compAddress,
+          complainant_address: compAddress,
+          subjectName: subj,
+          subject_name: subj,
+          alias: alias,
+          otherAccused: otherAcc,
+          other_accused: otherAcc,
+          incidentLocation: loc,
+          incident_location: loc,
+          phone: phone,
+          vehicle: vehicle,
+          bank: bank,
+          incidentSummary: cleanSummary,
+          incident_summary: cleanSummary,
+          propertySummary: propSummary,
+          property_summary: propSummary,
+          accusedImage: accusedPhoto,
+          accused_image: accusedPhoto,
+          extractionStatus: c.extraction_status || c.extractionStatus || 'approved',
+          extraction_status: c.extraction_status || c.extractionStatus || 'approved',
+          syndicateGroup: c.syndicate_group || c.syndicateGroup || fallback.syndicateGroup || '',
+          evidence_items: c.evidence_items || DEFAULT_EVIDENCE_ITEMS.filter(ev => ev.fir_id === c.id || ev.fir_number === firNum)
+        };
+      });
+    } else {
+      firCases = [...DEFAULT_FIR_CASES];
     }
 
     if (dbCdrs && dbCdrs.length > 0) {
