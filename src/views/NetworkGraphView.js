@@ -2,7 +2,7 @@ import Graph from 'graphology';
 import Sigma from 'sigma';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { el, icon } from '../lib/dom.js';
+import { el, icon, escapeHtml } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import {
   state,
@@ -429,10 +429,12 @@ export function renderSatelliteMapPins(visibleNodes) {
               const mColor = objectTypeColors[m.type] || '#38BDF8';
               const isSel = state.selected === m.id;
               const mLocked = isPinLocked(m.id);
+              const safeName = escapeHtml(m.name);
+              const safeType = escapeHtml(m.type);
               return `
-                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}" title="Click to inspect ${m.name}">
-                  <span class="pin-member-type-tag" style="color: ${mColor};">${m.type}</span>
-                  <span class="pin-member-name-text">${m.name}</span>
+                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}" title="Click to inspect ${safeName}">
+                  <span class="pin-member-type-tag" style="color: ${mColor};">${safeType}</span>
+                  <span class="pin-member-name-text">${safeName}</span>
                   <button class="pin-lock-badge-btn" data-node-id="${m.id}" title="${mLocked ? 'Pin locked' : 'Pin draggable'}">${mLocked ? '🔒' : '🔓'}</button>
                 </div>
               `;
@@ -562,8 +564,8 @@ export function renderSatelliteMapPins(visibleNodes) {
         <div class="pin-needle" style="border-top-color: ${typeColor};"></div>
         <div class="pin-shadow"></div>
         <div class="pin-label-pill">
-          <span class="pin-label-type">${entity.type}</span>
-          <span class="pin-label-name">${entity.name}</span>
+          <span class="pin-label-type">${escapeHtml(entity.type)}</span>
+          <span class="pin-label-name">${escapeHtml(entity.name)}</span>
           ${!isGroupingMode ? `
             <button class="pin-lock-badge-btn" data-node-id="${entity.id}" title="${nodeLocked ? 'Pin locked in place. Click to unlock & drag' : 'Pin draggable. Click to lock in place'}">
               ${nodeLocked ? '🔒' : '🔓'}
