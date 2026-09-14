@@ -1009,6 +1009,21 @@ export function expandGraphNode(nodeId) {
   }
   if (!state.graphExploration.expandedNodeIds.includes(nodeId)) {
     state.graphExploration.expandedNodeIds.push(nodeId);
+  } else {
+    // Expand all connected neighbors of this node to reveal next layer of network relationships
+    const neighborIds = [];
+    edges.forEach(edge => {
+      if (edge[0] === nodeId) neighborIds.push(edge[1]);
+      if (edge[1] === nodeId) neighborIds.push(edge[0]);
+    });
+    neighborIds.forEach(nId => {
+      if (!state.graphExploration.expandedNodeIds.includes(nId)) {
+        state.graphExploration.expandedNodeIds.push(nId);
+      }
+      if (state.graphExploration.hiddenNodeIds) {
+        state.graphExploration.hiddenNodeIds = state.graphExploration.hiddenNodeIds.filter(id => id !== nId);
+      }
+    });
   }
   state.graphExploration.active = true;
   notifyStateChange();

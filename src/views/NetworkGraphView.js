@@ -1056,9 +1056,6 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
             title: isPinLocked(entity.id) ? 'Pin is locked in place. Click to allow dragging.' : 'Pin can be dragged to any location. Click to lock in place.',
             onclick: () => {
               togglePinLock(entity.id);
-              const visibleIds = getVisibleGraphNodeIds();
-              const visibleNodes = graphMetrics(entities, edges).filter(e => visibleIds.has(e.id));
-              renderSatelliteMapPins(visibleNodes);
               showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
             }
           }, [isPinLocked(entity.id) ? '🔒 Pin: Locked' : '🔓 Pin: Moveable']) : null,
@@ -1592,14 +1589,20 @@ export function renderInvestigationLaunchpad(c) {
 export function renderActiveNetworkWorkspace(c) {
   const isSat = !!state.graphSatelliteMode;
   const analyticalEntities = graphMetrics(entities, edges);
+  const seedId = state.graphExploration?.seedId;
 
-  // Compute visibility set
+  // Filter visible nodes by active type filter (focal seed is kept for context)
   const visibleIds = getVisibleGraphNodeIds();
-  const visibleNodes = analyticalEntities.filter(e => visibleIds.has(e.id));
+  const visibleNodes = analyticalEntities.filter(e => {
+    if (!visibleIds.has(e.id)) return false;
+    if (!state.type || state.type.toLowerCase() === 'all') return true;
+    if (e.id === seedId) return true;
+    return e.type.toLowerCase() === state.type.toLowerCase();
+  });
 
   // Filter and sort for the directory / search list
   const filtered = analyticalEntities.filter(e => {
-    const matchType = state.type === 'all' || e.type.toLowerCase() === state.type.toLowerCase();
+    const matchType = !state.type || state.type === 'all' || e.type.toLowerCase() === state.type.toLowerCase();
     const q = (state.query || '').toLowerCase();
     const matchQuery = !q ||
       e.name.toLowerCase().includes(q) ||
@@ -1629,10 +1632,14 @@ export function renderActiveNetworkWorkspace(c) {
   const typeOptions = [['all', 'All Object Types'], ...uniqueTypes.map(x => [x.toLowerCase(), x])];
   const typeSelect = el('select', { class: 'filter-select' }, typeOptions.map(([v, l]) => {
     const o = el('option', { value: v }, [l]);
-    o.selected = v === state.type.toLowerCase();
+    o.selected = v === (state.type || 'all').toLowerCase();
     return o;
   }));
-  typeSelect.onchange = e => { state.type = e.target.value; notifyStateChange(); };
+  typeSelect.onchange = e => {
+    state.type = e.target.value;
+    notifyStateChange();
+    showToast(`Filtered network to: ${e.target.options[e.target.selectedIndex].text}`);
+  };
 
   const isFocusedMode = state.graphExploration?.mode === 'focused';
 
@@ -1651,7 +1658,6 @@ export function renderActiveNetworkWorkspace(c) {
     notifyStateChange();
   };
 
-  const seedId = state.graphExploration?.seedId;
   const mapConfig = state.graphMapConfig || {};
   const isLocked = !!mapConfig.locked;
   const isMapLocked = isLocked;
@@ -1695,9 +1701,6 @@ export function renderActiveNetworkWorkspace(c) {
         : 'Pins can be dragged freely. Click to lock all pins in place on the map.',
       onclick: () => {
         toggleLockAllPins();
-        const visibleIds = getVisibleGraphNodeIds();
-        const visibleNodes = graphMetrics(entities, edges).filter(e => visibleIds.has(e.id));
-        renderSatelliteMapPins(visibleNodes);
         showToast(state.graphMapConfig.pinsLockedAll ? '🔒 All Pins Locked in Place' : '📍 Pins Draggable');
       }
     }, [isAllPinsLocked ? `🔒 ${t('pinsLocked')}` : `📍 ${t('pinsMoveable')}`]);
@@ -1748,12 +1751,12 @@ export function renderActiveNetworkWorkspace(c) {
       }, [icon('undo'), ` ${t('reset')}`]),
       selectedEntity ? el('button', {
         class: 'strip-btn strip-highlight-btn',
-        title: `Expand direct 1-hop connections for ${selectedEntity.name}`,
+        title: `Expand network connections for ${selectedEntity.name}`,
         onclick: () => {
           expandGraphNode(selectedEntity.id);
-          showToast(`Expanded neighbors for ${selectedEntity.name}`);
+          showToast(`Expanded network around ${selectedEntity.name}`);
         }
-      }, [icon('plus'), ` ${t('expand')} (${getConnectedLinks(selectedEntity.id).length})`]) : null,
+      }, [icon('plus'), ` ${t('expand')}`]) : null,
       el('div', { class: 'strip-divider' }),
       el('button', {
         class: `strip-btn strip-sat-btn ${isSat ? 'active' : ''}`,
@@ -1775,7 +1778,8 @@ export function renderActiveNetworkWorkspace(c) {
   ]);
 
   const isPinsLocked = !!mapConfig.pinsLocked;
-  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${isLocked ? '1' : '0'}|${isPinsLocked ? '1' : '0'}|${mapConfig.pinsLockedAll ? '1' : '0'}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
+  const lockedPinsKey = Object.entries(mapConfig.lockedPinIds || {}).filter(([_, v]) => v).map(([k]) => k).sort().join(',');
+  const graphSignature = `${visibleNodes.map(n => n.id).sort().join(',')}|${state.selected}|${seedId}|${state.type}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${isLocked ? '1' : '0'}|${isPinsLocked ? '1' : '0'}|${mapConfig.pinsLockedAll ? '1' : '0'}|${lockedPinsKey}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
 
   const renderGraphPanel = () => {
     return el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
