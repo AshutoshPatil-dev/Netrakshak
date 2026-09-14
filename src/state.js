@@ -15,64 +15,17 @@ export function notifyStateChange() {
 
 export const DEFAULT_OFFICERS = [
   {
-    id: 'off_ashutosh',
+    id: '996ad2d5-a5d1-437f-9716-e982e69d864d',
     name: 'Ashutosh Patil',
     rank: 'Superintendent of Police',
     cadre: 'IPS (MH Cadre)',
+    badge_no: 'IPS-001',
     district: 'Pune HQ',
     state: 'Maharashtra',
-    email: 'ashutosh.patil@mahapolice.gov.in',
-    phone: '+91 98220 54101',
+    email: 'ashutosh.patil9750@gmail.com',
+    phone: '+91 9112222108',
     role: 'admin',
     isYou: true
-  },
-  {
-    id: 'off_anil',
-    name: 'Inspector Anil Singh',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Pune HQ',
-    state: 'Maharashtra',
-    email: 'anil.singh@mahapolice.gov.in',
-    phone: '+91 98220 11984',
-    role: 'analyst',
-    isYou: false
-  },
-  {
-    id: 'off_priya',
-    name: 'SI Priya Deshmukh',
-    rank: 'Sub-Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Shivajinagar',
-    state: 'Maharashtra',
-    email: 'priya.deshmukh@mahapolice.gov.in',
-    phone: '+91 98811 44210',
-    role: 'case-officer',
-    isYou: false
-  },
-  {
-    id: 'off_vikas',
-    name: 'Inspector Vikas Rane',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Kothrud',
-    state: 'Maharashtra',
-    email: 'vikas.rane@mahapolice.gov.in',
-    phone: '+91 97655 22104',
-    role: 'case-officer',
-    isYou: false
-  },
-  {
-    id: 'off_neha',
-    name: 'Inspector Neha Kulkarni',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Cyber Police',
-    district: 'Cyber Crime PS',
-    state: 'Maharashtra',
-    email: 'neha.cyber@mahapolice.gov.in',
-    phone: '+91 98900 88120',
-    role: 'analyst',
-    isYou: false
   }
 ];
 
@@ -81,7 +34,10 @@ export function loadSavedOfficers() {
     const raw = localStorage.getItem('netrakshak_officers');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const filtered = parsed.filter(o => !['off_anil', 'off_priya', 'off_vikas', 'off_neha', 'off_ashutosh'].includes(o.id));
+        if (filtered.length > 0) return filtered;
+      }
     }
     return [...DEFAULT_OFFICERS];
   } catch (e) {

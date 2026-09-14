@@ -28,12 +28,12 @@ export function renderEntities(c) {
   // Type filter categories
   const categories = [
     { id: 'all', label: 'All Entities', count: analyticalEntities.length },
-    { id: 'FIR Case', label: 'FIR Cases', count: analyticalEntities.filter(e => e.type === 'FIR Case').length },
     { id: 'Person', label: 'Suspects & Persons', count: analyticalEntities.filter(e => e.type === 'Person').length },
     { id: 'Phone', label: 'Phones / SIMs', count: analyticalEntities.filter(e => e.type === 'Phone').length },
     { id: 'Vehicle', label: 'Vehicles', count: analyticalEntities.filter(e => e.type === 'Vehicle').length },
     { id: 'Bank', label: 'Bank & Mule Accounts', count: analyticalEntities.filter(e => e.type === 'Bank').length },
-    { id: 'Location', label: 'Cell Towers & Places', count: analyticalEntities.filter(e => e.type === 'Location').length }
+    { id: 'Location', label: 'Cell Towers & Places', count: analyticalEntities.filter(e => e.type === 'Location').length },
+    { id: 'Organization', label: 'Shell Companies', count: analyticalEntities.filter(e => e.type === 'Organization').length }
   ];
 
   // Filter entities
