@@ -116,827 +116,17 @@ export function loadSavedAuditLogs() {
   }
 }
 
-export const DEFAULT_EVIDENCE_ITEMS = [
-  {
-    id: 'ev-0001',
-    fir_id: 'f0000001-0000-0000-0000-000000000001',
-    fir_number: 'FIR-MH-2026-4821',
-    evidence_type: 'document',
-    description: 'Forged Bond Certificate PDF (Apex Digital Asset)',
-    storage_path: 'evidence/forged_bond_apex.pdf',
-    sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-    created_at: '2026-09-13T20:32:50Z'
-  },
-  {
-    id: 'ev-0002',
-    fir_id: 'f0000001-0000-0000-0000-000000000001',
-    fir_number: 'FIR-MH-2026-4821',
-    evidence_type: 'telephony',
-    description: 'Tower Dump CDR Sector PN-CY-482 (FC Road)',
-    storage_path: 'evidence/cdr_dump_pn_cy_482.csv',
-    sha256: '8a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809',
-    created_at: '2026-09-13T20:32:50Z'
-  },
-  {
-    id: 'ev-0003',
-    fir_id: 'f0000001-0000-0000-0000-000000000002',
-    fir_number: 'FIR-MH-2026-1940',
-    evidence_type: 'cctv',
-    description: 'ATM CCTV Stills - Fergusson Road Branch Cash Withdrawal',
-    storage_path: 'evidence/atm_cctv_fergusson.jpg',
-    sha256: '9f837264a5d1b2c3d4e5f60718293a4b5c6d7e8f901a2b3c4d5e6f708192a3b4',
-    created_at: '2026-09-13T20:32:50Z'
-  },
-  {
-    id: 'ev-0004',
-    fir_id: 'f0000001-0000-0000-0000-000000000003',
-    fir_number: 'FIR-MH-2026-2811',
-    evidence_type: 'slip',
-    description: 'Original Handwritten Threat Slip (Swargate PS GD Entry)',
-    storage_path: 'evidence/swargate_extortion_slip.png',
-    sha256: '660badfabf7fdeced2a0dd07b8435a44388261c2655fb0e156fd662cd8440791',
-    created_at: '2026-09-13T20:32:50Z'
-  },
-  {
-    id: 'ev-0005',
-    fir_id: 'f0000001-0000-0000-0000-000000000004',
-    fir_number: 'FIR-MH-2026-0512',
-    evidence_type: 'document',
-    description: 'ROC Forged Incorporation Filings & Director Signatures',
-    storage_path: 'evidence/roc_forged_incorporation.pdf',
-    sha256: '1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809',
-    created_at: '2026-09-13T20:32:50Z'
-  }
-];
-
-export const DEFAULT_ENTITIES = [
-  // Persons (10 Accused & Operatives)
-  {
-    id: 'e0000001-0000-0000-0000-000000000001',
-    name: 'Sameer Khan',
-    local: 'Baba Bhai, Sammy',
-    type: 'Person',
-    category: 'person',
-    role: 'Syndicate Kingpin / Caller',
-    risk: 'high',
-    city: 'Pune City (Shivajinagar)',
-    phone: '+91 98811 55421',
-    imageUrl: getAccusedPhoto('Sameer Khan'),
-    identifiers: { alias: 'Baba Bhai, Sammy', aadhar: 'XXXX-XXXX-4912', status: 'Accused in 2 FIRs', imageUrl: getAccusedPhoto('Sameer Khan') },
-    events: 14,
-    recent: 96,
-    x: 350,
-    y: 260
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000002',
-    name: 'Vikram Rathi',
-    local: 'Vicky, Techno',
-    type: 'Person',
-    category: 'person',
-    role: 'Technical Mule Manager',
-    risk: 'high',
-    city: 'Mumbai / Pune',
-    phone: '+91 98199 44312',
-    imageUrl: getAccusedPhoto('Vikram Rathi'),
-    identifiers: { alias: 'Vicky', specialization: 'Forged bond portal & fake payment gateway developer', imageUrl: getAccusedPhoto('Vikram Rathi') },
-    events: 8,
-    recent: 92,
-    x: 480,
-    y: 190
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000003',
-    name: 'Ajay Deshmukh',
-    local: 'Ajju, Deccan Rider',
-    type: 'Person',
-    category: 'person',
-    role: 'Cash Courier / ATM Mule',
-    risk: 'medium',
-    city: 'Pune (Deccan)',
-    phone: '+91 97655 88910',
-    imageUrl: getAccusedPhoto('Ajay Deshmukh'),
-    identifiers: { specialization: 'ATM cash withdrawal & SIM runner', imageUrl: getAccusedPhoto('Ajay Deshmukh') },
-    events: 6,
-    recent: 88,
-    x: 490,
-    y: 350
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000004',
-    name: 'Arjun Pawar',
-    local: 'Pawar, Student Lead',
-    type: 'Person',
-    category: 'person',
-    role: 'Mule Account Recruiter',
-    risk: 'medium',
-    city: 'Pune (Swargate)',
-    phone: '+91 99230 44102',
-    imageUrl: getAccusedPhoto('Arjun Pawar'),
-    identifiers: { specialization: 'College student bank account recruiter', imageUrl: getAccusedPhoto('Arjun Pawar') },
-    events: 5,
-    recent: 82,
-    x: 180,
-    y: 380
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000005',
-    name: 'Suresh Shinde',
-    local: 'Surya, Anna',
-    type: 'Person',
-    category: 'person',
-    role: 'Hawala Operator / Extortionist',
-    risk: 'high',
-    city: 'Swargate / Market Yard',
-    phone: '+91 94220 33190',
-    imageUrl: getAccusedPhoto('Suresh Shinde'),
-    identifiers: { specialization: 'Protection money & physical cash pooling', imageUrl: getAccusedPhoto('Suresh Shinde') },
-    events: 7,
-    recent: 90,
-    x: 120,
-    y: 280
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000006',
-    name: 'Rohit Salunkhe',
-    local: 'Chhota Rohit',
-    type: 'Person',
-    category: 'person',
-    role: 'Safehouse Custodian',
-    risk: 'medium',
-    city: 'Kothrud, Pune',
-    phone: '+91 98224 50912',
-    imageUrl: getAccusedPhoto('Rohit Salunkhe'),
-    identifiers: { specialization: 'Burner phone storage & SIM distribution point', imageUrl: getAccusedPhoto('Rohit Salunkhe') },
-    events: 3,
-    recent: 70,
-    x: 580,
-    y: 420
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000007',
-    name: 'Pappu More',
-    local: 'More Dada',
-    type: 'Person',
-    category: 'person',
-    role: 'Vehicle Supplier & Logistician',
-    risk: 'medium',
-    city: 'Hadapsar, Pune',
-    phone: '+91 98231 77654',
-    imageUrl: getAccusedPhoto('Pappu More'),
-    identifiers: { specialization: 'Rented getaway two-wheelers & fake number plates', imageUrl: getAccusedPhoto('Pappu More') },
-    events: 4,
-    recent: 75,
-    x: 620,
-    y: 290
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000008',
-    name: 'Karan Mehra',
-    local: 'Mehra, Banker',
-    type: 'Person',
-    category: 'person',
-    role: 'Shell Company Director',
-    risk: 'high',
-    city: 'Mumbai (BKC)',
-    phone: '+91 98200 11984',
-    imageUrl: getAccusedPhoto('Karan Mehra'),
-    identifiers: { alias: 'Mehra', company: 'Apex Digital Asset LLP', specialization: 'Crypto off-ramping & mule bank directorship', imageUrl: getAccusedPhoto('Karan Mehra') },
-    events: 9,
-    recent: 95,
-    x: 240,
-    y: 160
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000009',
-    name: 'Maya Shelar',
-    local: 'Madam, Consultant',
-    type: 'Person',
-    category: 'person',
-    role: 'Hawala Channelizer',
-    risk: 'high',
-    city: 'Mumbai / Pune',
-    phone: '+91 98901 22345',
-    imageUrl: getAccusedPhoto('Maya Shelar'),
-    identifiers: { alias: 'Madam', specialization: 'Offshore USDT conversion & cash courier coordinator', imageUrl: getAccusedPhoto('Maya Shelar') },
-    events: 11,
-    recent: 94,
-    x: 380,
-    y: 120
-  },
-  {
-    id: 'e0000001-0000-0000-0000-000000000010',
-    name: 'Dinesh Jha',
-    local: 'Panditji, Caller',
-    type: 'Person',
-    category: 'person',
-    role: 'Spoofed Caller / Extortion Operator',
-    risk: 'medium',
-    city: 'Noida / Pune (remote)',
-    phone: '+91 98112 33490',
-    imageUrl: getAccusedPhoto('Dinesh Jha'),
-    identifiers: { specialization: 'VoIP spoofing & police impersonation calls', imageUrl: getAccusedPhoto('Dinesh Jha') },
-    events: 5,
-    recent: 84,
-    x: 200,
-    y: 240
-  },
-
-  // Phone Numbers (6 Registered SIMs)
-  {
-    id: 'e0000002-0000-0000-0000-000000000001',
-    name: '+91 98811 55421',
-    local: 'Sameer Primary Burner',
-    type: 'Phone',
-    category: 'phone',
-    role: 'Primary Suspect Burner Phone',
-    risk: 'high',
-    city: 'Shivajinagar Sector',
-    phone: '+91 98811 55421',
-    identifiers: { carrier: 'Reliance Jio 5G', imei: '864291048821902', activeTower: 'PN-CY-482 (FC Road)' },
-    events: 142,
-    recent: 98,
-    x: 270,
-    y: 190
-  },
-  {
-    id: 'e0000002-0000-0000-0000-000000000002',
-    name: '+91 98199 44312',
-    local: 'Vikram Mumbai Line',
-    type: 'Phone',
-    category: 'phone',
-    role: 'Technical Handler Mobile',
-    risk: 'high',
-    city: 'Mumbai Sector',
-    phone: '+91 98199 44312',
-    identifiers: { carrier: 'Airtel 4G', imei: '864291048821902', note: 'Shares IMEI with Sameer burner' },
-    events: 89,
-    recent: 92,
-    x: 520,
-    y: 140
-  },
-  {
-    id: 'e0000002-0000-0000-0000-000000000003',
-    name: '+91 97655 88910',
-    local: 'Ajay Courier SIM',
-    type: 'Phone',
-    category: 'phone',
-    role: 'Cash Courier Mobile',
-    risk: 'medium',
-    city: 'Deccan Sector',
-    phone: '+91 97655 88910',
-    identifiers: { carrier: 'Vodafone Idea', imei: '359128091823901', activeTower: 'PN-DEC-104' },
-    events: 45,
-    recent: 80,
-    x: 440,
-    y: 390
-  },
-  {
-    id: 'e0000002-0000-0000-0000-000000000004',
-    name: '+91 99230 44102',
-    local: 'Arjun Mule Recruiter Line',
-    type: 'Phone',
-    category: 'phone',
-    role: 'Recruiter Line',
-    risk: 'medium',
-    city: 'Swargate Sector',
-    phone: '+91 99230 44102',
-    identifiers: { carrier: 'BSNL', imei: '862190041289410', activeTower: 'PN-SWR-312' },
-    events: 34,
-    recent: 78,
-    x: 230,
-    y: 430
-  },
-  {
-    id: 'e0000002-0000-0000-0000-000000000005',
-    name: '+91 98210 99812',
-    local: 'Karan Crypto P2P Line',
-    type: 'Phone',
-    category: 'phone',
-    role: 'P2P Trading Line',
-    risk: 'high',
-    city: 'Mumbai BKC',
-    phone: '+91 98210 99812',
-    identifiers: { carrier: 'Reliance Jio', imei: '354001928391024', activeTower: 'MUM-BKC-901' },
-    events: 62,
-    recent: 88,
-    x: 690,
-    y: 200
-  },
-  {
-    id: 'e0000002-0000-0000-0000-000000000006',
-    name: '+91 94220 33190',
-    local: 'Suresh Extortion Caller',
-    type: 'Phone',
-    category: 'phone',
-    role: 'Extortion Caller Mobile',
-    risk: 'high',
-    city: 'Swargate Sector',
-    phone: '+91 94220 33190',
-    identifiers: { carrier: 'Airtel', imei: '869001928410291', activeTower: 'PN-SWR-312' },
-    events: 55,
-    recent: 89,
-    x: 80,
-    y: 230
-  },
-
-  // Vehicles (4 ANPR Tracked Assets)
-  {
-    id: 'e0000003-0000-0000-0000-000000000001',
-    name: 'MH-12-PQ-9081',
-    local: 'White Swift',
-    type: 'Vehicle',
-    category: 'vehicle',
-    role: 'Suspect Mobility / Logistics Asset',
-    risk: 'high',
-    city: 'Pune City',
-    identifiers: { make: 'Maruti Suzuki Swift', color: 'White', registeredOwner: 'Ajay Deshmukh', anprSightings: 14 },
-    events: 14,
-    recent: 92,
-    x: 390,
-    y: 380
-  },
-  {
-    id: 'e0000003-0000-0000-0000-000000000002',
-    name: 'MH-14-EA-7712',
-    local: 'Black Pulsar',
-    type: 'Vehicle',
-    category: 'vehicle',
-    role: 'Extortion Delivery Motorcycle',
-    risk: 'medium',
-    city: 'Pimpri / Swargate',
-    identifiers: { make: 'Bajaj Pulsar 150', color: 'Black', registeredOwner: 'Pappu More', anprSightings: 8 },
-    events: 8,
-    recent: 80,
-    x: 150,
-    y: 500
-  },
-  {
-    id: 'e0000003-0000-0000-0000-000000000003',
-    name: 'MH-01-DK-3490',
-    local: 'Black Fortuner',
-    type: 'Vehicle',
-    category: 'vehicle',
-    role: 'Corporate Executive Asset',
-    risk: 'high',
-    city: 'Mumbai Central',
-    identifiers: { make: 'Toyota Fortuner', color: 'Black', registeredOwner: 'Maya Shelar', anprSightings: 22 },
-    events: 22,
-    recent: 94,
-    x: 680,
-    y: 90
-  },
-  {
-    id: 'e0000003-0000-0000-0000-000000000004',
-    name: 'MH-12-TR-4401',
-    local: 'White Creta',
-    type: 'Vehicle',
-    category: 'vehicle',
-    role: 'Kingpin Personal Vehicle',
-    risk: 'high',
-    city: 'Pune (Shivajinagar)',
-    identifiers: { make: 'Hyundai Creta', color: 'White', registeredOwner: 'Sameer Khan', anprSightings: 19 },
-    events: 19,
-    recent: 95,
-    x: 310,
-    y: 330
-  },
-
-  // Bank & Mule Accounts (5 Layering Accounts)
-  {
-    id: 'e0000004-0000-0000-0000-000000000001',
-    name: 'HDFC-50100492817291',
-    local: 'Tier-1 Layering Mule',
-    type: 'Bank',
-    category: 'bank',
-    role: 'Primary Fraud Intake Account',
-    risk: 'high',
-    city: 'Shivajinagar, Pune',
-    identifiers: { bank: 'HDFC Bank', branch: 'Shivajinagar', turnover: 'INR 14.50L', status: 'Freeze Recommended under PMLA' },
-    events: 12,
-    recent: 98,
-    x: 440,
-    y: 280
-  },
-  {
-    id: 'e0000004-0000-0000-0000-000000000002',
-    name: 'ICICI-0021948102',
-    local: 'Tier-2 Split Account',
-    type: 'Bank',
-    category: 'bank',
-    role: 'Layering Split Account',
-    risk: 'high',
-    city: 'Deccan Gymkhana, Pune',
-    identifiers: { bank: 'ICICI Bank', branch: 'Deccan Gymkhana', turnover: 'INR 6.50L', status: 'Flagged for Intercept' },
-    events: 8,
-    recent: 89,
-    x: 560,
-    y: 290
-  },
-  {
-    id: 'e0000004-0000-0000-0000-000000000003',
-    name: 'AXIS-91201004812',
-    local: 'Tier-2 ATM Cashout Account',
-    type: 'Bank',
-    category: 'bank',
-    role: 'ATM Dispersal Account',
-    risk: 'high',
-    city: 'Kothrud, Pune',
-    identifiers: { bank: 'Axis Bank', branch: 'Kothrud', turnover: 'INR 4.20L', status: 'Flagged for Cash Withdrawal' },
-    events: 6,
-    recent: 84,
-    x: 520,
-    y: 350
-  },
-  {
-    id: 'e0000004-0000-0000-0000-000000000004',
-    name: 'BOM-60129948102',
-    local: 'Extortion Pool A/C',
-    type: 'Bank',
-    category: 'bank',
-    role: 'Extortion Revenue Pool',
-    risk: 'medium',
-    city: 'Swargate, Pune',
-    identifiers: { bank: 'Bank of Maharashtra', branch: 'Swargate', turnover: 'INR 8.90L', status: 'Under Investigation' },
-    events: 7,
-    recent: 82,
-    x: 190,
-    y: 320
-  },
-  {
-    id: 'e0000004-0000-0000-0000-000000000005',
-    name: 'KOTAK-9810284711',
-    local: 'Fintech Gateway Aggregator',
-    type: 'Bank',
-    category: 'bank',
-    role: 'Corporate Crypto Gateway',
-    risk: 'high',
-    city: 'Nariman Point, Mumbai',
-    identifiers: { bank: 'Kotak Mahindra Bank', turnover: 'INR 54.00L', status: 'High Velocity Structuring' },
-    events: 18,
-    recent: 96,
-    x: 620,
-    y: 190
-  },
-
-  // Cell Towers & Locations (4 Telecom Sectors)
-  {
-    id: 'e0000005-0000-0000-0000-000000000001',
-    name: 'Cell Tower PN-CY-482',
-    local: 'FC Road Sector',
-    type: 'Location',
-    category: 'location',
-    role: 'Cyber Hub Cell Tower',
-    risk: 'high',
-    city: 'Pune (Shivajinagar)',
-    identifiers: { towerId: 'PN-CY-482', lat: 18.5284, lng: 73.8415, zone: 'Commercial Complex, Shivajinagar' },
-    events: 142,
-    recent: 98,
-    x: 240,
-    y: 100
-  },
-  {
-    id: 'e0000005-0000-0000-0000-000000000002',
-    name: 'Cell Tower PN-DEC-104',
-    local: 'Deccan Sector',
-    type: 'Location',
-    category: 'location',
-    role: 'ATM Hub Cell Tower',
-    risk: 'medium',
-    city: 'Pune (Deccan)',
-    identifiers: { towerId: 'PN-DEC-104', lat: 18.5167, lng: 73.8410, zone: 'Deccan Gymkhana ATM Hub' },
-    events: 85,
-    recent: 87,
-    x: 410,
-    y: 440
-  },
-  {
-    id: 'e0000005-0000-0000-0000-000000000003',
-    name: 'Cell Tower PN-SWR-312',
-    local: 'Swargate Sector',
-    type: 'Location',
-    category: 'location',
-    role: 'Extortion Beat Cell Tower',
-    risk: 'medium',
-    city: 'Pune (Swargate)',
-    identifiers: { towerId: 'PN-SWR-312', lat: 18.5018, lng: 73.8580, zone: 'Timber Market / Bus Stand' },
-    events: 74,
-    recent: 83,
-    x: 80,
-    y: 370
-  },
-  {
-    id: 'e0000005-0000-0000-0000-000000000004',
-    name: 'Cell Tower MUM-BKC-901',
-    local: 'BKC Fintech Sector',
-    type: 'Location',
-    category: 'location',
-    role: 'Corporate Hub Cell Tower',
-    risk: 'high',
-    city: 'Mumbai (BKC)',
-    identifiers: { towerId: 'MUM-BKC-901', lat: 19.0674, lng: 72.8687, zone: 'Bandra Kurla Complex' },
-    events: 96,
-    recent: 93,
-    x: 730,
-    y: 140
-  },
-
-  // Shell Organizations (2 Corporate Fronts)
-  {
-    id: 'e0000006-0000-0000-0000-000000000001',
-    name: 'Apex Digital Asset LLP',
-    local: 'Apex Bond Portal',
-    type: 'Organization',
-    category: 'organization',
-    role: 'Forged Investment Front',
-    risk: 'high',
-    city: 'BKC, Mumbai',
-    identifiers: { cin: 'U72900MH2025PTC391024', directors: 'Maya Shelar, Vikram Rathi', status: 'Shell Company' },
-    events: 10,
-    recent: 95,
-    x: 560,
-    y: 110
-  },
-  {
-    id: 'e0000006-0000-0000-0000-000000000002',
-    name: 'Global Smart Solutions',
-    local: 'Call Center Racket',
-    type: 'Organization',
-    category: 'organization',
-    role: 'VoIP Boiler Room Front',
-    risk: 'high',
-    city: 'Pune / Noida',
-    identifiers: { operatingHead: 'Deepak Verma', activities: 'VoIP boiler-room scam center' },
-    events: 8,
-    recent: 91,
-    x: 370,
-    y: 60
-  }
-];
-
-export const DEFAULT_EDGES = [
-  ['e0000001-0000-0000-0000-000000000001', 'e0000002-0000-0000-0000-000000000001', 'Registered User'],
-  ['e0000001-0000-0000-0000-000000000001', 'e0000001-0000-0000-0000-000000000002', 'Syndicate Lieutenant'],
-  ['e0000001-0000-0000-0000-000000000001', 'e0000001-0000-0000-0000-000000000003', 'Mule Coordinator'],
-  ['e0000001-0000-0000-0000-000000000001', 'e0000003-0000-0000-0000-000000000004', 'Registered Owner'],
-  ['e0000001-0000-0000-0000-000000000001', 'e0000005-0000-0000-0000-000000000001', 'Frequent Cell Tower'],
-  ['e0000001-0000-0000-0000-000000000002', 'e0000002-0000-0000-0000-000000000002', 'Registered User'],
-  ['e0000001-0000-0000-0000-000000000002', 'e0000006-0000-0000-0000-000000000001', 'Technical Director'],
-  ['e0000001-0000-0000-0000-000000000002', 'e0000001-0000-0000-0000-000000000008', 'Co-Conspirator'],
-  ['e0000002-0000-0000-0000-000000000001', 'e0000002-0000-0000-0000-000000000002', 'Shared Hardware (IMEI)'],
-  ['e0000001-0000-0000-0000-000000000003', 'e0000002-0000-0000-0000-000000000003', 'Registered User'],
-  ['e0000001-0000-0000-0000-000000000003', 'e0000003-0000-0000-0000-000000000001', 'Registered Owner / Driver'],
-  ['e0000001-0000-0000-0000-000000000003', 'e0000004-0000-0000-0000-000000000002', 'ATM Cash-Out Handler'],
-  ['e0000001-0000-0000-0000-000000000003', 'e0000005-0000-0000-0000-000000000002', 'ATM Cluster Location'],
-  ['e0000001-0000-0000-0000-000000000004', 'e0000002-0000-0000-0000-000000000004', 'Registered User'],
-  ['e0000001-0000-0000-0000-000000000004', 'e0000001-0000-0000-0000-000000000005', 'Sub-Syndicate Link'],
-  ['e0000001-0000-0000-0000-000000000004', 'e0000004-0000-0000-0000-000000000004', 'Mule Recruiter'],
-  ['e0000001-0000-0000-0000-000000000005', 'e0000002-0000-0000-0000-000000000006', 'Registered User'],
-  ['e0000001-0000-0000-0000-000000000005', 'e0000001-0000-0000-0000-000000000007', 'Muscle Enforcer'],
-  ['e0000001-0000-0000-0000-000000000007', 'e0000003-0000-0000-0000-000000000002', 'Motorcycle Rider'],
-  ['e0000001-0000-0000-0000-000000000005', 'e0000005-0000-0000-0000-000000000003', 'Extortion Territory'],
-  ['e0000004-0000-0000-0000-000000000001', 'e0000004-0000-0000-0000-000000000002', 'Fund Layering (INR 6,50,000)'],
-  ['e0000004-0000-0000-0000-000000000001', 'e0000004-0000-0000-0000-000000000003', 'Fund Layering (INR 4,20,000)'],
-  ['e0000004-0000-0000-0000-000000000002', 'e0000001-0000-0000-0000-000000000003', 'ATM Withdrawal (INR 3,80,000)'],
-  ['e0000004-0000-0000-0000-000000000001', 'e0000004-0000-0000-0000-000000000005', 'Corporate Routing (INR 3,80,000)'],
-  ['e0000004-0000-0000-0000-000000000005', 'e0000001-0000-0000-0000-000000000009', 'P2P Crypto Purchase (USDT)'],
-  ['e0000006-0000-0000-0000-000000000001', 'e0000004-0000-0000-0000-000000000005', 'Corporate Bank Account'],
-  ['e0000001-0000-0000-0000-000000000001', 'e0000001-0000-0000-0000-000000000004', 'Inter-Syndicate Call Link'],
-  ['e0000003-0000-0000-0000-000000000001', 'e0000005-0000-0000-0000-000000000001', 'ANPR Sighting at Crime Scene'],
-  ['e0000002-0000-0000-0000-000000000001', 'e0000005-0000-0000-0000-000000000001', 'Connected Call at Crime Scene'],
-  ['e0000001-0000-0000-0000-000000000006', 'e0000001-0000-0000-0000-000000000002', 'Safehouse Equipment Link']
-];
-
-export let entities = [...DEFAULT_ENTITIES];
+export let entities = [];
 export function setEntities(val) {
   entities = val;
 }
 
-export let edges = [...DEFAULT_EDGES];
+export let edges = [];
 export function setEdges(val) {
   edges = val;
 }
 
-export const DEFAULT_FIR_CASES = [
-  {
-    id: 'f0000001-0000-0000-0000-000000000001',
-    firNumber: 'FIR-MH-2026-4821',
-    fir_number: 'FIR-MH-2026-4821',
-    policeStation: 'Cyber Crime Police Station, Shivajinagar',
-    police_station: 'Cyber Crime Police Station, Shivajinagar',
-    district: 'Pune City',
-    state: 'Maharashtra',
-    incidentDate: '2026-08-14',
-    incident_date: '2026-08-14',
-    incidentTime: '14:30',
-    sections: 'IPC 420, IPC 468, IPC 471, IT Act 66D',
-    complainantName: 'Rajesh Kulkarni',
-    complainant_name: 'Rajesh Kulkarni',
-    complainantAge: '42',
-    complainant_age: '42',
-    complainantFather: 'Madhavrao Kulkarni',
-    complainant_father: 'Madhavrao Kulkarni',
-    complainantPhone: '+91 98220 11984',
-    complainant_phone: '+91 98220 11984',
-    complainantAddress: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
-    complainant_address: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
-    subjectName: 'Sameer Khan',
-    subject_name: 'Sameer Khan',
-    alias: 'Baba Bhai, Sammy, SK',
-    otherAccused: 'Vikram Rathi, Ajay Deshmukh',
-    other_accused: 'Vikram Rathi, Ajay Deshmukh',
-    phone: '+91 98811 55421',
-    vehicle: 'MH-12-PQ-9081',
-    bank: 'HDFC-50100492817291',
-    accusedImage: getAccusedPhoto('Sameer Khan'),
-    accused_image: getAccusedPhoto('Sameer Khan'),
-    incidentLocation: 'FC Road Commercial Complex, Shivajinagar, Pune',
-    incident_location: 'FC Road Commercial Complex, Shivajinagar, Pune',
-    incidentSummary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-    incident_summary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-    propertySummary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF, 1x Jio SIM (+91 98811 55421), and White Swift (MH-12-PQ-9081) seized.',
-    property_summary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF, 1x Jio SIM (+91 98811 55421), and White Swift (MH-12-PQ-9081) seized.',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'ShadowFlow Cyber Racket',
-    sourceRefs: ['FIR-MH-2026-4821', 'CDR-JIO-PN', 'SFinDSet-Fraud-Batch']
-  },
-  {
-    id: 'f0000001-0000-0000-0000-000000000002',
-    firNumber: 'FIR-MH-2026-1940',
-    fir_number: 'FIR-MH-2026-1940',
-    policeStation: 'Kothrud Police Station',
-    police_station: 'Kothrud Police Station',
-    district: 'Pune City',
-    state: 'Maharashtra',
-    incidentDate: '2026-07-22',
-    incident_date: '2026-07-22',
-    incidentTime: '11:15',
-    sections: 'IPC 420, IPC 120B',
-    complainantName: 'Sanjay Patil',
-    complainant_name: 'Sanjay Patil',
-    complainantAge: '48',
-    complainant_age: '48',
-    complainantFather: 'Dattatray Patil',
-    complainant_father: 'Dattatray Patil',
-    complainantPhone: '+91 97655 44321',
-    complainant_phone: '+91 97655 44321',
-    complainantAddress: 'Near MIT College, Paud Road, Kothrud, Pune - 411038',
-    complainant_address: 'Near MIT College, Paud Road, Kothrud, Pune - 411038',
-    subjectName: 'Arjun Pawar',
-    subject_name: 'Arjun Pawar',
-    alias: 'Student Lead',
-    otherAccused: 'Rohit Salunkhe, Deepak Verma',
-    other_accused: 'Rohit Salunkhe, Deepak Verma',
-    phone: '+91 99230 44102',
-    vehicle: 'MH-14-EA-7712',
-    bank: 'AXIS-91201004812',
-    accusedImage: getAccusedPhoto('Arjun Pawar'),
-    accused_image: getAccusedPhoto('Arjun Pawar'),
-    incidentLocation: 'Paud Road, Kothrud, Pune',
-    incident_location: 'Paud Road, Kothrud, Pune',
-    incidentSummary: 'Fraudulent diversion of college admission security deposits through student mule accounts. Account credentials obtained under commission promises.',
-    incident_summary: 'Fraudulent diversion of college admission security deposits through student mule accounts. Account credentials obtained under commission promises.',
-    propertySummary: 'Seized items: 4x Student ID cards, 12x unlinked debit cards, 1x diary with UPI recovery handles, Black Pulsar (MH-14-EA-7712).',
-    property_summary: 'Seized items: 4x Student ID cards, 12x unlinked debit cards, 1x diary with UPI recovery handles, Black Pulsar (MH-14-EA-7712).',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'Kothrud Safehouse / Mule Hub',
-    sourceRefs: ['FIR-MH-2026-1940', 'Kothrud-GD-Diary']
-  },
-  {
-    id: 'f0000001-0000-0000-0000-000000000003',
-    firNumber: 'FIR-MH-2026-2811',
-    fir_number: 'FIR-MH-2026-2811',
-    policeStation: 'Swargate Police Station',
-    police_station: 'Swargate Police Station',
-    district: 'Pune City',
-    state: 'Maharashtra',
-    incidentDate: '2026-08-11',
-    incident_date: '2026-08-11',
-    incidentTime: '19:45',
-    sections: 'IPC 384, IPC 386, IPC 120B, Arms Act 25',
-    complainantName: 'Balasaheb Thorat',
-    complainant_name: 'Balasaheb Thorat',
-    complainantAge: '52',
-    complainant_age: '52',
-    complainantFather: 'Govindrao Thorat',
-    complainant_father: 'Govindrao Thorat',
-    complainantPhone: '+91 94220 33190',
-    complainant_phone: '+91 94220 33190',
-    complainantAddress: 'Ganesh Peth, Near Timber Market, Swargate, Pune - 411002',
-    complainant_address: 'Ganesh Peth, Near Timber Market, Swargate, Pune - 411002',
-    subjectName: 'Suresh Shinde',
-    subject_name: 'Suresh Shinde',
-    alias: 'Surya, Anna',
-    otherAccused: 'Pappu More, Arjun Pawar',
-    other_accused: 'Pappu More, Arjun Pawar',
-    phone: '+91 98199 44312',
-    vehicle: 'MH-14-EA-7712',
-    bank: 'BOM-60129948102',
-    accusedImage: getAccusedPhoto('Suresh Shinde'),
-    accused_image: getAccusedPhoto('Suresh Shinde'),
-    incidentLocation: 'Timber Market Road, Swargate, Pune',
-    incident_location: 'Timber Market Road, Swargate, Pune',
-    incidentSummary: 'Handwritten extortion slips demanding protection money from timber merchants. Accused Suresh Shinde and bike-borne associates delivered threat notes.',
-    incident_summary: 'Handwritten extortion slips demanding protection money from timber merchants. Accused Suresh Shinde and bike-borne associates delivered threat notes.',
-    propertySummary: 'Seized items: 1x handwritten extortion demand slip, 1x countrymade firearm, 1x SIM packaging card (+91 98199 44312).',
-    property_summary: 'Seized items: 1x handwritten extortion demand slip, 1x countrymade firearm, 1x SIM packaging card (+91 98199 44312).',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'Swargate Extortion & Hawala Ring',
-    sourceRefs: ['FIR-MH-2026-2811', 'Swargate-GD-Entry']
-  },
-  {
-    id: 'f0000001-0000-0000-0000-000000000004',
-    firNumber: 'FIR-MH-2026-0512',
-    fir_number: 'FIR-MH-2026-0512',
-    policeStation: 'Bandra Cyber Police Station',
-    police_station: 'Bandra Cyber Police Station',
-    district: 'Mumbai HQ',
-    state: 'Maharashtra',
-    incidentDate: '2026-08-02',
-    incident_date: '2026-08-02',
-    incidentTime: '16:00',
-    sections: 'IPC 420, IPC 467, IT Act 66C, PMLA 3',
-    complainantName: 'Sunita Singhania',
-    complainant_name: 'Sunita Singhania',
-    complainantAge: '39',
-    complainant_age: '39',
-    complainantFather: 'Kishorilal Singhania',
-    complainant_father: 'Kishorilal Singhania',
-    complainantPhone: '+91 98210 99812',
-    complainant_phone: '+91 98210 99812',
-    complainantAddress: 'Bandra Kurla Complex, Mumbai - 400051',
-    complainant_address: 'Bandra Kurla Complex, Mumbai - 400051',
-    subjectName: 'Maya Shelar',
-    subject_name: 'Maya Shelar',
-    alias: 'Madam, Consultant',
-    otherAccused: 'Karan Mehra, Vikram Rathi',
-    other_accused: 'Karan Mehra, Vikram Rathi',
-    phone: '+91 98901 22345',
-    vehicle: 'MH-01-DK-3490',
-    bank: 'KOTAK-9810284711',
-    accusedImage: getAccusedPhoto('Maya Shelar'),
-    accused_image: getAccusedPhoto('Maya Shelar'),
-    incidentLocation: 'Bandra Kurla Complex (BKC), Mumbai',
-    incident_location: 'Bandra Kurla Complex (BKC), Mumbai',
-    incidentSummary: 'Corporate identity theft and deployment of fake digital bond certificates via Apex Digital Asset LLP. Multi-crore crypto off-ramping.',
-    incident_summary: 'Corporate identity theft and deployment of fake digital bond certificates via Apex Digital Asset LLP. Multi-crore crypto off-ramping.',
-    propertySummary: 'Seized items: Forged ROC Incorporation Certificates, 2x Ledger Crypto Wallets, Black Fortuner (MH-01-DK-3490).',
-    property_summary: 'Seized items: Forged ROC Incorporation Certificates, 2x Ledger Crypto Wallets, Black Fortuner (MH-01-DK-3490).',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'Apex Offshore Bond Syndicate',
-    sourceRefs: ['FIR-MH-2026-0512', 'ROC-Records', 'PMLA-ED-2026']
-  },
-  {
-    id: '4f6ef501-bda1-49ec-ba43-8b21d79a6acd',
-    firNumber: 'FIR-MH-2026-6274',
-    fir_number: 'FIR-MH-2026-6274',
-    policeStation: 'Cyber Crime Police Station, Shivajinagar',
-    police_station: 'Cyber Crime Police Station, Shivajinagar',
-    district: 'Pune City',
-    state: 'Maharashtra',
-    incidentDate: '2026-08-14',
-    incident_date: '2026-08-14',
-    incidentTime: '14:30',
-    incident_time: '14:30',
-    sections: 'IPC 420, IPC 468, IPC 471, IT Act 66D',
-    complainantName: 'Rajesh Kulkarni',
-    complainant_name: 'Rajesh Kulkarni',
-    complainantAge: '42',
-    complainant_age: '42',
-    complainantFather: 'Madhavrao Kulkarni',
-    complainant_father: 'Madhavrao Kulkarni',
-    complainantPhone: '+91 98220 11984',
-    complainant_phone: '+91 98220 11984',
-    complainantAddress: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
-    complainant_address: 'Flat 402, Shanti Heights, Kothrud, Pune - 411038',
-    subjectName: 'Sameer Khan',
-    subject_name: 'Sameer Khan',
-    alias: 'Baba Bhai, Sammy, SK',
-    otherAccused: 'Vikram Rathi, Ajay Deshmukh',
-    other_accused: 'Vikram Rathi, Ajay Deshmukh',
-    phone: '+91 98811 55421',
-    vehicle: 'MH-12-PQ-9081',
-    bank: 'HDFC-50100492817291',
-    accusedImage: getAccusedPhoto('Sameer Khan'),
-    accused_image: getAccusedPhoto('Sameer Khan'),
-    incidentLocation: 'FC Road Commercial Complex, Shivajinagar, Pune',
-    incident_location: 'FC Road Commercial Complex, Shivajinagar, Pune',
-    incidentSummary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-    incident_summary: 'The complainant was approached under the guise of an investment scheme involving synthetic cryptocurrency routing. Accused Sameer Khan and associates forged digital bond certificates and facilitated fund transfers across unauthorized payment gateways.',
-    propertySummary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.',
-    property_summary: 'Total fraudulent diversion: INR 14,50,000 via IMPS and mule bank accounts. 1x forged certificate PDF and CDR link records seized.',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'ShadowFlow Cyber Racket',
-    sourceRefs: ['FIR-MH-2026-6274', 'CDR-JIO-PN', 'SFinDSet-Fraud-Batch']
-  }
-];
-
-export let firCases = [...DEFAULT_FIR_CASES];
+export let firCases = [];
 export function setFirCases(val) {
   firCases = val;
 }
@@ -1018,7 +208,9 @@ export const state = {
   ocrScriptDetected: '',
   ocrConfidence: 0,
   graphExploration: loadSavedGraphExploration(),
-  evidenceItems: [...DEFAULT_EVIDENCE_ITEMS],
+  evidenceItems: [],
+  cdrRecords: [],
+  financialTransactions: [],
   integrityAuditResult: null,
   isIntegrityAuditing: false
 };
@@ -1498,9 +690,8 @@ export async function loadSupabaseData() {
       }));
       saveOfficers();
     }
-
     if (dbEntities && dbEntities.length > 0) {
-      const fetchedEntities = dbEntities.map((e, idx) => ({
+      entities = dbEntities.map((e, idx) => ({
         id: e.id,
         name: e.display_name,
         local: e.aliases?.[0] || e.display_name,
@@ -1519,40 +710,48 @@ export async function loadSupabaseData() {
         x: 350 + Math.cos(idx) * 180,
         y: 250 + Math.sin(idx) * 180
       }));
-
-      entities = fetchedEntities;
     } else {
-      entities = [...DEFAULT_ENTITIES];
+      entities = [];
     }
 
     if (dbRels && dbRels.length > 0) {
       edges = dbRels.map(r => [r.source_entity_id, r.target_entity_id, r.relationship_type || 'Link']);
     } else {
-      edges = [...DEFAULT_EDGES];
+      edges = [];
+    }
+
+    if (dbEvidence && dbEvidence.length > 0) {
+      state.evidenceItems = dbEvidence;
+    } else {
+      state.evidenceItems = [];
+    }
+
+    if (dbCdrs && dbCdrs.length > 0) {
+      state.cdrRecords = dbCdrs;
+    } else {
+      state.cdrRecords = [];
+    }
+
+    if (dbFinances && dbFinances.length > 0) {
+      state.financialTransactions = dbFinances;
+    } else {
+      state.financialTransactions = [];
     }
 
     if (dbCases && dbCases.length > 0) {
-      const defaultCaseMap = new Map();
-      DEFAULT_FIR_CASES.forEach(dc => {
-        defaultCaseMap.set(dc.firNumber, dc);
-        defaultCaseMap.set(dc.fir_number, dc);
-        defaultCaseMap.set(dc.id, dc);
-      });
-
       firCases = dbCases.map(c => {
-        const firNum = c.fir_number || c.firNumber;
-        const fallback = defaultCaseMap.get(firNum) || defaultCaseMap.get(c.id) || {};
-        const sectionsStr = Array.isArray(c.sections) ? c.sections.join(', ') : (c.sections || fallback.sections || '');
+        const firNum = c.fir_number || c.firNumber || 'FIR';
+        const sectionsStr = Array.isArray(c.sections) ? c.sections.join(', ') : (c.sections || '');
 
-        let rawSummary = c.incident_summary || c.incidentSummary || fallback.incidentSummary || '';
-        let propSummary = c.property_summary || c.propertySummary || fallback.propertySummary || '';
-        let compName = c.complainant_name || c.complainantName || fallback.complainantName || '';
-        let compPhone = c.complainant_phone || c.complainantPhone || fallback.complainantPhone || '';
-        let compAge = c.complainant_age || c.complainantAge || fallback.complainantAge || '';
-        let compFather = c.complainant_father || c.complainantFather || fallback.complainantFather || '';
-        let compAddress = c.complainant_address || c.complainantAddress || fallback.complainantAddress || '';
-        let loc = c.incident_location || c.incidentLocation || fallback.incidentLocation || '';
-        let time = c.incident_time || c.incidentTime || fallback.incidentTime || '';
+        let rawSummary = c.incident_summary || c.incidentSummary || '';
+        let propSummary = c.property_summary || c.propertySummary || '';
+        let compName = c.complainant_name || c.complainantName || '';
+        let compPhone = c.complainant_phone || c.complainantPhone || '';
+        let compAge = c.complainant_age || c.complainantAge || '';
+        let compFather = c.complainant_father || c.complainantFather || '';
+        let compAddress = c.complainant_address || c.complainantAddress || '';
+        let loc = c.incident_location || c.incidentLocation || '';
+        let time = c.incident_time || c.incidentTime || '';
 
         // If composite narrative was saved in database, parse fields out if missing
         if (rawSummary.includes('[Complainant]:') && !compName) {
@@ -1577,32 +776,32 @@ export async function loadSupabaseData() {
           }
         }
 
-        // Clean raw summary of metadata tags for display
         let cleanSummary = rawSummary.split('[Property Stolen')[0].split('[Complainant]')[0].trim();
         if (!cleanSummary) cleanSummary = rawSummary;
 
-        const subj = c.subject_name || c.subjectName || fallback.subjectName || '';
-        const alias = c.alias || fallback.alias || '';
-        const otherAcc = c.other_accused || c.otherAccused || fallback.otherAccused || '';
-        const phone = c.phone || fallback.phone || '';
-        const vehicle = c.vehicle || fallback.vehicle || '';
-        const bank = c.bank || fallback.bank || '';
-        const accusedPhoto = c.accused_image || c.accusedImage || fallback.accusedImage || getAccusedPhoto(subj) || '';
+        const subj = c.subject_name || c.subjectName || '';
+        const alias = c.alias || '';
+        const otherAcc = c.other_accused || c.otherAccused || '';
+        const phone = c.phone || '';
+        const vehicle = c.vehicle || '';
+        const bank = c.bank || '';
+        const accusedPhoto = c.accused_image || c.accusedImage || getAccusedPhoto(subj) || '';
+
+        const caseEvidence = state.evidenceItems.filter(ev => ev.fir_id === c.id || ev.fir_number === firNum);
 
         return {
-          ...fallback,
           ...c,
           id: c.id,
           firNumber: firNum,
           fir_number: firNum,
-          policeStation: c.police_station || c.policeStation || fallback.policeStation || 'Cyber Crime Police Station, Shivajinagar',
-          police_station: c.police_station || c.policeStation || fallback.policeStation || 'Cyber Crime Police Station, Shivajinagar',
-          district: c.district || fallback.district || 'Pune City',
-          state: c.state || fallback.state || 'Maharashtra',
-          incidentDate: c.incident_date || c.incidentDate || fallback.incidentDate || '2026-08-14',
-          incident_date: c.incident_date || c.incidentDate || fallback.incidentDate || '2026-08-14',
-          incidentTime: time || '14:30',
-          incident_time: time || '14:30',
+          policeStation: c.police_station || c.policeStation || 'Cyber Crime Police Station, Shivajinagar',
+          police_station: c.police_station || c.policeStation || 'Cyber Crime Police Station, Shivajinagar',
+          district: c.district || 'Pune City',
+          state: c.state || 'Maharashtra',
+          incidentDate: c.incident_date || c.incidentDate || '',
+          incident_date: c.incident_date || c.incidentDate || '',
+          incidentTime: time || '',
+          incident_time: time || '',
           sections: sectionsStr,
           complainantName: compName,
           complainant_name: compName,
@@ -1632,29 +831,12 @@ export async function loadSupabaseData() {
           accused_image: accusedPhoto,
           extractionStatus: c.extraction_status || c.extractionStatus || 'approved',
           extraction_status: c.extraction_status || c.extractionStatus || 'approved',
-          syndicateGroup: c.syndicate_group || c.syndicateGroup || fallback.syndicateGroup || '',
-          evidence_items: c.evidence_items || DEFAULT_EVIDENCE_ITEMS.filter(ev => ev.fir_id === c.id || ev.fir_number === firNum)
+          syndicateGroup: c.syndicate_group || c.syndicateGroup || '',
+          evidence_items: c.evidence_items || caseEvidence
         };
       });
     } else {
-      firCases = [...DEFAULT_FIR_CASES];
-    }
-
-    if (dbCdrs && dbCdrs.length > 0) {
-      state.cdrRecords = dbCdrs;
-    }
-
-    if (dbFinances && dbFinances.length > 0) {
-      state.financialTransactions = dbFinances;
-    }
-
-    if (dbEvidence && dbEvidence.length > 0) {
-      const map = new Map();
-      DEFAULT_EVIDENCE_ITEMS.forEach(item => map.set(item.id, item));
-      dbEvidence.forEach(item => map.set(item.id, item));
-      state.evidenceItems = Array.from(map.values());
-    } else {
-      state.evidenceItems = [...DEFAULT_EVIDENCE_ITEMS];
+      firCases = [];
     }
 
     notifyStateChange();
