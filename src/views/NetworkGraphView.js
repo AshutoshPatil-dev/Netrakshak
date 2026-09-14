@@ -293,16 +293,16 @@ export function renderSatelliteMapPins(visibleNodes) {
   if (!leafletMapInstance || !visibleNodes || visibleNodes.length === 0) return;
 
   if (leafletMarkersGroup) {
-    leafletMapInstance.removeLayer(leafletMarkersGroup);
-    leafletMarkersGroup = null;
-  }
-  if (leafletEdgesGroup) {
-    leafletMapInstance.removeLayer(leafletEdgesGroup);
-    leafletEdgesGroup = null;
+    leafletMarkersGroup.clearLayers();
+  } else {
+    leafletMarkersGroup = L.layerGroup().addTo(leafletMapInstance);
   }
 
-  leafletEdgesGroup = L.layerGroup().addTo(leafletMapInstance);
-  leafletMarkersGroup = L.layerGroup().addTo(leafletMapInstance);
+  if (leafletEdgesGroup) {
+    leafletEdgesGroup.clearLayers();
+  } else {
+    leafletEdgesGroup = L.layerGroup().addTo(leafletMapInstance);
+  }
 
   const visibleIds = new Set(visibleNodes.map(n => n.id));
   const mapCenter = leafletMapInstance.getCenter();
@@ -341,7 +341,7 @@ export function renderSatelliteMapPins(visibleNodes) {
   });
 
   const markersMap = new Map();
-  const polylineMap = new Map();
+  const nodePolylinesMap = new Map();
   const isGroupingMode = !!state.graphMapConfig?.groupingMode;
   const selectedForGroup = new Set(state.graphMapConfig?.selectedForGrouping || []);
   const rawGroups = state.graphMapConfig?.markerGroups || [];
@@ -360,18 +360,19 @@ export function renderSatelliteMapPins(visibleNodes) {
 
   // Helper to live-update all connected lines for a list of node IDs
   const updateConnectedPolylines = (nodeIds) => {
-    edges.forEach(edge => {
-      const source = edge[0];
-      const target = edge[1];
-      if (nodeIds.includes(source) || nodeIds.includes(target)) {
-        const pl = polylineMap.get(`${source}_${target}`) || polylineMap.get(`${target}_${source}`);
-        if (pl) {
-          const p1 = state.graphMapConfig.nodeGeoPositions[source];
-          const p2 = state.graphMapConfig.nodeGeoPositions[target];
-          if (p1 && p2) {
-            pl.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
+    const seen = new Set();
+    nodeIds.forEach(id => {
+      const items = nodePolylinesMap.get(id);
+      if (items) {
+        items.forEach(item => {
+          if (seen.has(item)) return;
+          seen.add(item);
+          const p1 = state.graphMapConfig.nodeGeoPositions[item.source];
+          const p2 = state.graphMapConfig.nodeGeoPositions[item.target];
+          if (p1 && p2 && item.polyline) {
+            item.polyline.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
           }
-        }
+        });
       }
     });
   };
@@ -692,6 +693,11 @@ export function renderSatelliteMapPins(visibleNodes) {
       const p1 = state.graphMapConfig.nodeGeoPositions[source];
       const p2 = state.graphMapConfig.nodeGeoPositions[target];
       if (p1 && p2) {
+        // Skip self-loop or zero-distance intra-group lines
+        if (p1.lat === p2.lat && p1.lng === p2.lng) {
+          return;
+        }
+
         const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
         const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
           color: isConnectedToSelected ? '#38BDF8' : '#94A3B8',
@@ -709,8 +715,12 @@ export function renderSatelliteMapPins(visibleNodes) {
         }
 
         polyline.addTo(leafletEdgesGroup);
-        polylineMap.set(`${source}_${target}`, polyline);
-        polylineMap.set(`${target}_${source}`, polyline);
+
+        const edgeEntry = { polyline, source, target };
+        if (!nodePolylinesMap.has(source)) nodePolylinesMap.set(source, new Set());
+        if (!nodePolylinesMap.has(target)) nodePolylinesMap.set(target, new Set());
+        nodePolylinesMap.get(source).add(edgeEntry);
+        nodePolylinesMap.get(target).add(edgeEntry);
       }
     }
   });
