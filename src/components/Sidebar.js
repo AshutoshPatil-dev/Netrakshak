@@ -1,6 +1,6 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, getActiveOfficer, notifyStateChange } from '../state.js';
+import { state, getActiveOfficer, notifyStateChange, returnToGraphLaunchpad } from '../state.js';
 
 export function navItem(view, label, i) {
   const b = el('button', { class: `nav-item ${state.view === view ? 'active' : ''}`, 'data-view': view }, [
@@ -8,6 +8,17 @@ export function navItem(view, label, i) {
     el('span', {}, [label])
   ]);
   b.onclick = () => {
+    if (view === 'network') {
+      returnToGraphLaunchpad();
+      state.selected = null;
+      state.query = '';
+      state.type = 'all';
+    } else if (view === 'fir' && state.view === 'fir') {
+      state.firActiveTab = 'intake';
+    } else if (view === 'entities' && state.view === 'entities') {
+      state.profileEntityId = null;
+      state.query = '';
+    }
     state.view = view;
     notifyStateChange();
   };
