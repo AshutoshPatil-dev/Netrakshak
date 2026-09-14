@@ -6,6 +6,7 @@ import {
   state,
   entities,
   edges,
+  firCases,
   riskColor,
   notifyStateChange,
   getVisibleGraphNodeIds,
@@ -34,6 +35,7 @@ export const objectTypeColors = {
   Bank: '#2563EB',
   'FIR Case': '#DC2626',
   Location: '#7C3AED',
+  Organization: '#059669',
   Entity: '#475569'
 };
 
@@ -44,6 +46,7 @@ export const objectTypeIcons = {
   Bank: 'database',
   'FIR Case': 'file',
   Location: 'network',
+  Organization: 'shield',
   Entity: 'shield'
 };
 
@@ -82,6 +85,12 @@ export function getEntityHoverSummary(entity) {
     const latLong = entity.identifiers?.latLong ? ` [${entity.identifiers.latLong}]` : '';
     const callers = entity.identifiers?.callersIdentified ? ` · ${entity.identifiers.callersIdentified} logged CDR intersections` : '';
     return `${role || 'Cell Tower Sector'}${latLong}${callers} in ${entity.city || 'target sector'}.`;
+  }
+
+  if (entity.type === 'Organization') {
+    const cin = entity.identifiers?.cin ? ` [CIN: ${entity.identifiers.cin}]` : '';
+    const dir = entity.identifiers?.directors ? ` · Directors: ${entity.identifiers.directors}` : '';
+    return `${role || 'Corporate Front'}${cin}${dir} in ${entity.city || 'Commercial Zone'}.`;
   }
 
   // Person
@@ -715,7 +724,8 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
       { id: 'Phone', label: 'Phones' },
       { id: 'Vehicle', label: 'Vehicles' },
       { id: 'Bank', label: 'Banks' },
-      { id: 'FIR Case', label: 'FIRs' }
+      { id: 'Location', label: 'Cell Towers' },
+      { id: 'Organization', label: 'Shell Co.' }
     ];
 
     const filtered = allEntities.filter(e => {
@@ -829,14 +839,41 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
 export function renderInvestigationLaunchpad(c) {
   const analyticalEntities = graphMetrics(entities, edges);
 
-  const totalCases = entities.filter(e => e.type === 'FIR Case').length;
+  const firEntities = firCases.map(fc => {
+    const mainSubject = entities.find(e => e.name.toLowerCase() === (fc.subject_name || fc.subjectName || '').toLowerCase());
+    return {
+      id: fc.id,
+      targetEntityId: mainSubject ? mainSubject.id : (entities.length > 0 ? entities[0].id : null),
+      name: fc.fir_number || fc.firNumber,
+      type: 'FIR Case',
+      role: `Registered FIR · ${fc.police_station || fc.policeStation || 'Cyber Crime PS'}`,
+      local: `Subject: ${fc.subject_name || fc.subjectName || 'Dossier'}`,
+      phone: fc.phone || '',
+      city: fc.district || 'Maharashtra',
+      risk: 'high',
+      recent: 96,
+      identifiers: {
+        sections: fc.sections,
+        station: fc.police_station || fc.policeStation,
+        date: fc.incident_date || fc.incidentDate,
+        accused: fc.subject_name || fc.subjectName
+      },
+      isFIR: true,
+      firData: fc
+    };
+  });
+
+  const totalCases = firCases.length;
   const totalPersons = entities.filter(e => e.type === 'Person').length;
   const totalVehicles = entities.filter(e => e.type === 'Vehicle').length;
   const totalPhones = entities.filter(e => e.type === 'Phone').length;
   const totalBanks = entities.filter(e => e.type === 'Bank').length;
   const totalTowers = entities.filter(e => e.type === 'Location').length;
+  const totalOrgs = entities.filter(e => e.type === 'Organization').length;
 
-  const filtered = analyticalEntities.filter(e => {
+  const allLaunchpadItems = [...analyticalEntities, ...firEntities];
+
+  const filtered = allLaunchpadItems.filter(e => {
     const matchType = state.type === 'all' || e.type.toLowerCase() === state.type.toLowerCase();
     const q = (state.query || '').toLowerCase().trim();
     if (!q) return matchType;
@@ -882,13 +919,14 @@ export function renderInvestigationLaunchpad(c) {
 
   // Fast Category Statistics Pills
   const categoryStats = el('div', { class: 'launchpad-stats-row' }, [
-    { type: 'all', label: 'All Records', count: entities.length, iconName: 'shield', color: '#0F172A' },
+    { type: 'all', label: 'All Records', count: allLaunchpadItems.length, iconName: 'shield', color: '#0F172A' },
     { type: 'fir case', label: 'FIR Cases', count: totalCases, iconName: 'file', color: objectTypeColors['FIR Case'] },
     { type: 'person', label: 'Suspects & Persons', count: totalPersons, iconName: 'user', color: objectTypeColors.Person },
     { type: 'vehicle', label: 'Vehicles', count: totalVehicles, iconName: 'grid', color: objectTypeColors.Vehicle },
     { type: 'phone', label: 'Phones / SIMs', count: totalPhones, iconName: 'pulse', color: objectTypeColors.Phone },
     { type: 'bank', label: 'Mule Accounts', count: totalBanks, iconName: 'database', color: objectTypeColors.Bank },
-    { type: 'location', label: 'Cell Towers', count: totalTowers, iconName: 'network', color: objectTypeColors.Location }
+    { type: 'location', label: 'Cell Towers', count: totalTowers, iconName: 'network', color: objectTypeColors.Location },
+    { type: 'organization', label: 'Shell Companies', count: totalOrgs, iconName: 'shield', color: objectTypeColors.Organization }
   ].map(cat => {
     const isSelected = state.type.toLowerCase() === cat.type.toLowerCase();
     const card = el('button', {
@@ -954,13 +992,13 @@ export function renderInvestigationLaunchpad(c) {
   ]);
 
   // Results Grid
-  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} matching entities`]);
+  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} matching records`]);
   const resultsHeader = el('div', { class: 'launchpad-results-header' }, [
     el('div', { class: 'results-count-title' }, [
       el('h3', {}, ['Select an Investigation Focal Point']),
       countPill
     ]),
-    el('span', { class: 'results-hint' }, ['Click any entity to generate its network relationship graph'])
+    el('span', { class: 'results-hint' }, ['Click any entity or FIR to generate its network relationship graph'])
   ]);
 
   const emptyStateBox = el('div', {
@@ -985,7 +1023,7 @@ export function renderInvestigationLaunchpad(c) {
   sorted.forEach(item => {
     const itemColor = objectTypeColors[item.type] || '#1E293B';
     const itemIcon = objectTypeIcons[item.type] || 'shield';
-    const links = getConnectedLinks(item.id);
+    const links = item.isFIR ? (item.targetEntityId ? getConnectedLinks(item.targetEntityId) : []) : getConnectedLinks(item.id);
 
     // Extract key attributes snippet
     const snippets = [];
@@ -995,6 +1033,7 @@ export function renderInvestigationLaunchpad(c) {
       if (item.identifiers.make) snippets.push(`Make: ${item.identifiers.make}`);
       if (item.identifiers.bankName) snippets.push(`Bank: ${item.identifiers.bankName}`);
       if (item.identifiers.status) snippets.push(`Status: ${item.identifiers.status}`);
+      if (item.identifiers.station) snippets.push(`PS: ${item.identifiers.station}`);
     }
     if (item.phone && item.type !== 'Phone') snippets.push(`Contact: ${item.phone}`);
     if (item.city) snippets.push(`Sector: ${item.city}`);
@@ -1003,8 +1042,13 @@ export function renderInvestigationLaunchpad(c) {
       class: 'launchpad-entity-card',
       'data-search-text': `${item.name} ${item.type} ${item.role || ''} ${item.local || ''} ${item.phone || ''} ${item.city || ''} ${JSON.stringify(item.identifiers || {})}`.toLowerCase(),
       onclick: () => {
-        openEntityProfile(item.id);
-        showToast(`Opening profile for ${item.name}`);
+        if (item.isFIR) {
+          state.view = 'fir';
+          notifyStateChange();
+        } else {
+          openEntityProfile(item.id);
+          showToast(`Opening profile for ${item.name}`);
+        }
       }
     }, [
       el('div', { class: 'card-header-row' }, [
@@ -1027,15 +1071,21 @@ export function renderInvestigationLaunchpad(c) {
             class: 'primary-btn small launch-btn',
             onclick: (e) => {
               e.stopPropagation();
-              openEntityProfile(item.id);
+              if (item.isFIR) {
+                state.view = 'fir';
+                notifyStateChange();
+              } else {
+                openEntityProfile(item.id);
+              }
             }
-          }, ['Inspect Profile →']),
+          }, [item.isFIR ? 'Inspect FIR →' : 'Inspect Profile →']),
           el('button', {
             class: 'outline-btn small launch-btn-graph',
             title: 'Open directly in network graph canvas',
             onclick: (e) => {
               e.stopPropagation();
-              startGraphInvestigation(item.id);
+              const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
+              startGraphInvestigation(graphTargetId);
               showToast(`Generated network around ${item.name}`);
             }
           }, [icon('network'), ' Graph'])
