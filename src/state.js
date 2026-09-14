@@ -980,6 +980,7 @@ export function getVisibleGraphNodeIds() {
 }
 
 export function startGraphInvestigation(seedId) {
+  state.view = 'network';
   state.graphExploration.active = true;
   state.graphExploration.mode = 'focused';
   state.graphExploration.seedId = seedId;
@@ -990,6 +991,7 @@ export function startGraphInvestigation(seedId) {
 }
 
 export function returnToGraphLaunchpad() {
+  state.view = 'network';
   state.graphExploration.active = false;
   state.graphExploration.seedId = null;
   state.graphExploration.expandedNodeIds = [];
@@ -1073,6 +1075,7 @@ export function resetGraphExploration() {
 }
 
 export function showFullGraphUniverse() {
+  state.view = 'network';
   state.graphExploration.active = true;
   state.graphExploration.mode = 'all';
   state.graphExploration.hiddenNodeIds = [];

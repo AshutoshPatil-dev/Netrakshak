@@ -1339,7 +1339,15 @@ export function renderInvestigationLaunchpad(c) {
     ]),
     el('div', { class: 'heading-actions' }, [
       el('button', {
-        class: 'primary-btn',
+        class: 'primary-btn highlight launch-all-btn',
+        title: 'Open all connected criminal entities in full interactive graph',
+        onclick: () => {
+          showFullGraphUniverse();
+          showToast('Loaded full network universe');
+        }
+      }, [icon('network'), ' Open Full Graph Canvas →']),
+      el('button', {
+        class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
     ])
@@ -1618,7 +1626,8 @@ export function renderActiveNetworkWorkspace(c) {
 
   const seedId = state.graphExploration?.seedId;
   const mapConfig = state.graphMapConfig || {};
-  const isMapLocked = !!mapConfig.locked;
+  const isLocked = !!mapConfig.locked;
+  const isMapLocked = isLocked;
   const isAllPinsLocked = !!mapConfig.pinsLockedAll;
 
   // Satellite-specific controls for the top strip
