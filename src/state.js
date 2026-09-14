@@ -1169,6 +1169,7 @@ export async function loadSupabaseData() {
         id: p.id,
         name: p.display_name || p.email?.split('@')[0] || 'Officer',
         rank: p.rank || 'Inspector',
+        badge_no: p.badge_no || '',
         district: p.district || '',
         state: p.state || 'Maharashtra',
         email: p.email || '',
