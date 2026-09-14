@@ -852,6 +852,7 @@ export const state = {
   fileHash: '',
   filePath: '',
   graphFullscreen: false,
+  graphSatelliteMode: true,
   sidebarCollapsed: false,
   fontScale: parseFloat(localStorage.getItem('font_scale')) || 1,
   firMode: 'upload',
@@ -1042,6 +1043,11 @@ export function showFullGraphUniverse() {
   if (!state.selected && entities.length > 0) {
     state.selected = entities[0].id;
   }
+  notifyStateChange();
+}
+
+export function toggleGraphSatelliteMode() {
+  state.graphSatelliteMode = !state.graphSatelliteMode;
   notifyStateChange();
 }
 

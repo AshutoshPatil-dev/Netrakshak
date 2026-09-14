@@ -18,6 +18,7 @@ import {
   toggleGraphSeed,
   resetGraphExploration,
   showFullGraphUniverse,
+  toggleGraphSatelliteMode,
   openEntityProfile
 } from '../state.js';
 import { graphMetrics } from '../lib/analysis.js';
@@ -122,8 +123,9 @@ export function getConnectedLinks(entityId) {
 }
 
 export function graphContainer(visibleNodes) {
+  const isSat = !!state.graphSatelliteMode;
   if (visibleNodes.length === 0) {
-    return el('div', { class: 'sigma-container empty-graph-shell' }, [
+    return el('div', { class: `sigma-container empty-graph-shell ${isSat ? 'satellite-mode' : ''}` }, [
       el('div', { class: 'empty-shell-content' }, [
         el('span', { class: 'empty-shell-icon' }, [icon('network')]),
         el('strong', {}, ['No Entities in Active Exploration']),
@@ -131,9 +133,28 @@ export function graphContainer(visibleNodes) {
       ])
     ]);
   }
-  return el('div', { class: 'sigma-container', 'data-graph-count': String(visibleNodes.length) }, [
+  return el('div', {
+    class: `sigma-container ${isSat ? 'satellite-mode' : ''}`,
+    'data-graph-count': String(visibleNodes.length)
+  }, [
+    isSat ? el('div', { class: 'satellite-hud-overlay' }, [
+      el('div', { class: 'sat-hud-top-left' }, [
+        el('div', { class: 'sat-live-indicator' }, [el('span', { class: 'sat-pulse-dot' }), el('strong', {}, ['GEO-SAT RECON // TACTICAL OVERLAY'])]),
+        el('span', { class: 'sat-coords' }, ['18.5204° N, 73.8567° E · MAHARASHTRA TACTICAL ORBIT'])
+      ]),
+      el('div', { class: 'sat-hud-top-right' }, [
+        el('span', { class: 'sat-telemetry' }, ['HR SENTINEL-2 COMPOSITE (0.5M/PX)']),
+        el('span', { class: 'sat-sector-badge' }, ['SECTOR: PUNE-MUMBAI CORRIDOR'])
+      ]),
+      el('div', { class: 'sat-hud-crosshair sat-ch-tl' }),
+      el('div', { class: 'sat-hud-crosshair sat-ch-tr' }),
+      el('div', { class: 'sat-hud-crosshair sat-ch-bl' }),
+      el('div', { class: 'sat-hud-crosshair sat-ch-br' }),
+      el('div', { class: 'sat-hud-radar-grid' }),
+      el('div', { class: 'sat-hud-scan-line' })
+    ]) : null,
     el('div', { class: 'graph-node-tooltip', id: 'graphNodeTooltip' })
-  ]);
+  ].filter(Boolean));
 }
 
 export function mountSigma(visibleNodes) {
@@ -227,22 +248,25 @@ export function mountSigma(visibleNodes) {
     });
 
     // 3. Update / add edges
+    const isSat = !!state.graphSatelliteMode;
     edges.forEach((edge) => {
       const source = edge[0];
       const target = edge[1];
       const label = edge[2] || '';
       if (visibleIds.has(source) && visibleIds.has(target)) {
         const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+        const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
+        const defaultEdgeColor = isSat ? '#475569' : '#94A3B8';
         if (!currentGraph.hasEdge(source, target)) {
           currentGraph.addEdge(source, target, {
-            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
             size: isConnectedToSelected ? 2.5 : 1.2,
             type: 'line',
             label
           });
         } else {
           currentGraph.mergeEdgeAttributes(source, target, {
-            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
             size: isConnectedToSelected ? 2.5 : 1.2
           });
         }
@@ -257,11 +281,12 @@ export function mountSigma(visibleNodes) {
   sigmaInstance?.kill();
   const graph = new Graph();
   currentGraph = graph;
+  const isSat = !!state.graphSatelliteMode;
 
   visibleNodes.forEach((entity, index) => {
     const isSeed = entity.id === seedId;
     const isSelected = state.selected === entity.id;
-    const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || '#1E293B';
+    const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || (isSat ? '#38BDF8' : '#1E293B');
 
     let x = 0;
     let y = 0;
@@ -304,7 +329,7 @@ export function mountSigma(visibleNodes) {
       x,
       y,
       size: nodeSize,
-      color: isSelected ? '#2563EB' : nodeColor,
+      color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
       risk: entity.risk,
       entityId: entity.id,
       entityType: entity.type,
@@ -320,8 +345,10 @@ export function mountSigma(visibleNodes) {
     const label = edge[2] || '';
     if (visibleIds.has(source) && visibleIds.has(target) && !graph.hasEdge(source, target)) {
       const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+      const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
+      const defaultEdgeColor = isSat ? '#475569' : '#94A3B8';
       graph.addEdge(source, target, {
-        color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+        color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
         size: isConnectedToSelected ? 2.5 : 1.2,
         type: 'line',
         label
@@ -333,9 +360,9 @@ export function mountSigma(visibleNodes) {
     renderLabels: true,
     labelFont: 'Inter, system-ui, sans-serif',
     labelSize: 11,
-    labelColor: { color: '#0F172A' },
-    defaultNodeColor: '#1E293B',
-    defaultEdgeColor: '#CBD5E1',
+    labelColor: { color: isSat ? '#F8FAFC' : '#0F172A' },
+    defaultNodeColor: isSat ? '#38BDF8' : '#1E293B',
+    defaultEdgeColor: isSat ? '#475569' : '#CBD5E1',
     minCameraRatio: 0.15,
     maxCameraRatio: 5,
     allowInvalidContainer: true
@@ -911,6 +938,14 @@ export function renderInvestigationLaunchpad(c) {
     ]),
     el('div', { class: 'heading-actions' }, [
       el('button', {
+        class: `outline-btn launchpad-sat-btn ${state.graphSatelliteMode ? 'active-sat' : ''}`,
+        title: state.graphSatelliteMode ? 'Switch graph background to standard grid' : 'Switch graph background to tactical satellite map',
+        onclick: () => {
+          toggleGraphSatelliteMode();
+          showToast(state.graphSatelliteMode ? '🛰 Tactical Satellite Map Enabled' : 'Standard Vector Grid Enabled');
+        }
+      }, [icon('network'), state.graphSatelliteMode ? ' 🛰 Satellite Map: ON' : ' 🗺 Satellite Map: OFF']),
+      el('button', {
         class: 'primary-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
@@ -1221,6 +1256,14 @@ export function renderActiveNetworkWorkspace(c) {
         }
       }, [icon('plus'), ` Expand (${getConnectedLinks(selectedEntity.id).length})`]) : null,
       el('div', { class: 'strip-divider' }),
+      el('button', {
+        class: `strip-btn strip-sat-btn ${state.graphSatelliteMode ? 'active' : ''}`,
+        title: state.graphSatelliteMode ? 'Switch graph background to standard grid' : 'Switch graph background to tactical satellite map',
+        onclick: () => {
+          toggleGraphSatelliteMode();
+          showToast(state.graphSatelliteMode ? '🛰 Tactical Satellite Map Enabled' : 'Standard Vector Grid Enabled');
+        }
+      }, [icon('network'), state.graphSatelliteMode ? ' 🛰 Satellite Map' : ' 🗺 Vector Grid']),
       el('span', { class: 'strip-count' }, [
         `${visibleNodes.length}/${entities.length} nodes`
       ]),
@@ -1233,7 +1276,7 @@ export function renderActiveNetworkWorkspace(c) {
   ]);
 
   const seedId = state.graphExploration?.seedId;
-  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}`;
+  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}|${state.graphSatelliteMode ? 'sat' : 'std'}`;
 
   const existingWorkspace = c.querySelector('.network-workspace');
   if (existingWorkspace) {
