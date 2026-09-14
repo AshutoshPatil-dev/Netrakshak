@@ -1475,13 +1475,28 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
 
       // Evidence & Identifiers
       const idEntries = [];
+      const ignoredKeys = new Set(['imageurl', 'image_url', 'photo', 'avatar', 'accusedimage', 'accused_image', 'lat', 'lng']);
+      const addedKeys = new Set();
+
       if (entity.identifiers) {
         Object.entries(entity.identifiers).forEach(([k, v]) => {
-          if (v) idEntries.push([k, String(v)]);
+          const lowerK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (ignoredKeys.has(lowerK)) return;
+          if (typeof v === 'string' && (v.startsWith('data:image') || v.startsWith('http') && v.match(/\.(png|jpg|jpeg|svg|webp)/i))) return;
+          if (v && !addedKeys.has(lowerK)) {
+            addedKeys.add(lowerK);
+            idEntries.push([k, String(v)]);
+          }
         });
       }
-      if (entity.phone) idEntries.push(['Contact / Phone', entity.phone]);
-      if (entity.city) idEntries.push(['Police Jurisdiction', entity.city]);
+      if (entity.phone && !addedKeys.has('phone') && !addedKeys.has('contactphone')) {
+        addedKeys.add('phone');
+        idEntries.push(['Contact / Phone', entity.phone]);
+      }
+      if (entity.city && !addedKeys.has('city') && !addedKeys.has('policejurisdiction')) {
+        addedKeys.add('city');
+        idEntries.push(['Police Jurisdiction', entity.city]);
+      }
 
       const attrsCard = idEntries.length > 0 ? el('div', { class: 'inspector-card' }, [
         el('h4', { class: 'inspector-card-title' }, ['Evidence & Core Identifiers']),
