@@ -8,59 +8,27 @@ export const supabase = supabaseConfigured ? createClient(url, anonKey) : null;
 
 /**
  * Creates a new officer in Supabase Auth (auth.users) and Public Profiles (public.profiles)
- * Uses an isolated client with persistSession: false so that the logged-in administrator's
- * active session is preserved and not switched.
+ * Calls the secure PostgreSQL RPC function create_officer_account which creates the user
+ * with auto-confirmed email so they can log in immediately.
  */
 export async function createOfficerAccount({ email, password, name, rank, district, state, phone, role }) {
   if (!supabaseConfigured) return null;
 
-  const authClient = createClient(url, anonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false
-    }
+  const { data: rpcUserId, error: rpcError } = await supabase.rpc('create_officer_account', {
+    p_email: email,
+    p_password: password || 'password123',
+    p_name: name,
+    p_rank: rank || 'Sub-Inspector',
+    p_district: district || '',
+    p_state: state || 'Maharashtra',
+    p_phone: phone || '',
+    p_role: role || 'case-officer'
   });
 
-  const { data, error } = await authClient.auth.signUp({
-    email,
-    password: password || 'password123',
-    options: {
-      data: {
-        display_name: name,
-        unit_name: district || 'Maharashtra Police',
-        role_name: role || 'case-officer',
-        rank: rank || 'Sub-Inspector',
-        district: district || '',
-        state: state || 'Maharashtra',
-        phone: phone || ''
-      }
-    }
-  });
-
-  if (error) {
-    throw error;
+  if (rpcError) {
+    console.error('RPC create_officer_account error:', rpcError);
+    throw rpcError;
   }
 
-  const userId = data?.user?.id;
-  if (userId) {
-    const { error: profileError } = await supabase.from('profiles').upsert({
-      id: userId,
-      display_name: name,
-      unit_name: district || 'Maharashtra Police',
-      role_name: role || 'case-officer',
-      rank: rank || 'Sub-Inspector',
-      district: district || '',
-      state: state || 'Maharashtra',
-      email: email,
-      phone: phone || '',
-      is_active: true
-    });
-
-    if (profileError) {
-      console.warn('Profile table upsert note:', profileError);
-    }
-    return userId;
-  }
-  return null;
+  return rpcUserId;
 }
