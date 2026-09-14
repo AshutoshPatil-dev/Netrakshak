@@ -1,7 +1,7 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import { state, getActiveOfficer, saveOfficers, recordAudit, notifyStateChange } from '../state.js';
-import { supabase, supabaseConfigured } from '../lib/supabase.js';
+import { supabase, supabaseConfigured, createOfficerAccount } from '../lib/supabase.js';
 import { showToast } from '../components/Toast.js';
 
 export function renderOfficers(c) {
@@ -206,7 +206,7 @@ export function renderOfficers(c) {
       ])
     ]);
 
-    form.onsubmit = (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
       const name = form.querySelector('[name="fullName"]').value.trim();
       const rank = form.querySelector('[name="rank"]').value;
@@ -217,53 +217,88 @@ export function renderOfficers(c) {
       const password = form.querySelector('[name="password"]')?.value?.trim() || '';
       const role = state.officerFormRole || 'case-officer';
 
-      if (editingOfficer) {
-        editingOfficer.name = name;
-        editingOfficer.rank = rank;
-        editingOfficer.district = district;
-        editingOfficer.state = stateVal;
-        editingOfficer.email = email;
-        editingOfficer.phone = phone;
-        if (password && password !== '********') {
-          editingOfficer.password = password;
-        }
-        // Never allow changing your own role
-        if (!editingOfficer.isYou) editingOfficer.role = role;
-        saveOfficers();
-        recordAudit('Officer updated', `Officer profile updated: ${name} (${rank}, ${district}).`, 'info', 'officer');
-        if (supabaseConfigured && editingOfficer.id && !editingOfficer.id.startsWith('off_')) {
-          supabase.from('profiles').update({
-            display_name: name,
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving…';
+      }
+
+      try {
+        if (editingOfficer) {
+          editingOfficer.name = name;
+          editingOfficer.rank = rank;
+          editingOfficer.district = district;
+          editingOfficer.state = stateVal;
+          editingOfficer.email = email;
+          editingOfficer.phone = phone;
+          if (password && password !== '********') {
+            editingOfficer.password = password;
+          }
+          // Never allow changing your own role
+          if (!editingOfficer.isYou) editingOfficer.role = role;
+          saveOfficers();
+          recordAudit('Officer updated', `Officer profile updated: ${name} (${rank}, ${district}).`, 'info', 'officer');
+          if (supabaseConfigured && editingOfficer.id && !editingOfficer.id.startsWith('off_')) {
+            await supabase.from('profiles').update({
+              display_name: name,
+              rank,
+              district,
+              unit_name: district || 'Maharashtra Police',
+              state: stateVal,
+              email,
+              phone,
+              role_name: role
+            }).eq('id', editingOfficer.id);
+          }
+          showToast(t('officerUpdated'));
+          state.editingOfficerId = null;
+        } else {
+          let newId = 'off_' + Date.now();
+          if (supabaseConfigured) {
+            try {
+              const createdId = await createOfficerAccount({
+                email,
+                password: password || 'password123',
+                name,
+                rank,
+                district,
+                state: stateVal,
+                phone,
+                role
+              });
+              if (createdId) newId = createdId;
+            } catch (authErr) {
+              console.error('Supabase officer registration error:', authErr);
+              showToast(`Notice: ${authErr.message || 'Could not register in Supabase Auth'}`);
+            }
+          }
+
+          const newOff = {
+            id: newId,
+            name,
             rank,
             district,
-            state: stateVal,
+            state: stateVal || 'Maharashtra',
             email,
             phone,
-            role_name: role
-          }).eq('id', editingOfficer.id).then(() => {});
+            password: password || 'password123',
+            role,
+            isYou: false
+          };
+          state.officers.push(newOff);
+          saveOfficers();
+          recordAudit('Officer added', `New officer profile created: ${name} (${rank}, ${district}).`, 'info', 'officer');
+          showToast(t('officerAdded'));
         }
-        showToast(t('officerUpdated'));
-        state.editingOfficerId = null;
-      } else {
-        const newId = 'off_' + Date.now();
-        const newOff = {
-          id: newId,
-          name,
-          rank,
-          district,
-          state: stateVal || 'Maharashtra',
-          email,
-          phone,
-          password: password || 'password123',
-          role,
-          isYou: false
-        };
-        state.officers.push(newOff);
-        saveOfficers();
-        recordAudit('Officer added', `New officer profile created: ${name} (${rank}, ${district}).`, 'info', 'officer');
-        showToast(t('officerAdded'));
+      } catch (err) {
+        console.error('Officer save error:', err);
+        showToast(`Error: ${err.message || 'Failed to save officer'}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+        }
+        notifyStateChange();
       }
-      notifyStateChange();
     };
 
     const formPanel = el('div', { class: 'officer-form-panel' }, [
