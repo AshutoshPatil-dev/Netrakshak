@@ -288,6 +288,12 @@ export function renderEntityProfile(c) {
   if (entity.local && entity.local !== entity.name && !aliasesList.includes(entity.local)) {
     aliasesList.push(entity.local);
   }
+  const aliasesCard = aliasesList.length > 0 ? el('div', { class: 'profile-column-card aliases-card', style: 'margin-top: 16px;' }, [
+    el('h3', { class: 'col-card-title' }, ['Known Aliases & Operating Monikers']),
+    el('div', { class: 'aliases-chip-list', style: 'display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;' }, aliasesList.map(a => el('span', {
+      style: 'background: #F1F5F9; border: 1px solid #CBD5E1; color: var(--app-text); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px;'
+    }, [a])))
+  ]) : null;
 
   // Cross-Case Involvement Card
   const linkedCases = findCrossLinkedCases(entity.id);

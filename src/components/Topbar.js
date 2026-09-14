@@ -2,6 +2,7 @@ import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import { state, getActiveOfficer, signOutOfficer, entities, openEntityProfile, notifyStateChange } from '../state.js';
 import { langPicker } from './LanguagePicker.js';
+import { showToast } from './Toast.js';
 
 export function updateSearchSuggestions(input) {
   const box = input.closest('.global-search');
