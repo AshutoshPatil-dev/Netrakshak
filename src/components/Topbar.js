@@ -68,6 +68,19 @@ export function renderTopbar() {
       searchInput
     ]),
     el('div', { class: 'top-actions' }, [
+      el('button', {
+        class: `women-safety-toggle-btn ${state.womenSafetyFilter ? 'active' : ''}`,
+        title: 'Toggle Women & Child Safety Command Lens',
+        onclick: () => {
+          state.womenSafetyFilter = !state.womenSafetyFilter;
+          showToast(state.womenSafetyFilter ? '🌸 Women & Child Safety Priority Lens Activated' : 'Standard Intelligence Mode Restored');
+          notifyStateChange();
+        }
+      }, [
+        el('span', { class: 'safety-toggle-icon' }, [icon('shield')]),
+        el('span', { class: 'safety-toggle-text' }, [state.womenSafetyFilter ? 'Women & Child Safety: ON' : 'Women Safety Lens']),
+        state.womenSafetyFilter ? el('span', { class: 'safety-pulse-dot' }) : null
+      ]),
       langPicker(),
       el('div', { class: 'topbar-officer' }, [
         el('div', { class: 'avatar' }, [activeOfficer.initials]),
@@ -82,3 +95,4 @@ export function renderTopbar() {
 
   return topbar;
 }
+

@@ -88,21 +88,77 @@ export function riskPanel() {
   ]);
 }
 
+export function womenSafetyCommandPanel() {
+  const wsCases = firCases.filter(c => c.isWomenSafety || /stalk|harass|354|78|75|pocso|women/i.test(`${c.sections} ${c.policeStation} ${c.police_station}`));
+  return el('section', { class: 'panel women-safety-panel' }, [
+    el('div', { class: 'panel-heading' }, [
+      el('div', {}, [
+        el('div', { class: 'eyebrow rose' }, ['Special Operation Cell']),
+        el('h3', { style: 'color: #BE123C; display: flex; align-items: center; gap: 8px;' }, [
+          icon('shield'),
+          'Women & Child Safety Priority Command'
+        ]),
+        el('span', { class: 'muted' }, ['Fast-Track Bharatiya Nagarik Suraksha Sanhita (BNSS) & Section 73 Identity Protection Monitor'])
+      ]),
+      el('button', {
+        class: 'primary-btn small rose-btn',
+        onclick: () => {
+          state.womenSafetyFilter = true;
+          state.view = 'fir';
+          notifyStateChange();
+        }
+      }, [icon('file'), 'View Safety FIRs'])
+    ]),
+    el('div', { class: 'women-safety-stats-grid' }, [
+      el('div', { class: 'safety-stat-card' }, [
+        el('span', { class: 'safety-stat-val' }, [String(wsCases.length)]),
+        el('span', { class: 'safety-stat-lbl' }, ['Priority Safety FIRs']),
+        el('span', { class: 'safety-stat-sub' }, ['100% Identity Redacted'])
+      ]),
+      el('div', { class: 'safety-stat-card' }, [
+        el('span', { class: 'safety-stat-val' }, ['48h']),
+        el('span', { class: 'safety-stat-lbl' }, ['Sec 164 BNSS Target']),
+        el('span', { class: 'safety-stat-sub' }, ['Judicial Statement Protocol'])
+      ]),
+      el('div', { class: 'safety-stat-card' }, [
+        el('span', { class: 'safety-stat-val' }, ['60 Days']),
+        el('span', { class: 'safety-stat-lbl' }, ['Chargesheet Mandate']),
+        el('span', { class: 'safety-stat-sub' }, ['Strict Statutory Timeline'])
+      ]),
+      el('div', { class: 'safety-stat-card' }, [
+        el('span', { class: 'safety-stat-val text-red' }, ['1 High Risk']),
+        el('span', { class: 'safety-stat-lbl' }, ['Repeat Cyber Stalker']),
+        el('span', { class: 'safety-stat-sub' }, ['Deepak Verma (VoIP Hub)'])
+      ])
+    ])
+  ]);
+}
+
 export function renderOverview(c) {
   c.innerHTML = '';
   const highRiskCount = entities.filter(e => e.risk === 'high').length;
 
-  const activeCaseCard = firCases.length > 0 ? el('div', { class: 'case-row' }, [
+  const activeCase = state.womenSafetyFilter 
+    ? (firCases.find(c => c.isWomenSafety) || firCases[0])
+    : firCases[0];
+
+  const activeCaseCard = activeCase ? el('div', { class: 'case-row' }, [
     el('div', { class: 'case-main' }, [
-      el('div', { class: 'case-icon' }, [icon('network')]),
+      el('div', { class: `case-icon ${activeCase.isWomenSafety ? 'rose-icon' : ''}` }, [icon(activeCase.isWomenSafety ? 'shield' : 'network')]),
       el('div', {}, [
-        el('strong', {}, [firCases[0].fir_number || 'FIR Case']),
-        el('span', {}, [`${firCases[0].police_station || ''} · ${firCases[0].district || ''}`])
+        el('strong', {}, [
+          activeCase.fir_number || activeCase.firNumber || 'FIR Case',
+          activeCase.isWomenSafety ? el('span', { class: 'case-tag-rose' }, ['Women Safety Priority']) : null
+        ]),
+        el('span', {}, [`${activeCase.police_station || activeCase.policeStation || ''} · ${activeCase.district || ''}`])
       ])
     ]),
     el('div', { class: 'case-progress' }, [
-      el('div', { class: 'progress-label' }, [t('networkConfidence'), el('strong', {}, ['100%'])]),
-      el('div', { class: 'progress' }, [el('span', { style: 'width:100%' })])
+      el('div', { class: 'progress-label' }, [
+        activeCase.isWomenSafety ? 'BNSS Fast-Track Audit' : t('networkConfidence'),
+        el('strong', {}, ['100%'])
+      ]),
+      el('div', { class: 'progress' }, [el('span', { style: `width:100%; ${activeCase.isWomenSafety ? 'background: #E11D48;' : ''}` })])
     ]),
     el('button', { class: 'icon-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('arrow')])
   ]) : el('div', { class: 'case-row' }, [
@@ -119,11 +175,28 @@ export function renderOverview(c) {
   c.append(
     el('div', { class: 'page-heading' }, [
       el('div', {}, [
-        el('div', { class: 'eyebrow blue' }, [t('today')]),
-        el('h1', {}, [t('welcome')]),
-        el('p', { class: 'muted' }, [t('briefing')])
+        el('div', { class: `eyebrow ${state.womenSafetyFilter ? 'rose' : 'blue'}` }, [
+          state.womenSafetyFilter ? 'Women & Child Safety Command Lens Active' : t('today')
+        ]),
+        el('h1', {}, [
+          state.womenSafetyFilter ? 'Women & Child Protection Intelligence' : t('welcome')
+        ]),
+        el('p', { class: 'muted' }, [
+          state.womenSafetyFilter 
+            ? 'Real-time surveillance & fast-track intelligence on stalking, harassment, missing vulnerable persons, and cyber threats.'
+            : t('briefing')
+        ])
       ]),
-      el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; notifyStateChange(); } }, [icon('network'), t('viewNetwork')])
+      el('div', { style: 'display: flex; gap: 8px;' }, [
+        el('button', {
+          class: `outline-btn ${state.womenSafetyFilter ? 'active-rose-btn' : ''}`,
+          onclick: () => {
+            state.womenSafetyFilter = !state.womenSafetyFilter;
+            notifyStateChange();
+          }
+        }, [icon('shield'), state.womenSafetyFilter ? 'Exit Safety Lens' : 'Women Safety Lens']),
+        el('button', { class: 'outline-btn', onclick: () => { state.view = 'network'; notifyStateChange(); } }, [icon('network'), t('viewNetwork')])
+      ])
     ]),
     el('div', { class: 'metric-grid' }, [
       card(t('alerts'), String(highRiskCount), 'High risk priority', 'metric-red'),
@@ -131,12 +204,14 @@ export function renderOverview(c) {
       card(t('connections'), String(edges.length), 'Verified linkages', 'metric-green'),
       card(t('integrity'), supabaseConfigured ? '100%' : 'Local', 'Ledger active', 'metric-purple')
     ]),
+    state.womenSafetyFilter ? womenSafetyCommandPanel() : null,
     el('div', { class: 'dashboard-grid' }, [intelligenceSummaryPanel(), riskPanel()]),
     el('div', { class: 'section-heading' }, [
-      el('h2', {}, [t('activeCase')]),
+      el('h2', {}, [state.womenSafetyFilter ? 'Priority Fast-Track Case' : t('activeCase')]),
       el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [t('viewAll'), icon('arrow')])
     ]),
     activeCaseCard
   );
 }
+
 

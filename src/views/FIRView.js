@@ -1095,24 +1095,50 @@ export function renderFIRDossiersList() {
     }
   });
 
-  const headerActions = el('div', { style: 'display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;' }, [
-    el('div', {}, [
-      el('h2', { style: 'font-size: 18px; font-weight: 800; margin: 0; color: var(--app-text);' }, ['Registered FIR Case Dossiers (', String(allCases.length), ' Active Cases)']),
-      el('p', { class: 'muted', style: 'font-size: 12px; margin-top: 2px;' }, ['Official First Information Reports linking suspect identities, communication records (CDR), vehicles, and mule bank accounts across police stations.'])
+  const isWsFilterActive = state.womenSafetyFilter;
+  const filteredCases = isWsFilterActive 
+    ? allCases.filter(c => c.isWomenSafety || /stalk|harass|354|78|75|pocso|women/i.test(`${c.sections} ${c.policeStation} ${c.police_station}`))
+    : allCases;
+
+  const headerActions = el('div', { style: 'display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;' }, [
+    el('div', { style: 'display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;' }, [
+      el('div', {}, [
+        el('h2', { style: 'font-size: 18px; font-weight: 800; margin: 0; color: var(--app-text); display: flex; align-items: center; gap: 8px;' }, [
+          'Registered FIR Case Dossiers (', String(filteredCases.length), ' Active Cases)',
+          isWsFilterActive ? el('span', { class: 'case-tag-rose' }, ['Women & Child Safety Mode']) : null
+        ]),
+        el('p', { class: 'muted', style: 'font-size: 12px; margin-top: 2px;' }, ['Official First Information Reports linking suspect identities, communication records (CDR), vehicles, and mule bank accounts across police stations.'])
+      ]),
+      el('div', { style: 'display: flex; align-items: center; gap: 10px;' }, [
+        searchInput,
+        el('button', {
+          class: 'primary-btn',
+          onclick: () => {
+            state.firActiveTab = 'intake';
+            notifyStateChange();
+          }
+        }, [icon('plus'), 'New FIR Intake & Scan'])
+      ])
     ]),
-    el('div', { style: 'display: flex; align-items: center; gap: 10px;' }, [
-      searchInput,
+    el('div', { class: 'fir-filter-chips-row' }, [
       el('button', {
-        class: 'primary-btn',
+        class: `fir-filter-chip ${!isWsFilterActive ? 'active' : ''}`,
         onclick: () => {
-          state.firActiveTab = 'intake';
+          state.womenSafetyFilter = false;
           notifyStateChange();
         }
-      }, [icon('plus'), 'New FIR Intake & Scan'])
+      }, ['All Categories (', String(allCases.length), ')']),
+      el('button', {
+        class: `fir-filter-chip fir-filter-chip-rose ${isWsFilterActive ? 'active' : ''}`,
+        onclick: () => {
+          state.womenSafetyFilter = !state.womenSafetyFilter;
+          notifyStateChange();
+        }
+      }, [icon('shield'), 'Women & Child Safety Priority (Fast-Track BNSS)'])
     ])
   ]);
 
-  const cards = allCases.map(c => {
+  const cards = filteredCases.map(c => {
     const firNo = c.firNumber || c.fir_number || 'FIR-MH-2026';
     const ps = c.policeStation || c.police_station || 'Police Station';
     const dist = c.district || 'District';
@@ -1132,12 +1158,13 @@ export function renderFIRDossiersList() {
       return eName.includes(subj.toLowerCase()) || (otherAcc && otherAcc.toLowerCase().includes(eName));
     });
 
-    return el('div', { class: 'fir-dossier-card' }, [
+    return el('div', { class: `fir-dossier-card ${c.isWomenSafety ? 'fir-dossier-rose' : ''}` }, [
       // Top header
       el('div', { class: 'fir-dossier-top' }, [
         el('div', {}, [
           el('div', { class: 'fir-dossier-badge-row' }, [
             el('span', { class: 'fir-num-badge' }, [firNo]),
+            c.isWomenSafety ? el('span', { class: 'fir-badge-rose' }, ['🛡️ Women & Child Safety · Fast-Track BNSS 60 Days']) : null,
             el('span', { style: 'font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0;' }, ['OCR EXTRACTED & VERIFIED']),
             c.syndicateGroup ? el('span', { style: 'font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;' }, [`Syndicate: ${c.syndicateGroup}`]) : null
           ].filter(Boolean)),
@@ -1152,6 +1179,7 @@ export function renderFIRDossiersList() {
         el('strong', { style: 'display: block; font-size: 12px; color: var(--app-text); margin-bottom: 4px;' }, ['Incident Narrative & Registered Police Facts:']),
         el('span', {}, [summary])
       ]),
+
 
       // Attributed Entities & Seized Assets
       el('div', { class: 'fir-entities-attribution-grid' }, [
