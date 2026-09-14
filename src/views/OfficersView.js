@@ -271,7 +271,7 @@ export function renderOfficers(c) {
             try {
               const createdId = await createOfficerAccount({
                 email,
-                password: password || 'password123',
+                password,
                 name,
                 rank,
                 district,
@@ -298,7 +298,6 @@ export function renderOfficers(c) {
             email,
             phone,
             badge_no: badgeNo,
-            password: password || 'password123',
             role,
             isYou: false
           };

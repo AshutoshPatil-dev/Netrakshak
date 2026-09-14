@@ -21,7 +21,7 @@ export async function createOfficerAccount({ email, password, name, rank, distri
 
   const { data: rpcUserId, error: rpcError } = await supabase.rpc('create_officer_account', {
     p_email: email,
-    p_password: password || 'password123',
+    p_password: password,
     p_name: name,
     p_rank: rank || 'Sub-Inspector',
     p_district: district || '',
