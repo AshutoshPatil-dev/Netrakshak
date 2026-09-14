@@ -30,13 +30,14 @@ export function getExportFirData() {
 
   if (exportModalState.sourceType === 'blank') {
     return {
+      isBlankTemplate: true,
       firNumber: '',
-      policeStation: 'Cyber Crime Police Station, Shivajinagar',
-      district: 'Pune HQ',
-      state: 'Maharashtra',
+      policeStation: '',
+      district: '',
+      state: '',
       incidentDate: '',
       incidentTime: '',
-      sections: 'IPC 420, 468, 471, 120B · IT Act 66C, 66D',
+      sections: '',
       complainantName: '',
       complainantAge: '',
       complainantFather: '',
@@ -53,11 +54,11 @@ export function getExportFirData() {
       incidentSummary: '',
       propertySummary: '',
       evidenceItems: [],
-      actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
-      ioName: officer.name || 'Ashutosh Patil',
-      ioRank: officer.rank || 'Superintendent of Police',
-      ioDistrict: officer.district || 'Pune HQ',
-      printDate: new Date().toISOString().split('T')[0]
+      actionTaken: '',
+      ioName: '',
+      ioRank: '',
+      ioDistrict: '',
+      printDate: ''
     };
   }
 
@@ -136,6 +137,8 @@ export function getExportFirData() {
 }
 
 export function renderPrintableSheet(data) {
+  const isBlank = !!data.isBlankTemplate;
+
   return el('div', { class: 'fir-printable-sheet-root' }, [
     // Header
     el('div', { class: 'print-header-block' }, [
@@ -144,9 +147,11 @@ export function renderPrintableSheet(data) {
       el('div', { class: 'print-subtitle-legal' }, ['(Crime & Criminal Intelligence MIS · Under Section 154 Cr.P.C. / BNSS 173)']),
       el('div', { class: 'print-station-sub' }, [
         'Police Station: ',
-        el('strong', { class: 'print-underline-text' }, [data.policeStation || 'Cyber Crime Police Station, Shivajinagar']),
+        el('strong', { class: 'print-underline-text' }, [data.policeStation || '________________________________________']),
         ' · District: ',
-        el('strong', { class: 'print-underline-text' }, [`${data.district || 'Pune HQ'}, ${data.state || 'Maharashtra'}`])
+        el('strong', { class: 'print-underline-text' }, [
+          data.district || data.state ? `${data.district || '____________________'}, ${data.state || 'Maharashtra'}` : '____________________, Maharashtra'
+        ])
       ])
     ]),
 
@@ -170,7 +175,7 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-1' }, [
       el('div', { class: 'print-field-box full' }, [
         el('span', { class: 'print-label' }, ['STATUTORY ACTS & SECTIONS']),
-        el('div', { class: 'print-value bold' }, [data.sections || 'IPC 420, 468, 471, 120B · IT Act 66C, 66D'])
+        el('div', { class: 'print-value bold' }, [data.sections || '____________________________________________________________________________________'])
       ])
     ]),
 
@@ -249,7 +254,7 @@ export function renderPrintableSheet(data) {
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CELL TOWER / TRIANGULATION SECTOR']),
-        el('div', { class: 'print-value' }, [data.tower || 'FC Road Sector / Pune HQ'])
+        el('div', { class: 'print-value' }, [data.tower || '________________________________________'])
       ])
     ]),
 
@@ -275,7 +280,7 @@ export function renderPrintableSheet(data) {
       ])
     ]),
 
-    // 5 - Seized Evidence Attachments Table
+    // 5 - Seized Evidence Attachments Table (if present)
     data.evidenceItems && data.evidenceItems.length > 0 ? el('div', { class: 'print-evidence-section' }, [
       el('div', { class: 'print-section-divider' }, [
         el('strong', {}, ['5 - SEIZED DIGITAL & PHYSICAL EVIDENCE ITEMS'])
@@ -299,11 +304,13 @@ export function renderPrintableSheet(data) {
       el('div', { class: 'print-signoff-left' }, [
         el('div', { class: 'print-action-taken' }, [
           'Action taken: ',
-          el('span', {}, [data.actionTaken])
+          el('span', {}, [data.actionTaken || '____________________________________________________________________________________'])
         ]),
         el('div', { class: 'print-io-name' }, [
           'Investigating Officer: ',
-          el('strong', {}, [`${data.ioName} (${data.ioRank}, ${data.ioDistrict})`])
+          el('strong', {}, [
+            data.ioName ? `${data.ioName} (${data.ioRank}, ${data.ioDistrict})` : '____________________________________________________'
+          ])
         ]),
         el('div', { class: 'print-unit-tag' }, [
           'Unit: Crime & Criminal Network Command · Pune HQ'
@@ -312,14 +319,16 @@ export function renderPrintableSheet(data) {
       el('div', { class: 'print-signoff-right' }, [
         el('div', { class: 'print-signature-box' }, [
           el('div', { class: 'signature-line-mark' }),
-          el('span', { class: 'sig-label' }, [`Signature of IO · Date: ${data.printDate}`])
+          el('span', { class: 'sig-label' }, [`Signature of IO · Date: ${data.printDate || '____ / ____ / 20____'}`])
         ])
       ])
     ]),
 
     // Watermark line
     el('div', { class: 'print-bottom-watermark' }, [
-      `Netrakshak Criminal Intelligence MIS · Verified Official Record · Case Ref: ${data.firNumber || 'POLICE-MIS'}`
+      isBlank
+        ? 'Netrakshak Criminal Intelligence MIS · Standard Form II Template · Crime & Criminal Network Command'
+        : `Netrakshak Criminal Intelligence MIS · Verified Official Record · Case Ref: ${data.firNumber || 'POLICE-MIS'}`
     ])
   ].filter(Boolean));
 }

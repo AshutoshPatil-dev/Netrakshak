@@ -5097,7 +5097,7 @@
     padding: 0 !important;
     margin: 0 !important;
     height: auto !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 
   body > *:not(.fir-export-modal-overlay) {
@@ -5144,7 +5144,7 @@
     min-height: auto !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 6mm 10mm 4mm !important;
+    padding: 10mm 14mm 8mm !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
     page-break-inside: avoid !important;
@@ -5152,82 +5152,91 @@
   }
 
   .print-header-block {
-    padding-bottom: 6px !important;
-    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .print-gov-title {
+    font-size: 10px !important;
   }
 
   .print-main-title {
-    font-size: 16px !important;
-    margin: 0 0 3px !important;
+    font-size: 18px !important;
+    margin: 0 0 4px !important;
   }
 
   .print-field-row-3,
   .print-field-row-2,
   .print-field-row-1 {
-    gap: 10px !important;
-    margin-bottom: 5px !important;
-  }
-
-  .print-label {
-    font-size: 8.5px !important;
-    margin-bottom: 1px !important;
-  }
-
-  .print-value {
-    font-size: 11px !important;
-    padding-bottom: 2px !important;
-    min-height: 16px !important;
-  }
-
-  .print-section-divider {
-    font-size: 9.5px !important;
-    padding-top: 4px !important;
-    margin: 8px 0 5px !important;
-  }
-
-  .print-narrative-block {
+    gap: 14px !important;
     margin-bottom: 6px !important;
   }
 
+  .print-label {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .print-value {
+    font-size: 12px !important;
+    padding-bottom: 2px !important;
+    min-height: 18px !important;
+  }
+
+  .print-section-divider {
+    font-size: 10.5px !important;
+    padding-top: 6px !important;
+    margin: 10px 0 6px !important;
+  }
+
+  .print-narrative-block {
+    margin-bottom: 8px !important;
+  }
+
   .print-boxed-content {
-    min-height: 48px !important;
-    padding: 6px 10px !important;
-    margin-top: 2px !important;
+    min-height: 65px !important;
+    padding: 8px 12px !important;
+    margin-top: 3px !important;
   }
 
   .print-boxed-content.compact {
-    min-height: 36px !important;
+    min-height: 48px !important;
   }
 
   .print-paragraph {
-    font-size: 10.5px !important;
-    line-height: 1.35 !important;
+    font-size: 11.5px !important;
+    line-height: 1.45 !important;
   }
 
   .print-blank-lines {
-    height: 44px !important;
+    height: 55px !important;
   }
 
   .print-footer-signoff-row {
-    margin-top: 10px !important;
-    padding-top: 8px !important;
+    margin-top: 14px !important;
+    padding-top: 10px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .print-signoff-left {
-    font-size: 10px !important;
-    gap: 3px !important;
+    font-size: 11px !important;
+    gap: 4px !important;
+  }
+
+  .print-signature-box {
+    font-size: 11px !important;
   }
 
   .print-bottom-watermark {
-    margin-top: 8px !important;
-    padding-top: 4px !important;
-    font-size: 8px !important;
+    margin-top: 10px !important;
+    padding-top: 6px !important;
+    font-size: 8.5px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 }
+
 
 
 
