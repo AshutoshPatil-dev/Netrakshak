@@ -153,6 +153,22 @@ export function renderEntityProfile(c) {
   // 3-COLUMN INVESTIGATIVE DOSSIER
   // --------------------------------------------------------------------------
 
+  const renderProgressBar = (pct) => {
+    const val = Math.max(0, Math.min(100, Number(pct) || 0));
+    let barColor = '#94A3B8';
+    if (val >= 75) barColor = '#DC2626';
+    else if (val >= 45) barColor = '#F59E0B';
+    else if (val >= 15) barColor = '#2563EB';
+    else if (val > 0) barColor = '#64748B';
+
+    return el('div', { class: 'metric-progress-track' }, [
+      el('div', {
+        class: 'metric-progress-fill',
+        style: `width: ${val}%; background: ${barColor};`
+      })
+    ]);
+  };
+
   // 1. Column 1: Network Influence Card
   const influenceCard = el('div', { class: 'profile-column-card' }, [
     el('h3', { class: 'col-card-title' }, ['Network Influence']),
@@ -165,7 +181,7 @@ export function renderEntityProfile(c) {
           el('strong', { class: 'metric-title' }, ['Direct Connections']),
           el('span', { class: 'metric-pct' }, [`${directConnections}%`])
         ]),
-        el('div', { class: 'metric-red-bar' }),
+        renderProgressBar(directConnections),
         el('p', { class: 'metric-desc' }, [`How many people and assets this ${entity.type.toLowerCase()} is directly linked to.`])
       ]),
       el('div', { class: 'influence-metric-group' }, [
@@ -173,7 +189,7 @@ export function renderEntityProfile(c) {
           el('strong', { class: 'metric-title' }, ['Go-Between']),
           el('span', { class: 'metric-pct' }, [`${goBetween}%`])
         ]),
-        el('div', { class: 'metric-red-bar' }),
+        renderProgressBar(goBetween),
         el('p', { class: 'metric-desc' }, [`How often this ${entity.type.toLowerCase()} sits between people or groups that are not directly linked - the link that holds the network together.`])
       ]),
       el('div', { class: 'influence-metric-group' }, [
@@ -181,7 +197,7 @@ export function renderEntityProfile(c) {
           el('strong', { class: 'metric-title' }, ['Links to Key Players']),
           el('span', { class: 'metric-pct' }, [`${linksToKeyPlayers}%`])
         ]),
-        el('div', { class: 'metric-red-bar' }),
+        renderProgressBar(linksToKeyPlayers),
         el('p', { class: 'metric-desc' }, [`Whether this ${entity.type.toLowerCase()}'s contacts are themselves well-connected.`])
       ]),
       el('div', { class: 'influence-metric-group' }, [
@@ -189,7 +205,7 @@ export function renderEntityProfile(c) {
           el('strong', { class: 'metric-title' }, ['Overall Influence']),
           el('span', { class: 'metric-pct' }, [`${overallInfluence}%`])
         ]),
-        el('div', { class: 'metric-red-bar' }),
+        renderProgressBar(overallInfluence),
         el('p', { class: 'metric-desc' }, ['Their standing across the whole network - where an investigation should focus on.'])
       ])
     ])
