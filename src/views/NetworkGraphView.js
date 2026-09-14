@@ -728,25 +728,49 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
       return matchName || matchRole || matchPhone || matchCity;
     });
 
+    const searchInput = el('input', {
+      type: 'text',
+      class: 'directory-search-input',
+      placeholder: 'Filter directory objects...',
+      value: state.directorySearchQuery || ''
+    });
+
+    const clearBtn = el('button', {
+      class: 'search-clear-btn',
+      style: state.directorySearchQuery ? '' : 'display: none;',
+      onclick: () => {
+        state.directorySearchQuery = '';
+        searchInput.value = '';
+        updateDirFilter('');
+      }
+    }, ['✕']);
+
     const searchRow = el('div', { class: 'directory-search-row' }, [
-      el('input', {
-        type: 'text',
-        class: 'directory-search-input',
-        placeholder: 'Filter directory objects...',
-        value: state.directorySearchQuery || '',
-        oninput: (e) => {
-          state.directorySearchQuery = e.target.value;
-          notifyStateChange();
-        }
-      }),
-      state.directorySearchQuery ? el('button', {
-        class: 'search-clear-btn',
-        onclick: () => {
-          state.directorySearchQuery = '';
-          notifyStateChange();
-        }
-      }, ['✕']) : null
-    ].filter(Boolean));
+      searchInput,
+      clearBtn
+    ]);
+
+    const updateDirFilter = (q) => {
+      state.directorySearchQuery = q;
+      const cleanQ = (q || '').toLowerCase().trim();
+      clearBtn.style.display = cleanQ ? 'inline-flex' : 'none';
+      const rows = dirList.querySelectorAll('.dir-item-row');
+      let visCount = 0;
+      rows.forEach(row => {
+        const text = (row.getAttribute('data-search-text') || row.textContent || '').toLowerCase();
+        const matches = !cleanQ || text.includes(cleanQ);
+        row.style.display = matches ? 'flex' : 'none';
+        if (matches) visCount++;
+      });
+      const emptyBox = dirList.querySelector('.inspector-empty-state');
+      if (emptyBox) {
+        emptyBox.style.display = visCount === 0 ? 'flex' : 'none';
+      }
+    };
+
+    searchInput.oninput = (e) => {
+      updateDirFilter(e.target.value);
+    };
 
     const categoryChips = el('div', { class: 'directory-cat-pills' }, categories.map(cItem => {
       const isAct = cat === cItem.id;
@@ -767,6 +791,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
 
       return el('button', {
         class: `dir-item-row ${isSel ? 'selected' : ''}`,
+        'data-search-text': `${item.name} ${item.type} ${item.role || ''} ${item.city || ''} ${item.phone || ''}`.toLowerCase(),
         onclick: () => {
           state.selected = item.id;
           notifyStateChange();
@@ -889,10 +914,16 @@ export function renderInvestigationLaunchpad(c) {
     placeholder: 'Search by Case ID, Accused name, Mobile (+91), Vehicle Reg, Mule Account, Tower ID or Section...',
     value: state.query || ''
   });
-  searchInput.oninput = (e) => {
-    state.query = e.target.value;
-    notifyStateChange();
-  };
+
+  const clearBtn = el('button', {
+    class: 'search-clear-btn',
+    style: state.query ? '' : 'display: none;',
+    onclick: () => {
+      state.query = '';
+      searchInput.value = '';
+      updateLaunchpadFilter('');
+    }
+  }, ['✕']);
 
   const sortOptions = [
     ['connections', 'Sort by Connection Links'],
@@ -914,11 +945,8 @@ export function renderInvestigationLaunchpad(c) {
     el('div', { class: 'launchpad-search-wrapper' }, [
       el('span', { class: 'search-lens-icon' }, [icon('search')]),
       searchInput,
-      state.query ? el('button', {
-        class: 'search-clear-btn',
-        onclick: () => { state.query = ''; notifyStateChange(); }
-      }, ['✕']) : null
-    ].filter(Boolean)),
+      clearBtn
+    ]),
     el('div', { class: 'launchpad-sort-group' }, [
       el('span', { class: 'toolbar-label' }, ['Sort by:']),
       sortSelect
@@ -926,90 +954,123 @@ export function renderInvestigationLaunchpad(c) {
   ]);
 
   // Results Grid
+  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} matching entities`]);
   const resultsHeader = el('div', { class: 'launchpad-results-header' }, [
     el('div', { class: 'results-count-title' }, [
       el('h3', {}, ['Select an Investigation Focal Point']),
-      el('span', { class: 'results-count-pill' }, [`${sorted.length} matching entities`])
+      countPill
     ]),
     el('span', { class: 'results-hint' }, ['Click any entity to generate its network relationship graph'])
   ]);
 
-  const cardsGrid = el('div', { class: 'launchpad-cards-grid' });
-
-  if (sorted.length === 0) {
-    cardsGrid.append(el('div', { class: 'launchpad-empty-state' }, [
-      el('div', { class: 'empty-icon' }, [icon('search')]),
-      el('h3', {}, ['No Records Found']),
-      el('p', { class: 'muted' }, [`No records matching "${state.query}" in the active intelligence database.`]),
-      el('button', {
-        class: 'outline-btn small',
-        onclick: () => { state.query = ''; state.type = 'all'; notifyStateChange(); }
-      }, ['Clear All Filters'])
-    ]));
-  } else {
-    sorted.forEach(item => {
-      const itemColor = objectTypeColors[item.type] || '#1E293B';
-      const itemIcon = objectTypeIcons[item.type] || 'shield';
-      const links = getConnectedLinks(item.id);
-
-      // Extract key attributes snippet
-      const snippets = [];
-      if (item.identifiers) {
-        if (item.identifiers.sections) snippets.push(`Sections: ${item.identifiers.sections}`);
-        if (item.identifiers.carrier) snippets.push(`Carrier: ${item.identifiers.carrier}`);
-        if (item.identifiers.make) snippets.push(`Make: ${item.identifiers.make}`);
-        if (item.identifiers.bankName) snippets.push(`Bank: ${item.identifiers.bankName}`);
-        if (item.identifiers.status) snippets.push(`Status: ${item.identifiers.status}`);
+  const emptyStateBox = el('div', {
+    class: 'launchpad-empty-state',
+    style: sorted.length === 0 ? '' : 'display: none;'
+  }, [
+    el('div', { class: 'empty-icon' }, [icon('search')]),
+    el('h3', {}, ['No Records Found']),
+    el('p', { class: 'muted empty-search-msg' }, ['No records matching search query in active intelligence database.']),
+    el('button', {
+      class: 'outline-btn small',
+      onclick: () => {
+        state.query = '';
+        searchInput.value = '';
+        updateLaunchpadFilter('');
       }
-      if (item.phone && item.type !== 'Phone') snippets.push(`Contact: ${item.phone}`);
-      if (item.city) snippets.push(`Sector: ${item.city}`);
+    }, ['Clear Search Filter'])
+  ]);
 
-      const card = el('div', {
-        class: 'launchpad-entity-card',
-        onclick: () => {
-          openEntityProfile(item.id);
-          showToast(`Opening profile for ${item.name}`);
-        }
-      }, [
-        el('div', { class: 'card-header-row' }, [
-          el('div', { class: 'card-type-box', style: `background:${itemColor}15;color:${itemColor};border-color:${itemColor}30` }, [
-            icon(itemIcon),
-            ` ${item.type.toUpperCase()}`
-          ]),
-          el('span', { class: `risk-badge ${item.risk || 'low'}` }, [`${(item.risk || 'LOW').toUpperCase()} RISK`])
+  const cardsGrid = el('div', { class: 'launchpad-cards-grid' }, [emptyStateBox]);
+
+  sorted.forEach(item => {
+    const itemColor = objectTypeColors[item.type] || '#1E293B';
+    const itemIcon = objectTypeIcons[item.type] || 'shield';
+    const links = getConnectedLinks(item.id);
+
+    // Extract key attributes snippet
+    const snippets = [];
+    if (item.identifiers) {
+      if (item.identifiers.sections) snippets.push(`Sections: ${item.identifiers.sections}`);
+      if (item.identifiers.carrier) snippets.push(`Carrier: ${item.identifiers.carrier}`);
+      if (item.identifiers.make) snippets.push(`Make: ${item.identifiers.make}`);
+      if (item.identifiers.bankName) snippets.push(`Bank: ${item.identifiers.bankName}`);
+      if (item.identifiers.status) snippets.push(`Status: ${item.identifiers.status}`);
+    }
+    if (item.phone && item.type !== 'Phone') snippets.push(`Contact: ${item.phone}`);
+    if (item.city) snippets.push(`Sector: ${item.city}`);
+
+    const card = el('div', {
+      class: 'launchpad-entity-card',
+      'data-search-text': `${item.name} ${item.type} ${item.role || ''} ${item.local || ''} ${item.phone || ''} ${item.city || ''} ${JSON.stringify(item.identifiers || {})}`.toLowerCase(),
+      onclick: () => {
+        openEntityProfile(item.id);
+        showToast(`Opening profile for ${item.name}`);
+      }
+    }, [
+      el('div', { class: 'card-header-row' }, [
+        el('div', { class: 'card-type-box', style: `background:${itemColor}15;color:${itemColor};border-color:${itemColor}30` }, [
+          icon(itemIcon),
+          ` ${item.type.toUpperCase()}`
         ]),
-        el('h4', { class: 'card-entity-title' }, [item.name]),
-        el('p', { class: 'card-entity-role' }, [item.role || item.local || `${item.type} Record`]),
-        snippets.length > 0 ? el('div', { class: 'card-snippets-row' }, snippets.slice(0, 2).map(s => el('span', { class: 'snippet-tag' }, [s]))) : null,
-        el('div', { class: 'card-footer-row' }, [
-          el('span', { class: 'links-count-badge' }, [
-            icon('network'),
-            ` ${links.length} Connected Links`
-          ]),
-          el('div', { class: 'card-btn-group' }, [
-            el('button', {
-              class: 'primary-btn small launch-btn',
-              onclick: (e) => {
-                e.stopPropagation();
-                openEntityProfile(item.id);
-              }
-            }, ['Inspect Profile →']),
-            el('button', {
-              class: 'outline-btn small launch-btn-graph',
-              title: 'Open directly in network graph canvas',
-              onclick: (e) => {
-                e.stopPropagation();
-                startGraphInvestigation(item.id);
-                showToast(`Generated network around ${item.name}`);
-              }
-            }, [icon('network'), ' Graph'])
-          ])
+        el('span', { class: `risk-badge ${item.risk || 'low'}` }, [`${(item.risk || 'LOW').toUpperCase()} RISK`])
+      ]),
+      el('h4', { class: 'card-entity-title' }, [item.name]),
+      el('p', { class: 'card-entity-role' }, [item.role || item.local || `${item.type} Record`]),
+      snippets.length > 0 ? el('div', { class: 'card-snippets-row' }, snippets.slice(0, 2).map(s => el('span', { class: 'snippet-tag' }, [s]))) : null,
+      el('div', { class: 'card-footer-row' }, [
+        el('span', { class: 'links-count-badge' }, [
+          icon('network'),
+          ` ${links.length} Connected Links`
+        ]),
+        el('div', { class: 'card-btn-group' }, [
+          el('button', {
+            class: 'primary-btn small launch-btn',
+            onclick: (e) => {
+              e.stopPropagation();
+              openEntityProfile(item.id);
+            }
+          }, ['Inspect Profile →']),
+          el('button', {
+            class: 'outline-btn small launch-btn-graph',
+            title: 'Open directly in network graph canvas',
+            onclick: (e) => {
+              e.stopPropagation();
+              startGraphInvestigation(item.id);
+              showToast(`Generated network around ${item.name}`);
+            }
+          }, [icon('network'), ' Graph'])
         ])
-      ]);
+      ])
+    ]);
 
-      cardsGrid.append(card);
+    cardsGrid.append(card);
+  });
+
+  const updateLaunchpadFilter = (q) => {
+    state.query = q;
+    const cleanQ = (q || '').toLowerCase().trim();
+    clearBtn.style.display = cleanQ ? 'inline-flex' : 'none';
+
+    let visCount = 0;
+    const cards = cardsGrid.querySelectorAll('.launchpad-entity-card');
+    cards.forEach(c => {
+      const txt = (c.getAttribute('data-search-text') || c.textContent || '').toLowerCase();
+      const match = !cleanQ || txt.includes(cleanQ);
+      c.style.display = match ? 'flex' : 'none';
+      if (match) visCount++;
     });
-  }
+
+    countPill.textContent = `${visCount} matching entities`;
+    emptyStateBox.style.display = visCount === 0 ? 'flex' : 'none';
+    const msg = emptyStateBox.querySelector('.empty-search-msg');
+    if (msg && cleanQ) {
+      msg.textContent = `No records matching "${cleanQ}" in active intelligence database.`;
+    }
+  };
+
+  searchInput.oninput = (e) => {
+    updateLaunchpadFilter(e.target.value);
+  };
 
   launchpad.append(heading, categoryStats, searchToolbar, resultsHeader, cardsGrid);
   c.append(launchpad);

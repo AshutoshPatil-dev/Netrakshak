@@ -6,22 +6,6 @@ import { objectTypeColors, objectTypeIcons } from './NetworkGraphView.js';
 
 export const CHRONOLOGICAL_EVENTS = [
   {
-    id: 'ev_01',
-    date: '2026-08-16',
-    time: '21:10',
-    type: 'fir_registration',
-    category: 'Women Safety / Cyber Crime',
-    severity: 'high',
-    title: 'FIR Registered: Cyber-Stalking & Extortion Racket',
-    caseNumber: 'FIR-MH-2026-9041',
-    station: 'Women & Child Cyber Protection Unit, Shivajinagar',
-    description: 'Victim statement recorded under Section 73 BNS protection. Cyber cell uncovers untraceable VoIP routing and shared burner handset originating from FC Road boiler room.',
-    entities: [
-      { id: 'e0000001-0000-0000-0000-000000000010', name: 'Deepak Verma', role: 'VoIP Lead', type: 'Person' },
-      { id: 'e0000002-0000-0000-0000-000000000002', name: '+91 98199 44312', role: 'Burner Telephony', type: 'Phone' }
-    ]
-  },
-  {
     id: 'ev_02',
     date: '2026-08-14',
     time: '14:30',

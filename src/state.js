@@ -15,64 +15,17 @@ export function notifyStateChange() {
 
 export const DEFAULT_OFFICERS = [
   {
-    id: 'off_ashutosh',
+    id: '996ad2d5-a5d1-437f-9716-e982e69d864d',
     name: 'Ashutosh Patil',
     rank: 'Superintendent of Police',
     cadre: 'IPS (MH Cadre)',
+    badge_no: 'IPS-001',
     district: 'Pune HQ',
     state: 'Maharashtra',
-    email: 'ashutosh.patil@mahapolice.gov.in',
-    phone: '+91 98220 54101',
+    email: 'ashutosh.patil9750@gmail.com',
+    phone: '+91 9112222108',
     role: 'admin',
     isYou: true
-  },
-  {
-    id: 'off_anil',
-    name: 'Inspector Anil Singh',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Pune HQ',
-    state: 'Maharashtra',
-    email: 'anil.singh@mahapolice.gov.in',
-    phone: '+91 98220 11984',
-    role: 'analyst',
-    isYou: false
-  },
-  {
-    id: 'off_priya',
-    name: 'SI Priya Deshmukh',
-    rank: 'Sub-Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Shivajinagar',
-    state: 'Maharashtra',
-    email: 'priya.deshmukh@mahapolice.gov.in',
-    phone: '+91 98811 44210',
-    role: 'case-officer',
-    isYou: false
-  },
-  {
-    id: 'off_vikas',
-    name: 'Inspector Vikas Rane',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Police',
-    district: 'Kothrud',
-    state: 'Maharashtra',
-    email: 'vikas.rane@mahapolice.gov.in',
-    phone: '+91 97655 22104',
-    role: 'case-officer',
-    isYou: false
-  },
-  {
-    id: 'off_neha',
-    name: 'Inspector Neha Kulkarni',
-    rank: 'Inspector',
-    cadre: 'Maharashtra Cyber Police',
-    district: 'Cyber Crime PS',
-    state: 'Maharashtra',
-    email: 'neha.cyber@mahapolice.gov.in',
-    phone: '+91 98900 88120',
-    role: 'analyst',
-    isYou: false
   }
 ];
 
@@ -81,7 +34,10 @@ export function loadSavedOfficers() {
     const raw = localStorage.getItem('netrakshak_officers');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const filtered = parsed.filter(o => !['off_anil', 'off_priya', 'off_vikas', 'off_neha', 'off_ashutosh'].includes(o.id));
+        if (filtered.length > 0) return filtered;
+      }
     }
     return [...DEFAULT_OFFICERS];
   } catch (e) {
@@ -840,43 +796,11 @@ export const DEFAULT_FIR_CASES = [
     extraction_status: 'approved',
     syndicateGroup: 'Apex Offshore Bond Syndicate',
     sourceRefs: ['FIR-MH-2026-0512', 'ROC-Records', 'PMLA-ED-2026']
-  },
-  {
-    id: 'f0000001-0000-0000-0000-000000000005',
-    firNumber: 'FIR-MH-2026-9041',
-    fir_number: 'FIR-MH-2026-9041',
-    policeStation: 'Women & Child Cyber Protection Unit, Shivajinagar',
-    police_station: 'Women & Child Cyber Protection Unit, Shivajinagar',
-    district: 'Pune City',
-    incidentDate: '2026-08-16',
-    incident_date: '2026-08-16',
-    incidentTime: '21:10',
-    sections: 'BNS 78 (Stalking), BNS 75 (Sexual Harassment), BNS 351, IT Act 67',
-    isWomenSafety: true,
-    category: 'women_safety',
-    priority: 'HIGH_FAST_TRACK',
-    complainantName: 'Pooja Sharma (Protected Identity)',
-    complainantPhone: '+91 97640 12049',
-    complainantAddress: 'Shivajinagar, Pune - 411005 (Identity Redacted under Sec 73 BNS)',
-    subjectName: 'Deepak Verma',
-    subject_name: 'Deepak Verma',
-    alias: 'VoIP Lead, Cyber Hunter',
-    otherAccused: 'Vikram Rathi, Sameer Khan',
-    phone: '+91 98900 33412',
-    vehicle: 'MH-12-TR-4401',
-    bank: 'ICICI-0021948102',
-    incidentLocation: 'Online / Cyber Space / Shivajinagar Area',
-    incidentSummary: 'Persistent digital stalking, morphing of social media photographs, and threatening phone calls from untraceable VoIP routing demanding extortion money under threat of cyber exposure. Investigation uncovered common burner VoIP infrastructure operated from FC Road boiler room.',
-    incident_summary: 'Persistent digital stalking, morphing of social media photographs, and threatening phone calls from untraceable VoIP routing demanding extortion money under threat of cyber exposure. Investigation uncovered common burner VoIP infrastructure operated from FC Road boiler room.',
-    propertySummary: 'Seized items: 1x Laptop with cloned social media scraping scripts, 3x Burner SIM cards, 1x VoIP call log backup.',
-    extractionStatus: 'approved',
-    extraction_status: 'approved',
-    syndicateGroup: 'ShadowFlow Cyber Stalking & Extortion Cell',
-    sourceRefs: ['FIR-MH-2026-9041', 'WPU-Special-Dossier-2026', 'CyberCell-CDRs']
   }
 ];
 
 export let firCases = [...DEFAULT_FIR_CASES];
+
 export function setFirCases(val) {
   firCases = val;
 }

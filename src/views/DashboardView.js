@@ -172,7 +172,7 @@ export function renderOverview(c) {
     el('button', { class: 'primary-btn small', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [icon('plus'), 'New FIR Intake'])
   ]);
 
-  c.append(
+  const dashboardElements = [
     el('div', { class: 'page-heading' }, [
       el('div', {}, [
         el('div', { class: `eyebrow ${state.womenSafetyFilter ? 'rose' : 'blue'}` }, [
@@ -211,7 +211,9 @@ export function renderOverview(c) {
       el('button', { class: 'text-btn', onclick: () => { state.view = 'fir'; notifyStateChange(); } }, [t('viewAll'), icon('arrow')])
     ]),
     activeCaseCard
-  );
+  ].filter(Boolean);
+
+  c.append(...dashboardElements);
 }
 
 
