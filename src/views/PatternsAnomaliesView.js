@@ -193,6 +193,9 @@ function inspectSubGroupInGraph(comm) {
 }
 
 export function renderPatternsAnomalies(parent) {
+  if (parent) {
+    parent.innerHTML = '';
+  }
   const container = el('div', { class: 'patterns-view-container' });
 
   // Top header matching Netrakshak style
