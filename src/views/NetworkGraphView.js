@@ -107,40 +107,47 @@ export function mountLeafletMap() {
   const mapContainer = document.getElementById('graph-leaflet-map');
   if (!mapContainer) return;
 
-  if (leafletMapInstance) {
-    leafletMapInstance.remove();
-    leafletMapInstance = null;
+  try {
+    if (leafletMapInstance) {
+      try { leafletMapInstance.remove(); } catch (e) {}
+      leafletMapInstance = null;
+    }
+    if (mapContainer._leaflet_id) {
+      delete mapContainer._leaflet_id;
+    }
+
+    const { lat, lng, zoom, layerType, locked } = state.graphMapConfig || {};
+
+    leafletMapInstance = L.map(mapContainer, {
+      center: [lat || 18.5204, lng || 73.8567],
+      zoom: zoom || 14,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: !locked,
+      scrollWheelZoom: !locked,
+      doubleClickZoom: !locked,
+      boxZoom: !locked,
+      touchZoom: !locked
+    });
+
+    updateLeafletTileLayer(layerType || 'satellite');
+
+    leafletMapInstance.on('moveend', () => {
+      if (!leafletMapInstance) return;
+      const center = leafletMapInstance.getCenter();
+      const curZoom = leafletMapInstance.getZoom();
+      state.graphMapConfig.lat = center.lat;
+      state.graphMapConfig.lng = center.lng;
+      state.graphMapConfig.zoom = curZoom;
+      saveMapConfig(state.graphMapConfig);
+    });
+
+    setTimeout(() => {
+      if (leafletMapInstance) leafletMapInstance.invalidateSize();
+    }, 100);
+  } catch (err) {
+    console.warn('Leaflet map initialization notice:', err);
   }
-
-  const { lat, lng, zoom, layerType, locked } = state.graphMapConfig || {};
-
-  leafletMapInstance = L.map(mapContainer, {
-    center: [lat || 18.5204, lng || 73.8567],
-    zoom: zoom || 14,
-    zoomControl: false,
-    attributionControl: false,
-    dragging: !locked,
-    scrollWheelZoom: !locked,
-    doubleClickZoom: !locked,
-    boxZoom: !locked,
-    touchZoom: !locked
-  });
-
-  updateLeafletTileLayer(layerType || 'satellite');
-
-  leafletMapInstance.on('moveend', () => {
-    if (!leafletMapInstance) return;
-    const center = leafletMapInstance.getCenter();
-    const curZoom = leafletMapInstance.getZoom();
-    state.graphMapConfig.lat = center.lat;
-    state.graphMapConfig.lng = center.lng;
-    state.graphMapConfig.zoom = curZoom;
-    saveMapConfig(state.graphMapConfig);
-  });
-
-  setTimeout(() => {
-    if (leafletMapInstance) leafletMapInstance.invalidateSize();
-  }, 100);
 }
 
 export const objectTypeColors = {
@@ -1190,11 +1197,6 @@ export function renderInvestigationLaunchpad(c) {
     el('div', { class: 'heading-actions' }, [
       el('button', {
         class: 'primary-btn',
-        title: 'Open full connected crime network universe',
-        onclick: () => { showFullGraphUniverse(); showToast('Opened Full Crime Network Graph'); }
-      }, [icon('network'), ' Open Full Graph Canvas']),
-      el('button', {
-        class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
       }, [icon('file'), ' New FIR Intake'])
     ])
