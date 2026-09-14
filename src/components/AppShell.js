@@ -15,11 +15,13 @@ export function renderAppShell(renderCurrentView) {
   const localeChanged = lastRenderedLocale !== state.locale;
   lastRenderedLocale = state.locale;
 
+  const isCanvasActive = state.view === 'network' && state.graphExploration?.active;
+
   if (!shell || localeChanged) {
     root.innerHTML = '';
     const topbar = renderTopbar();
     const sidebar = renderSidebar();
-    const content = el('main', { class: `content ${state.view === 'network' ? 'network-mode' : ''}` }, []);
+    const content = el('main', { class: `content ${isCanvasActive ? 'network-mode' : ''}` }, []);
     shell = el('div', { class: `app-shell ${state.sidebarCollapsed ? 'sidebar-collapsed' : ''}` }, [
       topbar,
       el('div', { class: 'workspace' }, [
@@ -58,7 +60,7 @@ export function renderAppShell(renderCurrentView) {
 
   const content = shell.querySelector('.main-area > .content');
   if (content) {
-    content.className = `content ${state.view === 'network' ? 'network-mode' : ''}`;
+    content.className = `content ${isCanvasActive ? 'network-mode' : ''}`;
     if (viewChanged) {
       content.innerHTML = '';
     }

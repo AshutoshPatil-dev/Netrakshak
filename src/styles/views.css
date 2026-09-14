@@ -214,9 +214,7 @@
 .result-count { margin-left: auto; color: var(--muted); font-size: 11px; }
 
 /* Unified Network Workspace */
-.workspace:has(.network-mode),
 .workspace:has(.network-workspace),
-.main-area:has(.network-mode),
 .main-area:has(.network-workspace) {
   overflow: hidden !important;
   height: 100% !important;
@@ -4030,6 +4028,8 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  max-width: 100%;
+  padding-bottom: 48px;
 }
 
 .launchpad-stats-row {
