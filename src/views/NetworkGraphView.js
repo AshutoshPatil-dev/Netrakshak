@@ -1,6 +1,8 @@
 import Graph from 'graphology';
 import Sigma from 'sigma';
-import { el, icon } from '../lib/dom.js';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { el, icon, escapeHtml } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
 import {
   state,
@@ -17,7 +19,19 @@ import {
   setGraphSeed,
   toggleGraphSeed,
   resetGraphExploration,
-  showFullGraphUniverse,
+  toggleGraphSatelliteMode,
+  setGraphMapLocation,
+  toggleGraphMapLock,
+  isPinLocked,
+  togglePinLock,
+  toggleLockAllPins,
+  setNodeGeoPosition,
+  setGraphMapLayerType,
+  setMapGroupingMode,
+  togglePinSelectionForGrouping,
+  createMarkerGroup,
+  removeMarkerGroup,
+  saveMapConfig,
   openEntityProfile
 } from '../state.js';
 import { graphMetrics } from '../lib/analysis.js';
@@ -27,6 +41,772 @@ import { performAIAnalysis } from './AIAnalysisView.js';
 let sigmaInstance = null;
 let currentGraph = null;
 let lastRenderedGraphSignature = '';
+let leafletMapInstance = null;
+let currentTileLayer = null;
+let currentLabelLayer = null;
+let leafletMarkersGroup = null;
+let leafletEdgesGroup = null;
+
+// Ensure Leaflet map and Sigma canvas adapt smoothly to browser zoom and window resize
+window.addEventListener('resize', () => {
+  if (leafletMapInstance) {
+    try { leafletMapInstance.invalidateSize(); } catch (e) {}
+  }
+  if (sigmaInstance) {
+    try { sigmaInstance.refresh(); } catch (e) {}
+  }
+}, { passive: true });
+
+export const GEO_PRESETS = [
+  { name: 'Pune: Shivajinagar & FC Road', lat: 18.5284, lng: 73.8415, zoom: 15 },
+  { name: 'Pune: Swargate Timber Market', lat: 18.5018, lng: 73.8580, zoom: 15 },
+  { name: 'Pune: Kothrud Paud Road', lat: 18.5074, lng: 73.8077, zoom: 15 },
+  { name: 'Pune: Deccan Gymkhana', lat: 18.5167, lng: 73.8410, zoom: 15 },
+  { name: 'Mumbai: Bandra Kurla Complex (BKC)', lat: 19.0674, lng: 72.8687, zoom: 15 },
+  { name: 'Mumbai: Nariman Point & Fort', lat: 18.9256, lng: 72.8242, zoom: 15 },
+  { name: 'Mumbai: Cyber Station (Bandra)', lat: 19.0596, lng: 72.8295, zoom: 15 },
+  { name: 'Thane: Cyber Sector', lat: 19.2183, lng: 72.9781, zoom: 14 },
+  { name: 'New Delhi: Connaught Place', lat: 28.6315, lng: 77.2167, zoom: 14 },
+  { name: 'Bengaluru: Tech Corridor', lat: 12.9716, lng: 77.5946, zoom: 14 }
+];
+
+export function openGeoSearchModal() {
+  const existing = document.querySelector('.geo-search-modal-overlay');
+  if (existing) existing.remove();
+
+  const overlay = el('div', { class: 'geo-search-modal-overlay' });
+  const closeBtn = el('button', {
+    class: 'geo-search-modal-close',
+    title: 'Close Search',
+    onclick: () => overlay.remove()
+  }, ['✕']);
+
+  const header = el('div', { class: 'geo-search-modal-header' }, [
+    el('div', { class: 'geo-search-modal-title-group' }, [
+      el('h3', { class: 'geo-search-modal-title' }, ['🌍 Search World Location']),
+      el('p', { class: 'geo-search-modal-sub' }, [
+        'Center satellite view on any global city, sector, address, or Latitude, Longitude coordinates.'
+      ])
+    ]),
+    closeBtn
+  ]);
+
+  const searchInput = el('input', {
+    type: 'text',
+    class: 'geo-search-input',
+    placeholder: 'Search places worldwide (e.g. London, Times Square, 28.6139, 77.2090)...',
+    autofocus: true
+  });
+
+  const searchBtn = el('button', {
+    class: 'geo-search-submit-btn',
+    onclick: () => executeSearch()
+  }, ['🔍 Search Location']);
+
+  const searchBar = el('div', { class: 'geo-search-bar-row' }, [
+    searchInput,
+    searchBtn
+  ]);
+
+  const quickCities = [
+    'Pune', 'Mumbai', 'New Delhi', 'Bengaluru', 'Hyderabad',
+    'London', 'Dubai', 'Singapore', 'New York', 'Tokyo'
+  ];
+
+  const suggestionsRow = el('div', { class: 'geo-search-suggestions-row' }, [
+    el('span', { class: 'geo-search-suggestions-label' }, ['Quick Presets:']),
+    ...quickCities.map(city => el('button', {
+      class: 'geo-search-chip',
+      onclick: () => {
+        searchInput.value = city;
+        executeSearch();
+      }
+    }, [city]))
+  ]);
+
+  const resultsContainer = el('div', { class: 'geo-search-results-container' }, [
+    el('div', { class: 'geo-search-empty-hint' }, [
+      'Type any location name or paste coordinates to navigate the satellite map.'
+    ])
+  ]);
+
+  const selectLocation = (lat, lng, name) => {
+    setGraphMapLocation(lat, lng, 15, name);
+    if (leafletMapInstance) {
+      leafletMapInstance.flyTo([lat, lng], 15, { duration: 1.2 });
+    }
+    overlay.remove();
+    showToast(`📍 Satellite centered to: ${name}`);
+  };
+
+  const executeSearch = async () => {
+    const q = (searchInput.value || '').trim();
+    if (!q) return;
+
+    // Check for direct lat/lng coordinates (e.g., "18.5204, 73.8567" or "18.5204 73.8567")
+    const coordMatch = q.match(/^([-+]?\d+(\.\d+)?)[,\s]+([-+]?\d+(\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[3]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        resultsContainer.innerHTML = '';
+        const card = el('div', {
+          class: 'geo-search-result-item coordinate-match',
+          onclick: () => selectLocation(lat, lng, `Coordinates (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)`)
+        }, [
+          el('div', { class: 'geo-result-icon' }, ['📍']),
+          el('div', { class: 'geo-result-info' }, [
+            el('div', { class: 'geo-result-name' }, [`Direct Coordinates: ${lat.toFixed(5)}°, ${lng.toFixed(5)}°`]),
+            el('div', { class: 'geo-result-address' }, ['Click to fly satellite camera to these exact global coordinates'])
+          ]),
+          el('div', { class: 'geo-result-badge' }, ['GO ➔'])
+        ]);
+        resultsContainer.append(card);
+        return;
+      }
+    }
+
+    resultsContainer.innerHTML = '';
+    const loadingEl = el('div', { class: 'geo-search-loading' }, [
+      el('span', { class: 'geo-spinner' }, []),
+      el('span', {}, ['Searching global OpenStreetMap registry...'])
+    ]);
+    resultsContainer.append(loadingEl);
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6&addressdetails=1`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error('Search network error');
+      const data = await res.json();
+      resultsContainer.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        resultsContainer.append(el('div', { class: 'geo-search-empty-hint' }, [
+          `No places found matching "${q}". Try a broader city, district, or landmark name.`
+        ]));
+        return;
+      }
+
+      data.forEach(item => {
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
+        const parts = (item.display_name || '').split(',').map(s => s.trim());
+        const primaryName = parts[0] || item.name || 'Location';
+        const address = parts.slice(1).join(', ') || 'Global Region';
+
+        const itemCard = el('div', {
+          class: 'geo-search-result-item',
+          onclick: () => selectLocation(lat, lng, primaryName)
+        }, [
+          el('div', { class: 'geo-result-icon' }, ['🌐']),
+          el('div', { class: 'geo-result-info' }, [
+            el('div', { class: 'geo-result-name' }, [primaryName]),
+            el('div', { class: 'geo-result-address' }, [address]),
+            el('div', { class: 'geo-result-coords' }, [`Lat: ${lat.toFixed(4)}°, Lng: ${lng.toFixed(4)}°`])
+          ]),
+          el('div', { class: 'geo-result-badge' }, ['Fly To ➔'])
+        ]);
+        resultsContainer.append(itemCard);
+      });
+    } catch (err) {
+      resultsContainer.innerHTML = '';
+      resultsContainer.append(el('div', { class: 'geo-search-error-hint' }, [
+        'Could not reach global geocoder. You can also paste exact coordinates (e.g. 18.5204, 73.8567) to jump immediately.'
+      ]));
+    }
+  };
+
+  searchInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSearch();
+    }
+  };
+
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+
+  const dialog = el('div', { class: 'geo-search-modal-card' }, [
+    header,
+    searchBar,
+    suggestionsRow,
+    resultsContainer
+  ]);
+
+  overlay.append(dialog);
+  document.body.append(overlay);
+
+  setTimeout(() => searchInput.focus(), 50);
+}
+
+export function updateLeafletTileLayer(layerType) {
+  if (!leafletMapInstance) return;
+
+  if (currentTileLayer) {
+    leafletMapInstance.removeLayer(currentTileLayer);
+    currentTileLayer = null;
+  }
+  if (currentLabelLayer) {
+    leafletMapInstance.removeLayer(currentLabelLayer);
+    currentLabelLayer = null;
+  }
+
+  if (layerType === 'streets') {
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(leafletMapInstance);
+  } else if (layerType === 'hybrid') {
+    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }).addTo(leafletMapInstance);
+    currentLabelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19
+    }).addTo(leafletMapInstance);
+  } else {
+    // default: satellite
+    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }).addTo(leafletMapInstance);
+  }
+}
+
+export function applyMapLockState() {
+  if (!leafletMapInstance) return;
+  const isLocked = !!state.graphMapConfig?.locked;
+  if (isLocked) {
+    leafletMapInstance.dragging?.disable();
+    leafletMapInstance.scrollWheelZoom?.disable();
+    leafletMapInstance.touchZoom?.disable();
+  } else {
+    leafletMapInstance.dragging?.enable();
+    leafletMapInstance.scrollWheelZoom?.enable();
+    leafletMapInstance.touchZoom?.enable();
+  }
+}
+
+export function renderSatelliteMapPins(visibleNodes) {
+  if (!leafletMapInstance || !visibleNodes || visibleNodes.length === 0) return;
+
+  if (leafletMarkersGroup) {
+    leafletMarkersGroup.clearLayers();
+  } else {
+    leafletMarkersGroup = L.layerGroup().addTo(leafletMapInstance);
+  }
+
+  if (leafletEdgesGroup) {
+    leafletEdgesGroup.clearLayers();
+  } else {
+    leafletEdgesGroup = L.layerGroup().addTo(leafletMapInstance);
+  }
+
+  const visibleIds = new Set(visibleNodes.map(n => n.id));
+  const mapCenter = leafletMapInstance.getCenter();
+  const baseLat = mapCenter.lat || state.graphMapConfig.lat || 18.5204;
+  const baseLng = mapCenter.lng || state.graphMapConfig.lng || 73.8567;
+
+  if (!state.graphMapConfig.nodeGeoPositions) {
+    state.graphMapConfig.nodeGeoPositions = {};
+  }
+
+  // 1. Ensure all visible nodes have valid geo positions first
+  visibleNodes.forEach((entity) => {
+    let geo = state.graphMapConfig.nodeGeoPositions[entity.id];
+    if (!geo || typeof geo.lat !== 'number' || typeof geo.lng !== 'number') {
+      if (entity.identifiers?.lat && entity.identifiers?.lng) {
+        geo = { lat: entity.identifiers.lat, lng: entity.identifiers.lng };
+      } else {
+        const seedId = state.graphExploration?.seedId;
+        const isSeed = entity.id === seedId;
+        if (isSeed) {
+          geo = { lat: baseLat, lng: baseLng };
+        } else {
+          const others = visibleNodes.filter(n => n.id !== seedId);
+          const posIdx = Math.max(0, others.findIndex(n => n.id === entity.id));
+          const total = Math.max(others.length, 1);
+          const angle = (posIdx / total) * Math.PI * 2;
+          const radius = 0.005 + (posIdx % 2) * 0.0035;
+          geo = {
+            lat: baseLat + Math.sin(angle) * radius,
+            lng: baseLng + Math.cos(angle) * radius * 1.15
+          };
+        }
+      }
+      state.graphMapConfig.nodeGeoPositions[entity.id] = geo;
+    }
+  });
+
+  const markersMap = new Map();
+  const nodePolylinesMap = new Map();
+  const isGroupingMode = !!state.graphMapConfig?.groupingMode;
+  const selectedForGroup = new Set(state.graphMapConfig?.selectedForGrouping || []);
+  const rawGroups = state.graphMapConfig?.markerGroups || [];
+  const activeGroups = [];
+  const groupedNodeIdSet = new Set();
+
+  rawGroups.forEach(grp => {
+    const members = (grp.nodeIds || []).map(id => visibleNodes.find(n => n.id === id)).filter(Boolean);
+    if (members.length >= 2) {
+      activeGroups.push({ group: grp, members });
+      members.forEach(m => groupedNodeIdSet.add(m.id));
+    }
+  });
+
+  const ungroupedNodes = visibleNodes.filter(n => !groupedNodeIdSet.has(n.id));
+
+  // Helper to live-update all connected lines for a list of node IDs
+  const updateConnectedPolylines = (nodeIds) => {
+    const seen = new Set();
+    nodeIds.forEach(id => {
+      const items = nodePolylinesMap.get(id);
+      if (items) {
+        items.forEach(item => {
+          if (seen.has(item)) return;
+          seen.add(item);
+          const p1 = state.graphMapConfig.nodeGeoPositions[item.source];
+          const p2 = state.graphMapConfig.nodeGeoPositions[item.target];
+          if (p1 && p2 && item.polyline) {
+            item.polyline.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
+          }
+        });
+      }
+    });
+  };
+
+  // 2. Render Active Groups (Stepped Overlapping Heads & Combined Info Pill)
+  activeGroups.forEach(({ group, members }) => {
+    let gLat = group.lat;
+    let gLng = group.lng;
+    if (typeof gLat !== 'number' || typeof gLng !== 'number') {
+      const firstGeo = state.graphMapConfig.nodeGeoPositions[members[0].id];
+      gLat = firstGeo?.lat || baseLat;
+      gLng = firstGeo?.lng || baseLng;
+      group.lat = gLat;
+      group.lng = gLng;
+    }
+
+    // Synchronize all member entity coordinates to group anchor
+    members.forEach(m => {
+      state.graphMapConfig.nodeGeoPositions[m.id] = { lat: gLat, lng: gLng };
+    });
+
+    const isAnyMemberSelected = members.some(m => m.id === state.selected);
+    const isGroupLocked = members.every(m => isPinLocked(m.id)) || !!state.graphMapConfig?.pinsLockedAll;
+    const headsWidth = (members.length - 1) * 18 + 28;
+    const iconWidth = Math.max(headsWidth + 16, 150);
+    const iconHeight = 44 + members.length * 20;
+    const anchorX = iconWidth / 2;
+    const anchorY = 32;
+
+    const groupHtml = `
+      <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}">
+        <div class="pin-group-heads-container" style="width: ${headsWidth}px;">
+          ${members.map((m, idx) => {
+            const mColor = objectTypeColors[m.type] || '#1E293B';
+            const mIcon = objectTypeIcons[m.type] || 'shield';
+            const isSel = state.selected === m.id;
+            return `
+              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 18}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag to move group)">
+                <span class="pin-icon">${icon(mIcon)}</span>
+                <span class="pin-risk-dot ${m.risk || 'low'}"></span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="pin-needle group-needle"></div>
+        <div class="pin-shadow group-shadow"></div>
+        <div class="pin-group-combined-pill">
+          <div class="pin-group-pill-header">
+            <span class="pin-group-count-badge">👥 ${members.length} Grouped</span>
+            <button class="pin-ungroup-btn" data-group-id="${group.id}" title="Ungroup these pins">✕ Ungroup</button>
+          </div>
+          <div class="pin-group-members-list">
+            ${members.map(m => {
+              const mColor = objectTypeColors[m.type] || '#38BDF8';
+              const isSel = state.selected === m.id;
+              const mLocked = isPinLocked(m.id);
+              const safeName = escapeHtml(m.name);
+              const safeType = escapeHtml(m.type);
+              return `
+                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}" title="Click to inspect ${safeName}">
+                  <span class="pin-member-type-tag" style="color: ${mColor};">${safeType}</span>
+                  <span class="pin-member-name-text">${safeName}</span>
+                  <button class="pin-lock-badge-btn" data-node-id="${m.id}" title="${mLocked ? 'Pin locked' : 'Pin draggable'}">${mLocked ? '🔒' : '🔓'}</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const groupIcon = L.divIcon({
+      className: 'map-pin-group-div-icon',
+      html: groupHtml,
+      iconSize: [iconWidth, iconHeight],
+      iconAnchor: [anchorX, anchorY],
+      popupAnchor: [0, -36]
+    });
+
+    let isDraggingGroup = false;
+    const marker = L.marker([gLat, gLng], {
+      icon: groupIcon,
+      draggable: !isGroupLocked,
+      zIndexOffset: isAnyMemberSelected ? 1200 : 300
+    });
+
+    marker.on('dragstart', () => {
+      isDraggingGroup = true;
+    });
+
+    marker.on('drag', () => {
+      const curPos = marker.getLatLng();
+      group.lat = curPos.lat;
+      group.lng = curPos.lng;
+      members.forEach(m => {
+        state.graphMapConfig.nodeGeoPositions[m.id] = { lat: curPos.lat, lng: curPos.lng };
+      });
+      updateConnectedPolylines(members.map(m => m.id));
+    });
+
+    marker.on('dragend', () => {
+      const curPos = marker.getLatLng();
+      group.lat = curPos.lat;
+      group.lng = curPos.lng;
+      members.forEach(m => {
+        setNodeGeoPosition(m.id, curPos.lat, curPos.lng);
+      });
+      saveMapConfig(state.graphMapConfig);
+      showToast(`📍 Moved group (${members.length} pins)`);
+      setTimeout(() => { isDraggingGroup = false; }, 80);
+    });
+
+    marker.addTo(leafletMarkersGroup);
+
+    // Event delegation for internal buttons & member clicks
+    requestAnimationFrame(() => {
+      const mEl = marker.getElement();
+      if (mEl) {
+        // Ungroup button
+        const ungroupBtn = mEl.querySelector('.pin-ungroup-btn');
+        if (ungroupBtn) {
+          ungroupBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeMarkerGroup(group.id);
+            showToast('Ungrouped pins');
+          };
+        }
+
+        // Lock buttons
+        const lockBtns = mEl.querySelectorAll('.pin-lock-badge-btn');
+        lockBtns.forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const nid = btn.getAttribute('data-node-id');
+            if (nid) {
+              togglePinLock(nid);
+              showToast(isPinLocked(nid) ? '🔒 Locked pin' : '🔓 Unlocked pin');
+            }
+          };
+        });
+
+        // Member head & row clicks (only fires if not actively dragging)
+        const clickableItems = mEl.querySelectorAll('[data-node-id]');
+        clickableItems.forEach(item => {
+          item.onclick = (e) => {
+            if (isDraggingGroup) return;
+            if (e.target.closest('.pin-lock-badge-btn') || e.target.closest('.pin-ungroup-btn')) return;
+            e.stopPropagation();
+            const nid = item.getAttribute('data-node-id');
+            if (nid) {
+              state.selected = nid;
+              notifyStateChange();
+              const ent = members.find(m => m.id === nid);
+              if (ent) showToast(`Selected ${ent.name}`);
+            }
+          };
+          item.ondblclick = (e) => {
+            if (isDraggingGroup) return;
+            e.stopPropagation();
+            const nid = item.getAttribute('data-node-id');
+            if (nid) openEntityProfile(nid);
+          };
+        });
+      }
+    });
+  });
+
+  // 3. Render Ungrouped Individual Pins
+  ungroupedNodes.forEach((entity) => {
+    const geo = state.graphMapConfig.nodeGeoPositions[entity.id];
+    const nodeLocked = isPinLocked(entity.id);
+    const typeColor = objectTypeColors[entity.type] || '#1E293B';
+    const typeIcon = objectTypeIcons[entity.type] || 'shield';
+    const isSelected = state.selected === entity.id;
+    const isSeed = state.graphExploration?.seedId === entity.id;
+    const isCheckedForGroup = selectedForGroup.has(entity.id);
+    const allLinks = getConnectedLinks(entity.id);
+    const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
+
+    // Pin HTML
+    const pinHtml = `
+      <div class="map-tactical-pin ${isSelected ? 'selected' : ''} ${isSeed ? 'seed' : ''} ${nodeLocked ? 'locked' : 'draggable'} ${isGroupingMode ? 'grouping-selectable' : ''} ${isCheckedForGroup ? 'selected-for-group' : ''}">
+        ${isGroupingMode ? `<div class="pin-group-select-badge ${isCheckedForGroup ? 'checked' : ''}">${isCheckedForGroup ? '✓' : '+'}</div>` : ''}
+        <div class="pin-circle" style="background: ${typeColor};">
+          <span class="pin-icon">${icon(typeIcon)}</span>
+          ${unexploredCount > 0 ? `<span class="pin-badge">+${unexploredCount}</span>` : ''}
+          <span class="pin-risk-dot ${entity.risk || 'low'}"></span>
+        </div>
+        <div class="pin-needle" style="border-top-color: ${typeColor};"></div>
+        <div class="pin-shadow"></div>
+        <div class="pin-label-pill">
+          <span class="pin-label-type">${escapeHtml(entity.type)}</span>
+          <span class="pin-label-name">${escapeHtml(entity.name)}</span>
+          ${!isGroupingMode ? `
+            <button class="pin-lock-badge-btn" data-node-id="${entity.id}" title="${nodeLocked ? 'Pin locked in place. Click to unlock & drag' : 'Pin draggable. Click to lock in place'}">
+              ${nodeLocked ? '🔒' : '🔓'}
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
+    const customIcon = L.divIcon({
+      className: 'map-pin-div-icon',
+      html: pinHtml,
+      iconSize: [32, 42],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34]
+    });
+
+    let isDraggingPin = false;
+    const marker = L.marker([geo.lat, geo.lng], {
+      icon: customIcon,
+      draggable: !nodeLocked && !isGroupingMode,
+      zIndexOffset: isSelected ? 1000 : (isSeed ? 500 : 100)
+    });
+
+    marker.on('dragstart', () => {
+      isDraggingPin = true;
+    });
+
+    marker.on('drag', () => {
+      const curPos = marker.getLatLng();
+      state.graphMapConfig.nodeGeoPositions[entity.id] = { lat: curPos.lat, lng: curPos.lng };
+      updateConnectedPolylines([entity.id]);
+    });
+
+    marker.on('dragend', () => {
+      const curPos = marker.getLatLng();
+      setNodeGeoPosition(entity.id, curPos.lat, curPos.lng);
+      showToast(`📍 Pinned ${entity.name}`);
+      setTimeout(() => { isDraggingPin = false; }, 80);
+    });
+
+    marker.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (isDraggingPin) return;
+      if (isGroupingMode) {
+        togglePinSelectionForGrouping(entity.id);
+        const count = (state.graphMapConfig.selectedForGrouping || []).length;
+        showToast(`${isCheckedForGroup ? 'Deselected' : 'Selected'} ${entity.name} (${count} selected)`);
+        return;
+      }
+      state.selected = entity.id;
+      notifyStateChange();
+      showToast(`Selected ${entity.name}`);
+    });
+
+    marker.on('dblclick', (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (!isGroupingMode && !isDraggingPin) {
+        openEntityProfile(entity.id);
+      }
+    });
+
+    // Tooltip integration
+    marker.on('mouseover', () => {
+      if (isGroupingMode || isDraggingPin) return;
+      let tooltipEl = document.getElementById('graphNodeTooltip');
+      if (!tooltipEl) return;
+
+      const summary = getEntityHoverSummary(entity);
+      const links = getConnectedLinks(entity.id);
+
+      tooltipEl.innerHTML = `
+        <div class="tooltip-header">
+          <span class="tooltip-type-pill" style="background:${typeColor}15;color:${typeColor};border-color:${typeColor}40">
+            ${icon(typeIcon)} ${entity.type}
+          </span>
+          <span class="tooltip-risk-badge ${entity.risk || 'low'}">${(entity.risk || 'LOW').toUpperCase()} RISK</span>
+        </div>
+        <h4 class="tooltip-title">${entity.name}</h4>
+        <p class="tooltip-summary">${summary}</p>
+        <div class="tooltip-footer">
+          <span class="tooltip-links-count">${icon('pulse')} ${links.length} Connected Links</span>
+          <span class="tooltip-action-hint">${nodeLocked ? '🔒 Location locked · Click to inspect' : '📍 Drag pin to place · Click to inspect'}</span>
+        </div>
+      `;
+
+      const pt = leafletMapInstance.latLngToContainerPoint(marker.getLatLng());
+      const tipWidth = 280;
+      let posX = pt.x + 24;
+      let posY = pt.y - 60;
+      if (posX + tipWidth > window.innerWidth - 380) posX = pt.x - tipWidth - 24;
+      if (posY < 10) posY = 10;
+      tooltipEl.style.transform = `translate(${posX}px, ${posY}px)`;
+      tooltipEl.classList.add('visible');
+    });
+
+    marker.on('mouseout', () => {
+      const tooltipEl = document.getElementById('graphNodeTooltip');
+      if (tooltipEl) tooltipEl.classList.remove('visible');
+    });
+
+    marker.addTo(leafletMarkersGroup);
+    markersMap.set(entity.id, marker);
+
+    // Attach click event for per-pin lock toggle button
+    requestAnimationFrame(() => {
+      const mEl = marker.getElement();
+      if (mEl) {
+        const lockBtn = mEl.querySelector('.pin-lock-badge-btn');
+        if (lockBtn) {
+          lockBtn.onclick = (e) => {
+            e.stopPropagation();
+            togglePinLock(entity.id);
+            showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
+          };
+        }
+      }
+    });
+  });
+
+  // 4. Render Polylines for edges between visible nodes
+  edges.forEach(edge => {
+    const source = edge[0];
+    const target = edge[1];
+    const label = edge[2] || '';
+    if (visibleIds.has(source) && visibleIds.has(target)) {
+      const p1 = state.graphMapConfig.nodeGeoPositions[source];
+      const p2 = state.graphMapConfig.nodeGeoPositions[target];
+      if (p1 && p2) {
+        // Skip self-loop or zero-distance intra-group lines
+        if (p1.lat === p2.lat && p1.lng === p2.lng) {
+          return;
+        }
+
+        const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+        const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
+          color: isConnectedToSelected ? '#38BDF8' : '#94A3B8',
+          weight: isConnectedToSelected ? 3.5 : 2,
+          opacity: isConnectedToSelected ? 1 : 0.75,
+          dashArray: isConnectedToSelected ? null : '6, 6'
+        });
+
+        if (label) {
+          polyline.bindTooltip(label, {
+            permanent: false,
+            direction: 'center',
+            className: 'tactical-edge-tooltip'
+          });
+        }
+
+        polyline.addTo(leafletEdgesGroup);
+
+        const edgeEntry = { polyline, source, target };
+        if (!nodePolylinesMap.has(source)) nodePolylinesMap.set(source, new Set());
+        if (!nodePolylinesMap.has(target)) nodePolylinesMap.set(target, new Set());
+        nodePolylinesMap.get(source).add(edgeEntry);
+        nodePolylinesMap.get(target).add(edgeEntry);
+      }
+    }
+  });
+}
+
+export function mountLeafletMap(visibleNodes) {
+  const mapContainer = document.getElementById('graph-leaflet-map');
+  if (!mapContainer) return;
+
+  try {
+    if (leafletMapInstance) {
+      if (leafletMarkersGroup) {
+        try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+        leafletMarkersGroup = null;
+      }
+      if (leafletEdgesGroup) {
+        try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+        leafletEdgesGroup = null;
+      }
+      try { leafletMapInstance.remove(); } catch (e) {}
+      leafletMapInstance = null;
+    }
+    if (mapContainer._leaflet_id) {
+      delete mapContainer._leaflet_id;
+    }
+
+    const { lat, lng, zoom, layerType } = state.graphMapConfig || {};
+
+    leafletMapInstance = L.map(mapContainer, {
+      center: [lat || 18.5204, lng || 73.8567],
+      zoom: zoom || 14,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: false,
+      boxZoom: true,
+      touchZoom: true,
+      wheelDebounceTime: 30,
+      wheelPxPerZoomLevel: 50
+    });
+
+    applyMapLockState();
+
+    updateLeafletTileLayer(layerType || 'satellite');
+
+    if (visibleNodes && visibleNodes.length > 0) {
+      renderSatelliteMapPins(visibleNodes);
+    }
+
+    // Prevent container scrolling or upward jump on focus
+    mapContainer.addEventListener('mousedown', () => {
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) {
+        mainArea.scrollTop = 0;
+      }
+    }, { capture: true, passive: true });
+
+    mapContainer.addEventListener('touchstart', () => {
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) {
+        mainArea.scrollTop = 0;
+      }
+    }, { capture: true, passive: true });
+
+    leafletMapInstance.on('moveend', () => {
+      if (!leafletMapInstance) return;
+      const center = leafletMapInstance.getCenter();
+      const curZoom = leafletMapInstance.getZoom();
+      state.graphMapConfig.lat = center.lat;
+      state.graphMapConfig.lng = center.lng;
+      state.graphMapConfig.zoom = curZoom;
+      saveMapConfig(state.graphMapConfig);
+    });
+
+    setTimeout(() => {
+      if (leafletMapInstance) leafletMapInstance.invalidateSize();
+      const mainArea = document.querySelector('.main-area');
+      if (mainArea && mainArea.scrollTop !== 0) mainArea.scrollTop = 0;
+    }, 50);
+  } catch (err) {
+    console.warn('Leaflet map initialization notice:', err);
+  }
+}
 
 export const objectTypeColors = {
   Person: '#1E293B',
@@ -121,9 +901,13 @@ export function getConnectedLinks(entityId) {
   return links;
 }
 
+
 export function graphContainer(visibleNodes) {
+  const isSat = !!state.graphSatelliteMode;
+  const isLocked = !!state.graphMapConfig?.locked;
+
   if (visibleNodes.length === 0) {
-    return el('div', { class: 'sigma-container empty-graph-shell' }, [
+    return el('div', { class: `sigma-container empty-graph-shell ${isSat ? 'satellite-active' : ''}` }, [
       el('div', { class: 'empty-shell-content' }, [
         el('span', { class: 'empty-shell-icon' }, [icon('network')]),
         el('strong', {}, ['No Entities in Active Exploration']),
@@ -131,7 +915,10 @@ export function graphContainer(visibleNodes) {
       ])
     ]);
   }
-  return el('div', { class: 'sigma-container', 'data-graph-count': String(visibleNodes.length) }, [
+  return el('div', {
+    class: `sigma-container ${isSat ? 'satellite-active' : ''} ${isSat && !isLocked ? 'map-nav-mode' : ''}`,
+    'data-graph-count': String(visibleNodes.length)
+  }, [
     el('div', { class: 'graph-node-tooltip', id: 'graphNodeTooltip' })
   ]);
 }
@@ -144,7 +931,36 @@ export function mountSigma(visibleNodes) {
       sigmaInstance = null;
       currentGraph = null;
     }
+    if (leafletMapInstance) {
+      if (leafletMarkersGroup) {
+        try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+        leafletMarkersGroup = null;
+      }
+      if (leafletEdgesGroup) {
+        try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+        leafletEdgesGroup = null;
+      }
+      try { leafletMapInstance.remove(); } catch (e) {}
+      leafletMapInstance = null;
+    }
     return;
+  }
+
+  const isSat = !!state.graphSatelliteMode;
+  if (isSat) {
+    mountLeafletMap(visibleNodes);
+    return;
+  } else if (leafletMapInstance) {
+    if (leafletMarkersGroup) {
+      try { leafletMapInstance.removeLayer(leafletMarkersGroup); } catch (e) {}
+      leafletMarkersGroup = null;
+    }
+    if (leafletEdgesGroup) {
+      try { leafletMapInstance.removeLayer(leafletEdgesGroup); } catch (e) {}
+      leafletEdgesGroup = null;
+    }
+    try { leafletMapInstance.remove(); } catch (e) {}
+    leafletMapInstance = null;
   }
 
   const seedId = state.graphExploration?.seedId;
@@ -164,7 +980,7 @@ export function mountSigma(visibleNodes) {
     visibleNodes.forEach((entity, index) => {
       const isSeed = entity.id === seedId;
       const isSelected = state.selected === entity.id;
-      const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || '#1E293B';
+      const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || (isSat ? '#38BDF8' : '#1E293B');
       const allLinks = getConnectedLinks(entity.id);
       const unexploredCount = allLinks.filter(l => !visibleIds.has(l.partner.id)).length;
 
@@ -181,7 +997,7 @@ export function mountSigma(visibleNodes) {
         currentGraph.mergeNodeAttributes(entity.id, {
           label: nodeLabel,
           size: nodeSize,
-          color: isSelected ? '#2563EB' : nodeColor,
+          color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
           isSeed,
           isSelected,
           unexploredCount
@@ -215,7 +1031,7 @@ export function mountSigma(visibleNodes) {
           x,
           y,
           size: nodeSize,
-          color: isSelected ? '#2563EB' : nodeColor,
+          color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
           risk: entity.risk,
           entityId: entity.id,
           entityType: entity.type,
@@ -233,16 +1049,18 @@ export function mountSigma(visibleNodes) {
       const label = edge[2] || '';
       if (visibleIds.has(source) && visibleIds.has(target)) {
         const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+        const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
+        const defaultEdgeColor = isSat ? '#94A3B8' : '#CBD5E1';
         if (!currentGraph.hasEdge(source, target)) {
           currentGraph.addEdge(source, target, {
-            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
             size: isConnectedToSelected ? 2.5 : 1.2,
             type: 'line',
             label
           });
         } else {
           currentGraph.mergeEdgeAttributes(source, target, {
-            color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+            color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
             size: isConnectedToSelected ? 2.5 : 1.2
           });
         }
@@ -261,7 +1079,7 @@ export function mountSigma(visibleNodes) {
   visibleNodes.forEach((entity, index) => {
     const isSeed = entity.id === seedId;
     const isSelected = state.selected === entity.id;
-    const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || '#1E293B';
+    const nodeColor = objectTypeColors[entity.type] || riskColor[entity.risk] || (isSat ? '#38BDF8' : '#1E293B');
 
     let x = 0;
     let y = 0;
@@ -304,7 +1122,7 @@ export function mountSigma(visibleNodes) {
       x,
       y,
       size: nodeSize,
-      color: isSelected ? '#2563EB' : nodeColor,
+      color: isSelected ? (isSat ? '#38BDF8' : '#2563EB') : nodeColor,
       risk: entity.risk,
       entityId: entity.id,
       entityType: entity.type,
@@ -320,8 +1138,10 @@ export function mountSigma(visibleNodes) {
     const label = edge[2] || '';
     if (visibleIds.has(source) && visibleIds.has(target) && !graph.hasEdge(source, target)) {
       const isConnectedToSelected = state.selected && (source === state.selected || target === state.selected);
+      const activeEdgeColor = isSat ? '#38BDF8' : '#2563EB';
+      const defaultEdgeColor = isSat ? '#94A3B8' : '#CBD5E1';
       graph.addEdge(source, target, {
-        color: isConnectedToSelected ? '#2563EB' : '#94A3B8',
+        color: isConnectedToSelected ? activeEdgeColor : defaultEdgeColor,
         size: isConnectedToSelected ? 2.5 : 1.2,
         type: 'line',
         label
@@ -333,9 +1153,9 @@ export function mountSigma(visibleNodes) {
     renderLabels: true,
     labelFont: 'Inter, system-ui, sans-serif',
     labelSize: 11,
-    labelColor: { color: '#0F172A' },
-    defaultNodeColor: '#1E293B',
-    defaultEdgeColor: '#CBD5E1',
+    labelColor: { color: isSat ? '#FFFFFF' : '#0F172A' },
+    defaultNodeColor: isSat ? '#38BDF8' : '#1E293B',
+    defaultEdgeColor: isSat ? '#94A3B8' : '#CBD5E1',
     minCameraRatio: 0.15,
     maxCameraRatio: 5,
     allowInvalidContainer: true
@@ -520,7 +1340,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
     el('div', { class: 'inspector-title-row' }, [
       el('div', { class: 'inspector-title-wrap' }, [
         icon('shield'),
-        el('span', { class: 'inspector-title' }, ['Intelligence Inspector'])
+        el('span', { class: 'inspector-title' }, [t('intelligenceInspector')])
       ]),
       entity ? el('span', { class: 'inspector-live-dot', title: 'Target locked' }, ['● ACTIVE']) : null
     ].filter(Boolean)),
@@ -528,15 +1348,15 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'dossier' ? 'active' : ''}`,
         onclick: () => setTab('dossier')
-      }, [icon('user'), ' Dossier']),
+      }, [icon('user'), ` ${t('dossier')}`]),
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'links' ? 'active' : ''}`,
         onclick: () => setTab('links')
-      }, [icon('network'), ` Links (${connectedLinks.length})`]),
+      }, [icon('network'), ` ${t('links')} (${connectedLinks.length})`]),
       el('button', {
         class: `inspector-tab-btn ${currentTab === 'directory' ? 'active' : ''}`,
         onclick: () => setTab('directory')
-      }, [icon('grid'), ` Directory (${allEntities.length})`])
+      }, [icon('grid'), ` ${t('directory')} (${allEntities.length})`])
     ])
   ]);
 
@@ -546,8 +1366,8 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
     if (!entity) {
       tabBody = el('div', { class: 'inspector-empty-state' }, [
         el('div', { class: 'inspector-empty-icon' }, [icon('network')]),
-        el('h4', {}, ['No Entity Selected']),
-        el('p', { class: 'muted' }, ['Click any node on the network graph or select from the directory to inspect situational intelligence.'])
+        el('h4', {}, [t('noResults')]),
+        el('p', { class: 'muted' }, [t('clickEntityToGenerate')])
       ]);
     } else {
       const typeColor = objectTypeColors[entity.type] || '#1E293B';
@@ -563,7 +1383,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
           el('div', { class: 'inspector-hero-main' }, [
             el('div', { class: 'inspector-pill-row' }, [
               el('span', { class: 'inspector-type-pill', style: `background:${typeColor}15;color:${typeColor}` }, [entity.type]),
-              el('span', { class: `risk-badge ${entity.risk || 'low'}` }, [`${(entity.risk || 'LOW').toUpperCase()} RISK`])
+              el('span', { class: `risk-badge ${entity.risk || 'low'}` }, [`${(entity.risk || 'LOW').toUpperCase()} ${t('risk').toUpperCase()}`])
             ].filter(Boolean)),
             el('h3', { class: 'inspector-entity-name' }, [entity.name]),
             el('p', { class: 'inspector-entity-sub' }, [entity.role || entity.local || `${entity.type} Record`])
@@ -574,7 +1394,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
         el('div', { class: 'inspector-sitrep-box' }, [
           el('div', { class: 'sitrep-header' }, [
             icon('sparkle'),
-            el('strong', {}, ['Situational Summary:'])
+            el('strong', {}, [t('situationalSummary')])
           ]),
           el('p', { class: 'sitrep-text' }, [summaryText])
         ]),
@@ -582,15 +1402,15 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
         // Quick Stats
         el('div', { class: 'inspector-stats-row' }, [
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Direct Links']),
+            el('span', { class: 'stat-lbl' }, [t('directLinks')]),
             el('strong', { class: 'stat-val' }, [String(connectedLinks.length)])
           ]),
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Activity Rank']),
+            el('span', { class: 'stat-lbl' }, [t('activityRank')]),
             el('strong', { class: 'stat-val' }, [`${entity.recent || 50}%`])
           ]),
           el('div', { class: 'inspector-stat-cell' }, [
-            el('span', { class: 'stat-lbl' }, ['Risk Level']),
+            el('span', { class: 'stat-lbl' }, [t('riskLevel')]),
             el('strong', { class: `stat-val risk-${entity.risk || 'low'}` }, [(entity.risk || 'LOW').toUpperCase()])
           ])
         ]),
@@ -604,7 +1424,7 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
               openEntityProfile(entity.id);
               showToast(`Opening profile for ${entity.name}`);
             }
-          }, [icon('user'), ' Full Profile →']),
+          }, [icon('user'), ` ${t('fullProfile')} →`]),
           el('button', {
             class: 'inspector-action-btn',
             title: 'Scan AI linkages and syndicate patterns',
@@ -618,6 +1438,25 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
               showToast(`Scanning linkages for ${entity.name}...`);
             }
           }, [icon('sparkle'), ' AI Scan']),
+          state.graphSatelliteMode ? el('button', {
+            class: `inspector-action-btn ${isPinLocked(entity.id) ? 'btn-pin-locked' : 'btn-pin-unlocked'}`,
+            title: isPinLocked(entity.id) ? 'Pin is locked in place. Click to allow dragging.' : 'Pin can be dragged to any location. Click to lock in place.',
+            onclick: () => {
+              togglePinLock(entity.id);
+              showToast(isPinLocked(entity.id) ? `🔒 ${entity.name} locked on map` : `🔓 ${entity.name} unlocked (draggable)`);
+            }
+          }, [isPinLocked(entity.id) ? '🔒 Pin: Locked' : '🔓 Pin: Moveable']) : null,
+          state.graphSatelliteMode ? el('button', {
+            class: 'inspector-action-btn',
+            title: 'Center satellite map view on this pinned entity',
+            onclick: () => {
+              const geo = state.graphMapConfig?.nodeGeoPositions?.[entity.id];
+              if (geo && leafletMapInstance) {
+                leafletMapInstance.flyTo([geo.lat, geo.lng], 16, { duration: 0.8 });
+                showToast(`Centered map on ${entity.name}`);
+              }
+            }
+          }, [icon('network'), ' 📍 Focus Pin']) : null,
           isExpanded ? el('button', {
             class: 'inspector-action-btn',
             title: 'Collapse 1-hop branch',
@@ -638,13 +1477,28 @@ export function renderGraphInspector(entity, allEntities, visibleIds) {
 
       // Evidence & Identifiers
       const idEntries = [];
+      const ignoredKeys = new Set(['imageurl', 'image_url', 'photo', 'avatar', 'accusedimage', 'accused_image', 'lat', 'lng']);
+      const addedKeys = new Set();
+
       if (entity.identifiers) {
         Object.entries(entity.identifiers).forEach(([k, v]) => {
-          if (v) idEntries.push([k, String(v)]);
+          const lowerK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (ignoredKeys.has(lowerK)) return;
+          if (typeof v === 'string' && (v.startsWith('data:image') || v.startsWith('http') && v.match(/\.(png|jpg|jpeg|svg|webp)/i))) return;
+          if (v && !addedKeys.has(lowerK)) {
+            addedKeys.add(lowerK);
+            idEntries.push([k, String(v)]);
+          }
         });
       }
-      if (entity.phone) idEntries.push(['Contact / Phone', entity.phone]);
-      if (entity.city) idEntries.push(['Police Jurisdiction', entity.city]);
+      if (entity.phone && !addedKeys.has('phone') && !addedKeys.has('contactphone')) {
+        addedKeys.add('phone');
+        idEntries.push(['Contact / Phone', entity.phone]);
+      }
+      if (entity.city && !addedKeys.has('city') && !addedKeys.has('policejurisdiction')) {
+        addedKeys.add('city');
+        idEntries.push(['Police Jurisdiction', entity.city]);
+      }
 
       const attrsCard = idEntries.length > 0 ? el('div', { class: 'inspector-card' }, [
         el('h4', { class: 'inspector-card-title' }, ['Evidence & Core Identifiers']),
@@ -903,30 +1757,30 @@ export function renderInvestigationLaunchpad(c) {
   // Top Page Heading
   const heading = el('div', { class: 'page-heading' }, [
     el('div', {}, [
-      el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE INVESTIGATION COMMAND']),
-      el('h1', {}, ['Network Graph Investigation']),
+      el('div', { class: 'eyebrow blue' }, [t('intelligenceInvestigationCommand')]),
+      el('h1', {}, [t('investigationLaunchpad')]),
       el('p', { class: 'muted' }, [
-        'Search or select any starting FIR case, person, vehicle, phone, bank account or cell tower to generate and progressively explore connected criminal relationships.'
+        t('investigationLaunchpadDesc')
       ])
     ]),
     el('div', { class: 'heading-actions' }, [
       el('button', {
-        class: 'primary-btn',
+        class: 'outline-btn',
         onclick: () => { state.view = 'fir'; notifyStateChange(); }
-      }, [icon('file'), ' New FIR Intake'])
+      }, [icon('file'), ` ${t('newFIRIntake')}`])
     ])
   ]);
 
   // Fast Category Statistics Pills
   const categoryStats = el('div', { class: 'launchpad-stats-row' }, [
-    { type: 'all', label: 'All Records', count: allLaunchpadItems.length, iconName: 'shield', color: '#0F172A' },
-    { type: 'fir case', label: 'FIR Cases', count: totalCases, iconName: 'file', color: objectTypeColors['FIR Case'] },
-    { type: 'person', label: 'Suspects & Persons', count: totalPersons, iconName: 'user', color: objectTypeColors.Person },
-    { type: 'vehicle', label: 'Vehicles', count: totalVehicles, iconName: 'grid', color: objectTypeColors.Vehicle },
-    { type: 'phone', label: 'Phones / SIMs', count: totalPhones, iconName: 'pulse', color: objectTypeColors.Phone },
-    { type: 'bank', label: 'Mule Accounts', count: totalBanks, iconName: 'database', color: objectTypeColors.Bank },
-    { type: 'location', label: 'Cell Towers', count: totalTowers, iconName: 'network', color: objectTypeColors.Location },
-    { type: 'organization', label: 'Shell Companies', count: totalOrgs, iconName: 'shield', color: objectTypeColors.Organization }
+    { type: 'all', label: t('allRecords'), count: allLaunchpadItems.length, iconName: 'shield', color: '#0F172A' },
+    { type: 'fir case', label: t('firCases'), count: totalCases, iconName: 'file', color: objectTypeColors['FIR Case'] },
+    { type: 'person', label: t('suspectsPersons'), count: totalPersons, iconName: 'user', color: objectTypeColors.Person },
+    { type: 'vehicle', label: t('vehicles'), count: totalVehicles, iconName: 'grid', color: objectTypeColors.Vehicle },
+    { type: 'phone', label: t('phonesSims'), count: totalPhones, iconName: 'pulse', color: objectTypeColors.Phone },
+    { type: 'bank', label: t('muleAccounts'), count: totalBanks, iconName: 'database', color: objectTypeColors.Bank },
+    { type: 'location', label: t('cellTowers'), count: totalTowers, iconName: 'network', color: objectTypeColors.Location },
+    { type: 'organization', label: t('shellCompanies'), count: totalOrgs, iconName: 'shield', color: objectTypeColors.Organization }
   ].map(cat => {
     const isSelected = state.type.toLowerCase() === cat.type.toLowerCase();
     const card = el('button', {
@@ -949,7 +1803,7 @@ export function renderInvestigationLaunchpad(c) {
   const searchInput = el('input', {
     type: 'text',
     class: 'launchpad-search-input',
-    placeholder: 'Search by Case ID, Accused name, Mobile (+91), Vehicle Reg, Mule Account, Tower ID or Section...',
+    placeholder: t('searchLaunchpadPlaceholder'),
     value: state.query || ''
   });
 
@@ -964,10 +1818,10 @@ export function renderInvestigationLaunchpad(c) {
   }, ['✕']);
 
   const sortOptions = [
-    ['connections', 'Sort by Connection Links'],
-    ['risk', 'Sort by Risk Level'],
-    ['name', 'Sort by Name / Identifier'],
-    ['recent', 'Sort by Recent Activity']
+    ['connections', t('sortByConnections')],
+    ['risk', t('sortByRisk')],
+    ['name', t('sortByName')],
+    ['recent', t('sortByRecent')]
   ];
   const sortSelect = el('select', { class: 'filter-select' }, sortOptions.map(([v, l]) => {
     const o = el('option', { value: v }, [l]);
@@ -986,19 +1840,19 @@ export function renderInvestigationLaunchpad(c) {
       clearBtn
     ]),
     el('div', { class: 'launchpad-sort-group' }, [
-      el('span', { class: 'toolbar-label' }, ['Sort by:']),
+      el('span', { class: 'toolbar-label' }, [`${t('filter')}:`]),
       sortSelect
     ])
   ]);
 
   // Results Grid
-  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} matching records`]);
+  const countPill = el('span', { class: 'results-count-pill' }, [`${sorted.length} ${t('matchingRecords')}`]);
   const resultsHeader = el('div', { class: 'launchpad-results-header' }, [
     el('div', { class: 'results-count-title' }, [
-      el('h3', {}, ['Select an Investigation Focal Point']),
+      el('h3', {}, [t('selectInvestigationFocalPoint')]),
       countPill
     ]),
-    el('span', { class: 'results-hint' }, ['Click any entity or FIR to generate its network relationship graph'])
+    el('span', { class: 'results-hint' }, [t('clickEntityToGenerate')])
   ]);
 
   const emptyStateBox = el('div', {
@@ -1006,8 +1860,8 @@ export function renderInvestigationLaunchpad(c) {
     style: sorted.length === 0 ? '' : 'display: none;'
   }, [
     el('div', { class: 'empty-icon' }, [icon('search')]),
-    el('h3', {}, ['No Records Found']),
-    el('p', { class: 'muted empty-search-msg' }, ['No records matching search query in active intelligence database.']),
+    el('h3', {}, [t('noRecordsFound')]),
+    el('p', { class: 'muted empty-search-msg' }, [t('noRecordsMatching')]),
     el('button', {
       class: 'outline-btn small',
       onclick: () => {
@@ -1015,7 +1869,7 @@ export function renderInvestigationLaunchpad(c) {
         searchInput.value = '';
         updateLaunchpadFilter('');
       }
-    }, ['Clear Search Filter'])
+    }, [t('clearSearchFilter')])
   ]);
 
   const cardsGrid = el('div', { class: 'launchpad-cards-grid' }, [emptyStateBox]);
@@ -1042,13 +1896,9 @@ export function renderInvestigationLaunchpad(c) {
       class: 'launchpad-entity-card',
       'data-search-text': `${item.name} ${item.type} ${item.role || ''} ${item.local || ''} ${item.phone || ''} ${item.city || ''} ${JSON.stringify(item.identifiers || {})}`.toLowerCase(),
       onclick: () => {
-        if (item.isFIR) {
-          state.view = 'fir';
-          notifyStateChange();
-        } else {
-          openEntityProfile(item.id);
-          showToast(`Opening profile for ${item.name}`);
-        }
+        const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
+        startGraphInvestigation(graphTargetId);
+        showToast(`Generated network around ${item.name}`);
       }
     }, [
       el('div', { class: 'card-header-row' }, [
@@ -1069,6 +1919,17 @@ export function renderInvestigationLaunchpad(c) {
         el('div', { class: 'card-btn-group' }, [
           el('button', {
             class: 'primary-btn small launch-btn',
+            title: 'Open network relationship graph for this entity',
+            onclick: (e) => {
+              e.stopPropagation();
+              const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
+              startGraphInvestigation(graphTargetId);
+              showToast(`Generated network around ${item.name}`);
+            }
+          }, [icon('network'), ' Launch Graph →']),
+          el('button', {
+            class: 'outline-btn small launch-btn-graph',
+            title: 'Inspect detailed entity profile record',
             onclick: (e) => {
               e.stopPropagation();
               if (item.isFIR) {
@@ -1078,17 +1939,7 @@ export function renderInvestigationLaunchpad(c) {
                 openEntityProfile(item.id);
               }
             }
-          }, [item.isFIR ? 'Inspect FIR →' : 'Inspect Profile →']),
-          el('button', {
-            class: 'outline-btn small launch-btn-graph',
-            title: 'Open directly in network graph canvas',
-            onclick: (e) => {
-              e.stopPropagation();
-              const graphTargetId = item.isFIR ? (item.targetEntityId || entities[0].id) : item.id;
-              startGraphInvestigation(graphTargetId);
-              showToast(`Generated network around ${item.name}`);
-            }
-          }, [icon('network'), ' Graph'])
+          }, ['Profile'])
         ])
       ])
     ]);
@@ -1130,15 +1981,22 @@ export function renderInvestigationLaunchpad(c) {
 // ACTIVE NETWORK GRAPH INVESTIGATION VIEW (After entity selected)
 // --------------------------------------------------------------------------
 export function renderActiveNetworkWorkspace(c) {
+  const isSat = !!state.graphSatelliteMode;
   const analyticalEntities = graphMetrics(entities, edges);
+  const seedId = state.graphExploration?.seedId;
 
-  // Compute visibility set
+  // Filter visible nodes by active type filter (focal seed is kept for context)
   const visibleIds = getVisibleGraphNodeIds();
-  const visibleNodes = analyticalEntities.filter(e => visibleIds.has(e.id));
+  const visibleNodes = analyticalEntities.filter(e => {
+    if (!visibleIds.has(e.id)) return false;
+    if (!state.type || state.type.toLowerCase() === 'all') return true;
+    if (e.id === seedId) return true;
+    return e.type.toLowerCase() === state.type.toLowerCase();
+  });
 
   // Filter and sort for the directory / search list
   const filtered = analyticalEntities.filter(e => {
-    const matchType = state.type === 'all' || e.type.toLowerCase() === state.type.toLowerCase();
+    const matchType = !state.type || state.type === 'all' || e.type.toLowerCase() === state.type.toLowerCase();
     const q = (state.query || '').toLowerCase();
     const matchQuery = !q ||
       e.name.toLowerCase().includes(q) ||
@@ -1168,10 +2026,14 @@ export function renderActiveNetworkWorkspace(c) {
   const typeOptions = [['all', 'All Object Types'], ...uniqueTypes.map(x => [x.toLowerCase(), x])];
   const typeSelect = el('select', { class: 'filter-select' }, typeOptions.map(([v, l]) => {
     const o = el('option', { value: v }, [l]);
-    o.selected = v === state.type.toLowerCase();
+    o.selected = v === (state.type || 'all').toLowerCase();
     return o;
   }));
-  typeSelect.onchange = e => { state.type = e.target.value; notifyStateChange(); };
+  typeSelect.onchange = e => {
+    state.type = e.target.value;
+    notifyStateChange();
+    showToast(`Filtered network to: ${e.target.options[e.target.selectedIndex].text}`);
+  };
 
   const isFocusedMode = state.graphExploration?.mode === 'focused';
 
@@ -1190,6 +2052,120 @@ export function renderActiveNetworkWorkspace(c) {
     notifyStateChange();
   };
 
+  const mapConfig = state.graphMapConfig || {};
+  const isLocked = !!mapConfig.locked;
+  const isMapLocked = isLocked;
+  const isAllPinsLocked = !!mapConfig.pinsLockedAll;
+
+  // Satellite-specific controls for the top strip
+  let satControls = [];
+  if (isSat) {
+    const presetSelect = el('select', { class: 'strip-select map-preset-select', title: 'Center satellite map on predefined sector preset or search any worldwide location' }, [
+      el('option', { value: '' }, ['📍 Preset Sector...']),
+      el('option', { value: '__search_worldwide__' }, ['🔍 Search Any Place (World)...']),
+      ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
+    ]);
+    presetSelect.onchange = (e) => {
+      const val = e.target.value;
+      if (!val) return;
+      if (val === '__search_worldwide__') {
+        presetSelect.value = '';
+        openGeoSearchModal();
+        return;
+      }
+      try {
+        const p = JSON.parse(val);
+        setGraphMapLocation(p.lat, p.lng, p.zoom, p.name);
+        if (leafletMapInstance) {
+          leafletMapInstance.setView([p.lat, p.lng], p.zoom);
+        }
+        showToast(`Map centered to ${p.name}`);
+      } catch (err) {}
+    };
+
+    const layerSelect = el('select', { class: 'strip-select map-layer-select', title: 'Switch satellite tile imagery layer' }, [
+      el('option', { value: 'satellite' }, ['🛰 Satellite']),
+      el('option', { value: 'hybrid' }, ['🗺 Hybrid']),
+      el('option', { value: 'streets' }, ['🏙 Streets'])
+    ]);
+    layerSelect.value = mapConfig.layerType || 'satellite';
+    layerSelect.onchange = (e) => {
+      setGraphMapLayerType(e.target.value);
+      updateLeafletTileLayer(e.target.value);
+      showToast(`Map layer: ${e.target.value}`);
+    };
+
+    const pinLockBtn = el('button', {
+      class: `strip-btn ${isAllPinsLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
+      title: isAllPinsLocked 
+        ? 'All pins are locked in place at their geographic coordinates. Click to allow dragging.' 
+        : 'Pins can be dragged freely. Click to lock all pins in place on the map.',
+      onclick: () => {
+        toggleLockAllPins();
+        showToast(state.graphMapConfig.pinsLockedAll ? '🔒 All Pins Locked in Place' : '📍 Pins Draggable');
+      }
+    }, [isAllPinsLocked ? `🔒 ${t('pinsLocked')}` : `📍 ${t('pinsMoveable')}`]);
+
+    const mapLockBtn = el('button', {
+      class: `strip-btn ${isMapLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
+      title: isMapLocked 
+        ? 'Map position is locked. Click to enable panning and zooming.' 
+        : 'Map navigation is interactive. Click to lock position.',
+      onclick: () => {
+        toggleGraphMapLock();
+        applyMapLockState();
+        showToast(state.graphMapConfig.locked ? '🔒 Map Viewport Locked' : '🗺 Pan Map (Interactive)');
+      }
+    }, [isMapLocked ? `🔒 ${t('mapLockedText')}` : `🗺 ${t('panMapText')}`]);
+
+    const isGroupingMode = !!mapConfig.groupingMode;
+    const selectedGroupCount = (mapConfig.selectedForGrouping || []).length;
+
+    let groupControlBtn;
+    if (!isGroupingMode) {
+      groupControlBtn = el('button', {
+        class: 'strip-btn strip-group-btn',
+        title: 'Group pins together into a stacked cluster on the map',
+        onclick: () => {
+          setMapGroupingMode(true);
+          showToast('Click markers to select pins for grouping, then click Merge.');
+        }
+      }, [icon('grid'), ' 👥 Group']);
+    } else {
+      groupControlBtn = el('div', { style: 'display:flex;align-items:center;gap:4px;' }, [
+        el('button', {
+          class: 'strip-btn strip-group-active-btn',
+          title: selectedGroupCount >= 2 ? 'Merge selected pins into stacked cluster' : 'Click at least 2 pins on map to select them',
+          onclick: () => {
+            if (selectedGroupCount >= 2) {
+              const grp = createMarkerGroup(mapConfig.selectedForGrouping);
+              showToast(`Grouped ${grp.nodeIds.length} pins into stacked cluster`);
+            } else {
+              showToast('Please click on at least 2 pins to select them for grouping');
+            }
+          }
+        }, [icon('check'), selectedGroupCount >= 2 ? ` Merge (${selectedGroupCount})` : ` Select Pins (${selectedGroupCount})`]),
+        el('button', {
+          class: 'strip-btn strip-group-cancel-btn',
+          title: 'Cancel grouping mode',
+          onclick: () => {
+            setMapGroupingMode(false);
+            showToast('Grouping cancelled');
+          }
+        }, ['✕'])
+      ]);
+    }
+
+    satControls = [
+      el('div', { class: 'strip-divider' }),
+      presetSelect,
+      layerSelect,
+      pinLockBtn,
+      mapLockBtn,
+      groupControlBtn
+    ];
+  }
+
   const topStrip = el('div', { class: 'network-top-strip' }, [
     el('div', { class: 'network-strip-left' }, [
       el('button', {
@@ -1199,30 +2175,39 @@ export function renderActiveNetworkWorkspace(c) {
           returnToGraphLaunchpad();
           showToast('Returned to Investigation Launchpad');
         }
-      }, [icon('undo'), ' Launchpad']),
+      }, [icon('undo'), ` ${t('launchpad')}`]),
       el('div', { class: 'strip-divider' }),
       el('div', { class: 'strip-select-wrap' }, [
-        el('span', { class: 'strip-label' }, ['Filter Type:']),
+        el('span', { class: 'strip-label' }, [`${t('filter')}:`]),
         typeSelect
-      ])
+      ]),
+      ...satControls
     ]),
     el('div', { class: 'network-strip-right' }, [
       el('button', {
         class: 'strip-btn',
         title: 'Reset graph to starting investigation entity',
         onclick: () => { resetGraphExploration(); showToast('Reset exploration to start node'); }
-      }, [icon('undo'), ' Reset']),
+      }, [icon('undo'), ` ${t('reset')}`]),
       selectedEntity ? el('button', {
         class: 'strip-btn strip-highlight-btn',
-        title: `Expand direct 1-hop connections for ${selectedEntity.name}`,
+        title: `Expand network connections for ${selectedEntity.name}`,
         onclick: () => {
           expandGraphNode(selectedEntity.id);
-          showToast(`Expanded neighbors for ${selectedEntity.name}`);
+          showToast(`Expanded network around ${selectedEntity.name}`);
         }
-      }, [icon('plus'), ` Expand (${getConnectedLinks(selectedEntity.id).length})`]) : null,
+      }, [icon('plus'), ` ${t('expand')}`]) : null,
       el('div', { class: 'strip-divider' }),
+      el('button', {
+        class: `strip-btn strip-sat-btn ${isSat ? 'active' : ''}`,
+        title: isSat ? 'Disable satellite map background and return to clean canvas' : 'Enable interactive satellite map background for geographic reference',
+        onclick: () => {
+          toggleGraphSatelliteMode();
+          showToast(state.graphSatelliteMode ? '🛰 Satellite Map Background Enabled' : 'Standard Clean Graph Canvas Enabled');
+        }
+      }, [icon('network'), isSat ? ` 🛰 ${t('satelliteView')}: ON` : ` 🗺 ${t('satelliteView')}: OFF`]),
       el('span', { class: 'strip-count' }, [
-        `${visibleNodes.length}/${entities.length} nodes`
+        `${visibleNodes.length}/${entities.length} ${t('nodes')}`
       ]),
       el('button', {
         class: 'strip-btn strip-icon-btn',
@@ -1232,8 +2217,46 @@ export function renderActiveNetworkWorkspace(c) {
     ].filter(Boolean))
   ]);
 
-  const seedId = state.graphExploration?.seedId;
-  const graphSignature = `${Array.from(visibleIds).sort().join(',')}|${state.selected}|${seedId}|${isFocusedMode ? '1' : '0'}`;
+  const isPinsLocked = !!mapConfig.pinsLocked;
+  const lockedPinsKey = Object.entries(mapConfig.lockedPinIds || {}).filter(([_, v]) => v).map(([k]) => k).sort().join(',');
+  const groupsKey = (mapConfig.markerGroups || []).map(g => `${g.id}:${(g.nodeIds || []).sort().join(',')}`).join(';');
+  const groupSelectKey = (mapConfig.selectedForGrouping || []).sort().join(',');
+  const graphSignature = `${visibleNodes.map(n => n.id).sort().join(',')}|${state.selected}|${seedId}|${state.type}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${isLocked ? '1' : '0'}|${isPinsLocked ? '1' : '0'}|${mapConfig.pinsLockedAll ? '1' : '0'}|${lockedPinsKey}|${mapConfig.groupingMode ? '1' : '0'}|${groupSelectKey}|${groupsKey}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
+
+  const renderGraphPanel = () => {
+    return el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
+      isSat ? el('div', {
+        id: 'graph-leaflet-map',
+        class: `graph-leaflet-map ${isLocked ? 'map-locked' : 'map-interactive'}`
+      }) : null,
+      graphContainer(visibleNodes),
+      visibleNodes.length > 0 ? el('div', { class: `graph-legend ${isSat ? 'sat-legend' : ''}` }, [
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Vehicle}` }), 'Vehicle']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Bank}` }), 'Bank Account']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors['FIR Case']}` }), 'FIR Case']),
+        el('span', {}, [el('i', { style: `background:${objectTypeColors.Location}` }), 'Cell Tower'])
+      ]) : null,
+      visibleNodes.length > 0 ? el('div', { class: `graph-controls ${isSat ? 'sat-controls' : ''}` }, [
+        el('button', {
+          class: 'icon-btn',
+          title: 'Zoom in',
+          onclick: () => isSat ? leafletMapInstance?.zoomIn() : sigmaInstance?.getCamera().animatedZoom()
+        }, ['＋']),
+        el('button', {
+          class: 'icon-btn',
+          title: 'Zoom out',
+          onclick: () => isSat ? leafletMapInstance?.zoomOut() : sigmaInstance?.getCamera().animatedUnzoom()
+        }, ['−']),
+        el('button', {
+          class: 'icon-btn',
+          title: 'Reset view',
+          onclick: () => isSat ? (leafletMapInstance?.setView([mapConfig.lat || 18.5204, mapConfig.lng || 73.8567], mapConfig.zoom || 14)) : sigmaInstance?.getCamera().animatedReset({ duration: 300 })
+        }, ['⌖'])
+      ]) : null
+    ].filter(Boolean));
+  };
 
   const existingWorkspace = c.querySelector('.network-workspace');
   if (existingWorkspace) {
@@ -1248,7 +2271,17 @@ export function renderActiveNetworkWorkspace(c) {
       oldInspector.replaceWith(newInspector);
     }
 
-    if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
+    const oldGraphPanel = existingWorkspace.querySelector('.graph-panel');
+    const wasSat = oldGraphPanel ? oldGraphPanel.classList.contains('satellite-view-active') : false;
+    if (oldGraphPanel && (wasSat !== isSat)) {
+      const newGraphPanel = renderGraphPanel();
+      oldGraphPanel.replaceWith(newGraphPanel);
+      lastRenderedGraphSignature = graphSignature;
+      mountSigma(visibleNodes);
+    } else if (isSat && visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
+      lastRenderedGraphSignature = graphSignature;
+      renderSatelliteMapPins(visibleNodes);
+    } else if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
     }
@@ -1257,27 +2290,14 @@ export function renderActiveNetworkWorkspace(c) {
 
   // Full first-time render
   c.innerHTML = '';
-  const graph = el('section', { class: 'graph-panel' }, [
-    graphContainer(visibleNodes),
-    visibleNodes.length > 0 ? el('div', { class: 'graph-legend' }, [
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Vehicle}` }), 'Vehicle']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Bank}` }), 'Bank Account']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors['FIR Case']}` }), 'FIR Case']),
-      el('span', {}, [el('i', { style: `background:${objectTypeColors.Location}` }), 'Cell Tower'])
-    ]) : null,
-    visibleNodes.length > 0 ? el('div', { class: 'graph-controls' }, [
-      el('button', { class: 'icon-btn', title: 'Zoom in', onclick: () => sigmaInstance?.getCamera().animatedZoom() }, ['＋']),
-      el('button', { class: 'icon-btn', title: 'Zoom out', onclick: () => sigmaInstance?.getCamera().animatedUnzoom() }, ['−']),
-      el('button', { class: 'icon-btn', title: 'Reset view', onclick: () => sigmaInstance?.getCamera().animatedReset({ duration: 300 }) }, ['⌖'])
-    ]) : null
-  ].filter(Boolean));
-
+  const graph = renderGraphPanel();
   const entityAside = renderGraphInspector(selectedEntity, analyticalEntities, visibleIds);
 
   n.append(topStrip, el('div', { class: 'network-grid' }, [graph, entityAside]));
   c.append(n);
+
+  const mainArea = document.querySelector('.main-area');
+  if (mainArea) mainArea.scrollTop = 0;
 
   if (visibleNodes.length > 0) {
     lastRenderedGraphSignature = graphSignature;
