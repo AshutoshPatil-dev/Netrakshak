@@ -809,7 +809,8 @@ export const state = {
     seedId: null,
     previousSeedId: null,
     previousMode: 'focused',
-    expandedNodeIds: []
+    expandedNodeIds: [],
+    hiddenNodeIds: []
   }
 };
 
@@ -843,20 +844,25 @@ export function getVisibleGraphNodeIds() {
   if (!state.graphExploration.active) {
     return new Set();
   }
+  const hidden = new Set(state.graphExploration.hiddenNodeIds || []);
+  let visible;
   if (state.graphExploration.mode === 'all') {
-    return new Set(entities.map(e => e.id));
-  }
-  const visible = new Set(state.graphExploration.expandedNodeIds || []);
-  if (state.graphExploration.seedId) {
-    visible.add(state.graphExploration.seedId);
-  }
-  // Include direct 1-hop neighbors of any expanded node
-  (state.graphExploration.expandedNodeIds || []).forEach(nodeId => {
-    edges.forEach(edge => {
-      if (edge[0] === nodeId) visible.add(edge[1]);
-      if (edge[1] === nodeId) visible.add(edge[0]);
+    visible = new Set(entities.map(e => e.id));
+  } else {
+    visible = new Set(state.graphExploration.expandedNodeIds || []);
+    if (state.graphExploration.seedId) {
+      visible.add(state.graphExploration.seedId);
+    }
+    // Include direct 1-hop neighbors of any expanded node
+    (state.graphExploration.expandedNodeIds || []).forEach(nodeId => {
+      edges.forEach(edge => {
+        if (edge[0] === nodeId) visible.add(edge[1]);
+        if (edge[1] === nodeId) visible.add(edge[0]);
+      });
     });
-  });
+  }
+  // Exclude explicitly hidden nodes
+  hidden.forEach(id => visible.delete(id));
   return visible;
 }
 
@@ -865,6 +871,7 @@ export function startGraphInvestigation(seedId) {
   state.graphExploration.mode = 'focused';
   state.graphExploration.seedId = seedId;
   state.graphExploration.expandedNodeIds = [seedId];
+  state.graphExploration.hiddenNodeIds = [];
   state.selected = seedId;
   notifyStateChange();
 }
@@ -873,24 +880,33 @@ export function returnToGraphLaunchpad() {
   state.graphExploration.active = false;
   state.graphExploration.seedId = null;
   state.graphExploration.expandedNodeIds = [];
+  state.graphExploration.hiddenNodeIds = [];
   state.selected = null;
   notifyStateChange();
 }
 
 export function expandGraphNode(nodeId) {
+  if (!state.graphExploration.expandedNodeIds) {
+    state.graphExploration.expandedNodeIds = [];
+  }
+  if (state.graphExploration.hiddenNodeIds) {
+    state.graphExploration.hiddenNodeIds = state.graphExploration.hiddenNodeIds.filter(id => id !== nodeId);
+  }
   if (!state.graphExploration.expandedNodeIds.includes(nodeId)) {
     state.graphExploration.expandedNodeIds.push(nodeId);
-    state.graphExploration.active = true;
-    state.graphExploration.mode = 'focused';
-    notifyStateChange();
   }
+  state.graphExploration.active = true;
+  notifyStateChange();
 }
 
 export function collapseGraphNode(nodeId) {
-  state.graphExploration.expandedNodeIds = state.graphExploration.expandedNodeIds.filter(id => id !== nodeId);
-  if (state.graphExploration.expandedNodeIds.length === 0) {
-    state.graphExploration.expandedNodeIds = [state.graphExploration.seedId].filter(Boolean);
+  if (!state.graphExploration.hiddenNodeIds) {
+    state.graphExploration.hiddenNodeIds = [];
   }
+  if (!state.graphExploration.hiddenNodeIds.includes(nodeId)) {
+    state.graphExploration.hiddenNodeIds.push(nodeId);
+  }
+  state.graphExploration.expandedNodeIds = (state.graphExploration.expandedNodeIds || []).filter(id => id !== nodeId);
   notifyStateChange();
 }
 
@@ -931,6 +947,7 @@ export function toggleGraphSeed(seedId) {
 export function resetGraphExploration() {
   const seed = state.graphExploration.seedId;
   state.customNodePositions = {};
+  state.graphExploration.hiddenNodeIds = [];
   if (seed) {
     state.graphExploration.active = true;
     state.graphExploration.expandedNodeIds = [seed];
@@ -945,6 +962,7 @@ export function resetGraphExploration() {
 export function showFullGraphUniverse() {
   state.graphExploration.active = true;
   state.graphExploration.mode = 'all';
+  state.graphExploration.hiddenNodeIds = [];
   if (!state.selected && entities.length > 0) {
     state.selected = entities[0].id;
   }
