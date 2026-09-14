@@ -5,7 +5,6 @@ import {
   entities,
   edges,
   firCases,
-  DEFAULT_EVIDENCE_ITEMS,
   riskColor,
   notifyStateChange,
   openEntityProfile,
@@ -346,7 +345,7 @@ export function renderEntityProfile(c) {
   const entityEvidenceItems = [];
   relatedCases.forEach(c => {
     const firNo = c.firNumber || c.fir_number || 'FIR-MH-2026';
-    const items = c.evidence_items || c.evidenceItems || DEFAULT_EVIDENCE_ITEMS[firNo] || [];
+    const items = c.evidence_items || c.evidenceItems || state.evidenceItems.filter(ev => ev.fir_id === c.id || ev.fir_number === firNo) || [];
     items.forEach(it => {
       entityEvidenceItems.push({
         ...it,

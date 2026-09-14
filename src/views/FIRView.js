@@ -1,6 +1,6 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, edges, firCases, DEFAULT_EVIDENCE_ITEMS, recordAudit, loadSupabaseData, notifyStateChange, openEntityProfile } from '../state.js';
+import { state, entities, edges, firCases, recordAudit, loadSupabaseData, notifyStateChange, openEntityProfile } from '../state.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { uploadPrivateEvidence } from '../lib/storage.js';
 import { hashText, sha256File } from '../lib/crypto.js';
@@ -8,7 +8,7 @@ import { showToast } from '../components/Toast.js';
 import { openFilePreview } from '../components/FilePreviewModal.js';
 import { openFIRExportModal } from '../components/FIRExportModal.js';
 import { performAIAnalysis } from './AIAnalysisView.js';
-import { getAccusedPhoto, DEFAULT_MUGSHOTS } from '../lib/avatars.js';
+import { getAccusedPhoto } from '../lib/avatars.js';
 
 import { extractFIRWithVision, getGeminiApiKey } from '../lib/ocr.js';
 
@@ -1050,7 +1050,7 @@ export function renderFIRIntakeForm() {
                 customUploadInput.click();
               } else if (val) {
                 const matchedPerson = personEntities.find(p => p.name === val);
-                const photo = matchedPerson?.imageUrl || matchedPerson?.identifiers?.imageUrl || DEFAULT_MUGSHOTS[val];
+                const photo = matchedPerson?.imageUrl || matchedPerson?.identifiers?.imageUrl || getAccusedPhoto(val);
                 if (photo) {
                   state.firDraft.accusedImage = photo;
                   photoPreviewImg.src = photo;
@@ -1263,8 +1263,8 @@ export function renderFIRDossiersList() {
 
     const suspectPhoto = c.accusedImage || getAccusedPhoto(linkedAccused[0]) || getAccusedPhoto(subj);
 
-    // Evidentiary Assets (from c.evidence_items or DEFAULT_EVIDENCE_ITEMS[firNo] or empty)
-    const evidenceList = c.evidence_items || c.evidenceItems || DEFAULT_EVIDENCE_ITEMS[firNo] || [];
+    // Evidentiary Assets from database
+    const evidenceList = c.evidence_items || c.evidenceItems || state.evidenceItems.filter(ev => ev.fir_id === c.id || ev.fir_number === firNo) || [];
 
     return el('div', { class: 'fir-dossier-card' }, [
       // Top header
@@ -1399,7 +1399,7 @@ export function renderFIRDossiersList() {
               propertySummary: c.propertySummary || c.property_summary || propSummary || '',
               accusedImage: c.accusedImage || c.accused_image || suspectPhoto || ''
             };
-            const existingEvidence = c.evidence_items || c.evidenceItems || DEFAULT_EVIDENCE_ITEMS.filter(ev => ev.fir_id === c.id || ev.fir_number === firNo) || [];
+            const existingEvidence = c.evidence_items || c.evidenceItems || state.evidenceItems.filter(ev => ev.fir_id === c.id || ev.fir_number === firNo) || [];
             state.manualEvidence = existingEvidence.map(ev => ({
               type: ev.type || ev.evidence_type || 'document',
               description: ev.description || ev.name || 'Evidence Item',
