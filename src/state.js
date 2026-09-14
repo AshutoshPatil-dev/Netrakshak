@@ -98,48 +98,13 @@ export function notifyStateChange() {
   }
 }
 
-export const DEFAULT_OFFICERS = [
-  {
-    id: '996ad2d5-a5d1-437f-9716-e982e69d864d',
-    name: 'Ashutosh Patil',
-    rank: 'Superintendent of Police',
-    cadre: 'IPS (MH Cadre)',
-    badge_no: 'IPS-001',
-    district: 'Pune HQ',
-    state: 'Maharashtra',
-    email: 'ashutosh.patil9750@gmail.com',
-    password: 'Ashu123',
-    phone: '+91 9112222108',
-    role: 'admin',
-    isYou: true
-  },
-  {
-    id: 'dbf89a8a-3b6d-4b14-baa0-3e875f0c3460',
-    name: 'Yash Chaudhari',
-    rank: 'Sub-Inspector',
-    cadre: 'MH Cadre',
-    badge_no: 'MH-ACP-011',
-    district: 'Pune',
-    state: 'Maharashtra',
-    email: 'chaudhariyash3006@gmail.com',
-    password: 'password123',
-    phone: '+91 9579137558',
-    role: 'case-officer',
-    isYou: false
-  }
-];
-
 export function loadSavedOfficers() {
   try {
     const raw = localStorage.getItem('netrakshak_officers');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (e) {}
-  return [...DEFAULT_OFFICERS];
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
 }
 
 export function loadSavedAuditLogs() {
