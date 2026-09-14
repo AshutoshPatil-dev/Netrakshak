@@ -2254,9 +2254,193 @@
 .integrity-item span { font-size: 9px; color: var(--muted); margin-top: 3px; }
 .integrity-value { margin-left: auto; color: var(--green); font-size: 9px !important; text-align: right; }
 
+/* ---- Live Cryptographic Integrity Verification & Breach Alerts ---- */
+.integrity-breach-banner {
+  background: #FEF2F2;
+  border: 1.5px solid #F87171;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 18px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
+}
+.integrity-breach-banner.all-good {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);
+}
+.breach-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #FEE2E2;
+  color: #DC2626;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+.integrity-breach-banner.all-good .breach-banner-icon {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+.breach-banner-content {
+  flex: 1;
+}
+.breach-banner-content h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #991B1B;
+}
+.integrity-breach-banner.all-good .breach-banner-content h4 {
+  color: #166534;
+}
+.breach-banner-content p {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #7F1D1D;
+  line-height: 1.5;
+}
+.integrity-breach-banner.all-good .breach-banner-content p {
+  color: #14532D;
+}
+.breach-bullet-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 10.5px;
+  color: #991B1B;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.audit-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 18px;
+}
+.audit-status-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--slate);
+}
+.audit-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.audit-pulse-dot.breached {
+  background: #DC2626;
+  animation: pulse 1.5s infinite;
+}
+.integrity-table-card {
+  margin-top: 18px;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.integrity-table-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #F8FAFC;
+}
+.integrity-table-header h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.integrity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.integrity-table th {
+  text-align: left;
+  padding: 10px 18px;
+  background: #F1F5F9;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+}
+.integrity-table td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--slate);
+  vertical-align: middle;
+}
+.integrity-table tr:last-child td {
+  border-bottom: none;
+}
+.hash-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  background: #F1F5F9;
+  color: #334155;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid #E2E8F0;
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.status-pill-badge.verified {
+  background: #DCFCE7;
+  color: #166534;
+}
+.status-pill-badge.deleted {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.status-pill-badge.tampered {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.status-pill-badge.operational {
+  background: #EFF6FF;
+  color: #1E40AF;
+}
+.status-pill-badge.dropped {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
 @media (max-width: 900px) {
   .source-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .integrity-items { grid-template-columns: 1fr; }
+  .audit-action-bar { flex-direction: column; gap: 10px; align-items: stretch; }
+  .integrity-table { display: block; overflow-x: auto; }
 }
 
 /* ---- Settings ---- */
