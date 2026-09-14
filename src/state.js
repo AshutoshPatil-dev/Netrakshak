@@ -623,7 +623,22 @@ export const DEFAULT_EDGES = [
   ['e0000001-0000-0000-0000-000000000001', 'e0000001-0000-0000-0000-000000000004', 'Inter-Syndicate Call Link'],
   ['e0000003-0000-0000-0000-000000000001', 'e0000005-0000-0000-0000-000000000001', 'ANPR Sighting at Crime Scene'],
   ['e0000002-0000-0000-0000-000000000001', 'e0000005-0000-0000-0000-000000000001', 'Connected Call at Crime Scene'],
-  ['e0000001-0000-0000-0000-000000000006', 'e0000001-0000-0000-0000-000000000002', 'Safehouse Equipment Link']
+  ['e0000001-0000-0000-0000-000000000006', 'e0000001-0000-0000-0000-000000000002', 'Safehouse Equipment Link'],
+  // Fortuner MH-01-DK-3490 links
+  ['e0000001-0000-0000-0000-000000000008', 'e0000003-0000-0000-0000-000000000003', 'Registered Owner'],
+  ['e0000003-0000-0000-0000-000000000003', 'e0000006-0000-0000-0000-000000000001', 'Corporate Asset Sighting'],
+  ['e0000003-0000-0000-0000-000000000003', 'e0000005-0000-0000-0000-000000000004', 'ANPR Sighting in BKC'],
+  // Creta MH-12-TR-4401 links
+  ['e0000001-0000-0000-0000-000000000001', 'e0000003-0000-0000-0000-000000000004', 'Registered Owner'],
+  ['e0000003-0000-0000-0000-000000000004', 'e0000005-0000-0000-0000-000000000001', 'ANPR Sighting at FC Road'],
+  // Crypto broker Kavita Nair & VoIP Lead Deepak Verma links
+  ['e0000001-0000-0000-0000-000000000009', 'e0000004-0000-0000-0000-000000000005', 'USDT Liquidity Provider'],
+  ['e0000001-0000-0000-0000-000000000009', 'e0000001-0000-0000-0000-000000000002', 'P2P Hawala Partner'],
+  ['e0000001-0000-0000-0000-000000000010', 'e0000006-0000-0000-0000-000000000002', 'Boiler Room Manager'],
+  ['e0000001-0000-0000-0000-000000000010', 'e0000002-0000-0000-0000-000000000002', 'VoIP SIM Operator'],
+  ['e0000001-0000-0000-0000-000000000010', 'e0000001-0000-0000-0000-000000000001', 'Direct Syndicate Link'],
+  ['e0000002-0000-0000-0000-000000000002', 'e0000005-0000-0000-0000-000000000001', 'CDR Tower Intersection'],
+  ['e0000001-0000-0000-0000-000000000008', 'e0000005-0000-0000-0000-000000000004', 'Executive Office Cell Ping']
 ];
 
 export let entities = [...DEFAULT_ENTITIES];
@@ -634,6 +649,75 @@ export function setEntities(val) {
 export let edges = [...DEFAULT_EDGES];
 export function setEdges(val) {
   edges = val;
+}
+
+export function findCrossLinkedCases(entityIdOrName) {
+  if (!entityIdOrName) return [];
+  const entity = entities.find(e => e.id === entityIdOrName || e.name === entityIdOrName);
+  const name = entity ? entity.name.toLowerCase() : String(entityIdOrName).toLowerCase();
+  const phone = entity?.phone ? entity.phone.replace(/[^0-9]/g, '') : '';
+  
+  return firCases.filter(c => {
+    const sName = (c.subject_name || c.subjectName || '').toLowerCase();
+    const oName = (c.other_accused || c.otherAccused || '').toLowerCase();
+    const cPhone = (c.phone || '').replace(/[^0-9]/g, '');
+    const cVeh = (c.vehicle || '').toLowerCase();
+    const cBank = (c.bank || '').toLowerCase();
+    
+    if (sName.includes(name) || oName.includes(name)) return true;
+    if (entity?.type === 'Vehicle' && cVeh.includes(name)) return true;
+    if (entity?.type === 'Bank' && cBank.includes(name)) return true;
+    if (phone && cPhone && (phone.includes(cPhone) || cPhone.includes(phone))) return true;
+    return false;
+  });
+}
+
+export function getCaseForensicMatches(caseId) {
+  const targetCase = firCases.find(c => c.id === caseId || c.fir_number === caseId || c.firNumber === caseId);
+  if (!targetCase) return [];
+
+  const matches = [];
+  const targetPhone = (targetCase.phone || '').replace(/[^0-9]/g, '');
+  const targetVeh = (targetCase.vehicle || '').toLowerCase().trim();
+  const targetBank = (targetCase.bank || '').toLowerCase().trim();
+  const targetSubject = (targetCase.subject_name || targetCase.subjectName || '').toLowerCase().trim();
+
+  firCases.forEach(otherCase => {
+    if (otherCase.id === targetCase.id || (otherCase.fir_number && otherCase.fir_number === targetCase.fir_number)) return;
+
+    const shared = [];
+    const otherPhone = (otherCase.phone || '').replace(/[^0-9]/g, '');
+    const otherVeh = (otherCase.vehicle || '').toLowerCase().trim();
+    const otherBank = (otherCase.bank || '').toLowerCase().trim();
+    const otherSubject = (otherCase.subject_name || otherCase.subjectName || '').toLowerCase().trim();
+    const otherAccused = (otherCase.other_accused || otherCase.otherAccused || '').toLowerCase();
+
+    // Check shared vehicle
+    if (targetVeh && otherVeh && (targetVeh.includes(otherVeh) || otherVeh.includes(targetVeh))) {
+      shared.push({ type: 'Vehicle', label: targetCase.vehicle, detail: 'Identical vehicle asset cited across both cases' });
+    }
+    // Check shared burner phone
+    if (targetPhone && otherPhone && (targetPhone.includes(otherPhone) || otherPhone.includes(targetPhone))) {
+      shared.push({ type: 'Phone', label: targetCase.phone, detail: 'Shared burner mobile / IMEI hardware intersection' });
+    }
+    // Check shared mule bank
+    if (targetBank && otherBank && (targetBank.includes(otherBank) || otherBank.includes(targetBank))) {
+      shared.push({ type: 'Bank', label: targetCase.bank, detail: 'Common money laundering account destination' });
+    }
+    // Check shared subject / co-accused
+    if (targetSubject && (otherSubject.includes(targetSubject) || otherAccused.includes(targetSubject))) {
+      shared.push({ type: 'Person', label: targetCase.subject_name || targetCase.subjectName, detail: 'Cross-jurisdiction syndicate operative' });
+    }
+
+    if (shared.length > 0) {
+      matches.push({
+        matchedCase: otherCase,
+        sharedEntities: shared
+      });
+    }
+  });
+
+  return matches;
 }
 
 export const DEFAULT_FIR_CASES = [

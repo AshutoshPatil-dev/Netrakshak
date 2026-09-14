@@ -1,6 +1,6 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, edges, firCases, recordAudit, loadSupabaseData, notifyStateChange } from '../state.js';
+import { state, entities, edges, firCases, recordAudit, loadSupabaseData, notifyStateChange, getCaseForensicMatches } from '../state.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { uploadPrivateEvidence } from '../lib/storage.js';
 import { hashText, sha256File } from '../lib/crypto.js';
@@ -1181,6 +1181,34 @@ export function renderFIRDossiersList() {
         el('strong', { style: 'color: var(--app-text);' }, ['Seized Property / Digital Forensics: ']),
         el('span', {}, [propSummary])
       ]) : null,
+
+      // Cross-Case Intersections Alert
+      (() => {
+        const crossMatches = getCaseForensicMatches(c.id || c.fir_number || c.firNumber);
+        if (crossMatches.length === 0) return null;
+        return el('div', { class: 'fir-cross-case-alert-box' }, [
+          el('div', { class: 'cross-case-alert-header' }, [
+            icon('alert'),
+            el('strong', {}, [`Cross-Case Forensic Matches (${crossMatches.length} Connected Police Investigations):`])
+          ]),
+          el('div', { class: 'cross-case-matches-list' }, crossMatches.map(m => {
+            const mCase = m.matchedCase;
+            const mFirNo = mCase.firNumber || mCase.fir_number;
+            const mPs = mCase.policeStation || mCase.police_station;
+            return el('div', { class: 'cross-match-item' }, [
+              el('div', { class: 'cross-match-top-line' }, [
+                el('span', { class: 'cross-match-badge' }, [mFirNo]),
+                el('strong', { class: 'cross-match-station' }, [mPs])
+              ]),
+              el('div', { class: 'cross-match-shared-tags' }, m.sharedEntities.map(s => el('span', { class: 'shared-entity-tag' }, [
+                el('span', { class: 'tag-type' }, [s.type]),
+                `: ${s.label} `,
+                el('small', { class: 'tag-detail' }, [`(${s.detail})`])
+              ])))
+            ]);
+          }))
+        ]);
+      })(),
 
       // Actions Footer
       el('div', { class: 'fir-dossier-actions' }, [

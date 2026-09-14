@@ -7,7 +7,8 @@ import {
   notifyStateChange,
   openEntityProfile,
   backEntityProfile,
-  startGraphInvestigation
+  startGraphInvestigation,
+  findCrossLinkedCases
 } from '../state.js';
 import { graphMetrics } from '../lib/analysis.js';
 import { objectTypeColors, objectTypeIcons, getConnectedLinks } from './NetworkGraphView.js';
@@ -288,19 +289,58 @@ export function renderEntityProfile(c) {
     aliasesList.push(entity.local);
   }
 
-  const aliasesCard = aliasesList.length > 0 ? el('div', { class: 'profile-column-card known-aliases-card', style: 'margin-top: 16px;' }, [
-    el('h3', { class: 'col-card-title' }, ['Known Aliases']),
-    el('div', { class: 'known-aliases-chips' }, aliasesList.map(a => el('span', { class: 'alias-chip' }, [a])))
-  ]) : null;
+  // Cross-Case Involvement Card
+  const linkedCases = findCrossLinkedCases(entity.id);
+  const crossCaseCard = el('div', { class: 'profile-column-card cross-case-involvement-card', style: 'margin-top: 16px;' }, [
+    el('div', { class: 'cross-case-header-row' }, [
+      el('h3', { class: 'col-card-title' }, [`Registered Police Cases (${linkedCases.length})`]),
+      linkedCases.length > 0 ? el('span', { class: 'cross-case-count-badge' }, [`${linkedCases.length} Dossiers`]) : null
+    ].filter(Boolean)),
+    linkedCases.length > 0 ? el('div', { class: 'cross-case-dossier-list' }, linkedCases.map(c => {
+      const firNo = c.firNumber || c.fir_number;
+      const ps = c.policeStation || c.police_station;
+      const date = c.incidentDate || c.incident_date;
+      const sec = c.sections || '';
+      return el('div', { class: 'cross-case-item' }, [
+        el('div', { class: 'cross-case-top-row' }, [
+          el('strong', { class: 'cross-case-number' }, [firNo]),
+          el('span', { class: 'cross-case-status' }, ['ACTIVE DOSSIER'])
+        ]),
+        el('div', { class: 'cross-case-meta' }, [
+          el('span', { class: 'cross-case-station' }, [ps]),
+          el('span', { class: 'cross-case-date' }, [` · Registered: ${date}`])
+        ]),
+        sec ? el('div', { class: 'cross-case-sections' }, [sec]) : null,
+        el('div', { class: 'cross-case-actions' }, [
+          el('button', {
+            class: 'outline-btn small',
+            onclick: () => {
+              state.firActiveTab = 'dossiers';
+              state.view = 'fir';
+              notifyStateChange();
+              showToast(`Opening case dossier for ${firNo}`);
+            }
+          }, [icon('file'), ' View Case Dossier →'])
+        ])
+      ]);
+    })) : el('div', { class: 'empty-cross-case-box' }, [
+      el('p', { class: 'muted' }, ['No direct First Information Reports citing this entity currently in local jurisdiction.'])
+    ])
+  ]);
 
   const col1Wrapper = el('div', { class: 'profile-column-wrapper' }, [
     influenceCard,
     aliasesCard
   ].filter(Boolean));
 
+  const col2Wrapper = el('div', { class: 'profile-column-wrapper' }, [
+    timelineCard,
+    crossCaseCard
+  ]);
+
   const threeColGrid = el('div', { class: 'profile-three-col-grid' }, [
     col1Wrapper,
-    timelineCard,
+    col2Wrapper,
     associatedCard
   ]);
 
