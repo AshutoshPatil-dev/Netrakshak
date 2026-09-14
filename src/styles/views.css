@@ -5086,8 +5086,13 @@
 /* ==========================================================================
    Pure Print Media Mode for Physical Paper / Native PDF Save
    ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 @media print {
-  body {
+  html, body {
     background: #FFFFFF !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -5102,6 +5107,7 @@
     background: transparent !important;
     padding: 0 !important;
     display: block !important;
+    margin: 0 !important;
   }
 
   .fir-export-modal-dialog {
@@ -5111,12 +5117,15 @@
     border: none !important;
     border-radius: 0 !important;
     display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .fir-export-modal-header,
   .fir-export-controls-bar,
   .export-saved-picker-row,
-  .export-draft-notice-bar {
+  .export-draft-notice-bar,
+  .preview-modal-close {
     display: none !important;
   }
 
@@ -5125,15 +5134,19 @@
     padding: 0 !important;
     display: block !important;
     overflow: visible !important;
+    margin: 0 !important;
   }
 
   .fir-printable-sheet-root {
     max-width: 100% !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 15mm 15mm !important;
+    padding: 12mm 15mm !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
   }
 }
+
 
 /* ==========================================================================
    PATTERNS & ANOMALIES VIEW (Sub-Groups Clustering & High-Risk Anomalies)

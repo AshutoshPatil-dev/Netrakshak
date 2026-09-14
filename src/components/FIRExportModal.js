@@ -407,7 +407,12 @@ export function renderFIRExportModal() {
       el('button', {
         class: 'primary-btn small print-cta-btn',
         onclick: () => {
+          const originalTitle = document.title;
+          document.title = ' ';
           window.print();
+          setTimeout(() => {
+            document.title = originalTitle;
+          }, 800);
         }
       }, [icon('expand'), ' Print / Save PDF'])
     ])
