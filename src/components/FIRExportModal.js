@@ -30,13 +30,14 @@ export function getExportFirData() {
 
   if (exportModalState.sourceType === 'blank') {
     return {
+      isBlankTemplate: true,
       firNumber: '',
-      policeStation: 'Cyber Crime Police Station, Shivajinagar',
-      district: 'Pune HQ',
-      state: 'Maharashtra',
-      incidentDate: '',
-      incidentTime: '',
-      sections: 'IPC 420, 468, 471, 120B · IT Act 66C, 66D',
+      policeStation: '',
+      district: '',
+      state: '',
+      incidentDate: 'DD / MM / YYYY',
+      incidentTime: '____:____ HRS',
+      sections: '',
       complainantName: '',
       complainantAge: '',
       complainantFather: '',
@@ -53,11 +54,11 @@ export function getExportFirData() {
       incidentSummary: '',
       propertySummary: '',
       evidenceItems: [],
-      actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
-      ioName: officer.name || 'Ashutosh Patil',
-      ioRank: officer.rank || 'Superintendent of Police',
-      ioDistrict: officer.district || 'Pune HQ',
-      printDate: new Date().toISOString().split('T')[0]
+      actionTaken: '',
+      ioName: '',
+      ioRank: '',
+      ioDistrict: '',
+      printDate: ''
     };
   }
 
@@ -104,13 +105,13 @@ export function getExportFirData() {
   // Current draft from form
   const draft = state.firDraft || {};
   return {
-    firNumber: draft.firNumber || 'FIR-MH-2026-DRAFT',
-    policeStation: draft.policeStation || 'Cyber Crime Police Station, Shivajinagar',
-    district: draft.district || 'Pune HQ',
-    state: draft.state || 'Maharashtra',
+    firNumber: draft.firNumber || '',
+    policeStation: draft.policeStation || '',
+    district: draft.district || '',
+    state: draft.state || '',
     incidentDate: draft.incidentDate || '',
-    incidentTime: draft.incidentTime || '',
-    sections: draft.sections || 'IPC 420, 468, 471, 120B · IT Act 66D',
+    incidentTime: draft.incidentTime ? `${draft.incidentTime}${draft.incidentTime.includes('HRS') ? '' : ' HRS'}` : '',
+    sections: draft.sections || '',
     complainantName: draft.complainantName || '',
     complainantAge: draft.complainantAge || '',
     complainantFather: draft.complainantFather || '',
@@ -123,30 +124,54 @@ export function getExportFirData() {
     phone: draft.phone || '',
     vehicle: draft.vehicle || '',
     bank: draft.bank || '',
-    tower: 'Cell Tower PN-CY-482 (FC Road Sector)',
+    tower: draft.tower || '',
     incidentSummary: draft.incidentSummary || '',
     propertySummary: draft.propertySummary || '',
     evidenceItems: state.manualEvidence || [],
-    actionTaken: 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.',
-    ioName: officer.name || 'Ashutosh Patil',
-    ioRank: officer.rank || 'Superintendent of Police',
-    ioDistrict: officer.district || 'Pune HQ',
+    actionTaken: draft.actionTaken || (draft.subjectName ? 'Cognizable offence registered under Section 154 Cr.P.C. / Section 173 BNSS; digital artifacts and network nodes entered into Netrakshak Intelligence Database.' : ''),
+    ioName: officer.name || '',
+    ioRank: officer.rank || '',
+    ioDistrict: officer.district || '',
     printDate: new Date().toISOString().split('T')[0]
   };
 }
 
 export function renderPrintableSheet(data) {
+  const isBlank = !!data.isBlankTemplate;
+
+  // Helper for rendering values or clean fillable underlines
+  const valOrBlank = (val, isBold = false) => {
+    return el('div', { class: `print-value ${isBold ? 'bold' : ''}` }, [
+      val && val.trim() ? val.trim() : el('span', { class: 'print-blank-fill' }, ['\u00A0'])
+    ]);
+  };
+
+  // Helper for physical ruled writing lines
+  const renderRuledLines = (lineCount = 4) => {
+    const lines = [];
+    for (let i = 0; i < lineCount; i++) {
+      lines.push(el('div', { class: 'print-ruled-line-row' }));
+    }
+    return el('div', { class: 'print-ruled-lines-container' }, lines);
+  };
+
   return el('div', { class: 'fir-printable-sheet-root' }, [
     // Header
     el('div', { class: 'print-header-block' }, [
       el('div', { class: 'print-gov-title' }, ['MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)']),
       el('h1', { class: 'print-main-title' }, ['FIRST INFORMATION REPORT']),
       el('div', { class: 'print-subtitle-legal' }, ['(Crime & Criminal Intelligence MIS · Under Section 154 Cr.P.C. / BNSS 173)']),
-      el('div', { class: 'print-station-sub' }, [
-        'Police Station: ',
-        el('strong', { class: 'print-underline-text' }, [data.policeStation || 'Cyber Crime Police Station, Shivajinagar']),
-        ' · District: ',
-        el('strong', { class: 'print-underline-text' }, [`${data.district || 'Pune HQ'}, ${data.state || 'Maharashtra'}`])
+      el('div', { class: 'print-station-sub-grid' }, [
+        el('div', { class: 'print-station-sub-item' }, [
+          el('span', { class: 'print-sub-label' }, ['Police Station:']),
+          el('span', { class: 'print-sub-line' }, [data.policeStation || '\u00A0'])
+        ]),
+        el('div', { class: 'print-station-sub-item' }, [
+          el('span', { class: 'print-sub-label' }, ['District:']),
+          el('span', { class: 'print-sub-line' }, [
+            data.district || data.state ? `${data.district || ''}${data.district && data.state ? ', ' : ''}${data.state || 'Maharashtra'}` : '\u00A0'
+          ])
+        ])
       ])
     ]),
 
@@ -154,15 +179,15 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-3' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['FIR NUMBER / CASE REF']),
-        el('div', { class: 'print-value bold' }, [data.firNumber || '____________________'])
+        valOrBlank(data.firNumber, true)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['DATE OF OCCURRENCE']),
-        el('div', { class: 'print-value' }, [data.incidentDate || 'DD / MM / YYYY'])
+        valOrBlank(data.incidentDate)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['TIME OF INCIDENT']),
-        el('div', { class: 'print-value' }, [data.incidentTime || '______ HRS'])
+        valOrBlank(data.incidentTime)
       ])
     ]),
 
@@ -170,7 +195,7 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-1' }, [
       el('div', { class: 'print-field-box full' }, [
         el('span', { class: 'print-label' }, ['STATUTORY ACTS & SECTIONS']),
-        el('div', { class: 'print-value bold' }, [data.sections || 'IPC 420, 468, 471, 120B · IT Act 66C, 66D'])
+        valOrBlank(data.sections, true)
       ])
     ]),
 
@@ -181,25 +206,25 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-3' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['NAME OF COMPLAINANT']),
-        el('div', { class: 'print-value' }, [data.complainantName || '____________________'])
+        valOrBlank(data.complainantName)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['AGE']),
-        el('div', { class: 'print-value' }, [data.complainantAge ? `${data.complainantAge} Years` : '______'])
+        valOrBlank(data.complainantAge ? `${data.complainantAge} Years` : '')
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ["FATHER'S / RELATIVE NAME"]),
-        el('div', { class: 'print-value' }, [data.complainantFather || '____________________'])
+        valOrBlank(data.complainantFather)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CONTACT MOBILE / PHONE']),
-        el('div', { class: 'print-value' }, [data.complainantPhone || '+91 ______________'])
+        valOrBlank(data.complainantPhone ? data.complainantPhone : '')
       ]),
       el('div', { class: 'print-field-box wide' }, [
         el('span', { class: 'print-label' }, ['PERMANENT / RESIDENTIAL ADDRESS']),
-        el('div', { class: 'print-value' }, [data.complainantAddress || '__________________________________________________________________'])
+        valOrBlank(data.complainantAddress)
       ])
     ]),
 
@@ -210,21 +235,21 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['PRIMARY ACCUSED NAME']),
-        el('div', { class: 'print-value bold' }, [data.subjectName || '____________________'])
+        valOrBlank(data.subjectName, true)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['KNOWN ALIASES / CYBER HANDLES']),
-        el('div', { class: 'print-value' }, [data.alias || '____________________'])
+        valOrBlank(data.alias)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CO-ACCUSED & CONSPIRATORS (COMMA SEPARATED)']),
-        el('div', { class: 'print-value' }, [data.otherAccused || '__________________________________________________'])
+        valOrBlank(data.otherAccused)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['INCIDENT LOCATION / PLACE OF OCCURRENCE']),
-        el('div', { class: 'print-value' }, [data.incidentLocation || '__________________________________________________'])
+        valOrBlank(data.incidentLocation)
       ])
     ]),
 
@@ -235,21 +260,21 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['ASSOCIATED PHONE / BURNER SIM']),
-        el('div', { class: 'print-value' }, [data.phone || '____________________'])
+        valOrBlank(data.phone)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['LOGISTICS / VEHICLE ASSET']),
-        el('div', { class: 'print-value' }, [data.vehicle || '____________________'])
+        valOrBlank(data.vehicle)
       ])
     ]),
     el('div', { class: 'print-field-row-2' }, [
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['MULE ACCOUNT / FINANCIAL ROUTE']),
-        el('div', { class: 'print-value' }, [data.bank || '__________________________________________________'])
+        valOrBlank(data.bank)
       ]),
       el('div', { class: 'print-field-box' }, [
         el('span', { class: 'print-label' }, ['CELL TOWER / TRIANGULATION SECTOR']),
-        el('div', { class: 'print-value' }, [data.tower || 'FC Road Sector / Pune HQ'])
+        valOrBlank(data.tower)
       ])
     ]),
 
@@ -260,22 +285,22 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-narrative-block' }, [
       el('span', { class: 'print-label' }, ['DESCRIPTION OF CRIME & FACTUAL SEQUENCE']),
       el('div', { class: 'print-boxed-content' }, [
-        data.incidentSummary
-          ? el('p', { class: 'print-paragraph' }, [data.incidentSummary])
-          : el('div', { class: 'print-blank-lines' })
+        data.incidentSummary && data.incidentSummary.trim()
+          ? el('p', { class: 'print-paragraph' }, [data.incidentSummary.trim()])
+          : renderRuledLines(4)
       ])
     ]),
 
-    el('div', { class: 'print-narrative-block', style: 'margin-top: 10px;' }, [
+    el('div', { class: 'print-narrative-block', style: 'margin-top: 8px;' }, [
       el('span', { class: 'print-label' }, ['PROPERTY DEFRAUDED / STOLEN / SEIZED VALUABLES']),
       el('div', { class: 'print-boxed-content compact' }, [
-        data.propertySummary
-          ? el('p', { class: 'print-paragraph' }, [data.propertySummary])
-          : el('div', { class: 'print-blank-lines short' })
+        data.propertySummary && data.propertySummary.trim()
+          ? el('p', { class: 'print-paragraph' }, [data.propertySummary.trim()])
+          : renderRuledLines(3)
       ])
     ]),
 
-    // 5 - Seized Evidence Attachments Table
+    // 5 - Seized Evidence Attachments Table (if present)
     data.evidenceItems && data.evidenceItems.length > 0 ? el('div', { class: 'print-evidence-section' }, [
       el('div', { class: 'print-section-divider' }, [
         el('strong', {}, ['5 - SEIZED DIGITAL & PHYSICAL EVIDENCE ITEMS'])
@@ -298,28 +323,34 @@ export function renderPrintableSheet(data) {
     el('div', { class: 'print-footer-signoff-row' }, [
       el('div', { class: 'print-signoff-left' }, [
         el('div', { class: 'print-action-taken' }, [
-          'Action taken: ',
-          el('span', {}, [data.actionTaken])
+          el('span', { class: 'print-label' }, ['ACTION TAKEN']),
+          el('div', { class: 'print-value' }, [data.actionTaken || el('span', { class: 'print-blank-fill' }, ['\u00A0'])])
         ]),
         el('div', { class: 'print-io-name' }, [
-          'Investigating Officer: ',
-          el('strong', {}, [`${data.ioName} (${data.ioRank}, ${data.ioDistrict})`])
+          el('span', { class: 'print-label' }, ['INVESTIGATING OFFICER']),
+          el('div', { class: 'print-value' }, [
+            data.ioName ? `${data.ioName} (${data.ioRank}, ${data.ioDistrict})` : el('span', { class: 'print-blank-fill' }, ['\u00A0'])
+          ])
         ]),
         el('div', { class: 'print-unit-tag' }, [
-          'Unit: Crime & Criminal Network Command · Pune HQ'
+          isBlank ? 'Unit: ________________________________________________' : 'Unit: Crime & Criminal Network Command · Pune HQ'
         ])
       ]),
       el('div', { class: 'print-signoff-right' }, [
         el('div', { class: 'print-signature-box' }, [
           el('div', { class: 'signature-line-mark' }),
-          el('span', { class: 'sig-label' }, [`Signature of IO · Date: ${data.printDate}`])
+          el('div', { class: 'sig-label', style: 'white-space: nowrap;' }, [
+            isBlank ? 'Signature of IO · Date: ____/____/20__' : (data.printDate ? `Signature of IO · Date: ${data.printDate}` : 'Signature of IO · Date: ____/____/20__')
+          ])
         ])
       ])
     ]),
 
     // Watermark line
     el('div', { class: 'print-bottom-watermark' }, [
-      `Netrakshak Criminal Intelligence MIS · Verified Official Record · Case Ref: ${data.firNumber || 'POLICE-MIS'}`
+      isBlank
+        ? 'Netrakshak Criminal Intelligence MIS · Standard Form II Template · Crime & Criminal Network Command'
+        : `Netrakshak Criminal Intelligence MIS · Verified Official Record · Case Ref: ${data.firNumber || 'POLICE-MIS'}`
     ])
   ].filter(Boolean));
 }
@@ -407,7 +438,12 @@ export function renderFIRExportModal() {
       el('button', {
         class: 'primary-btn small print-cta-btn',
         onclick: () => {
+          const originalTitle = document.title;
+          document.title = ' ';
           window.print();
+          setTimeout(() => {
+            document.title = originalTitle;
+          }, 800);
         }
       }, [icon('expand'), ' Print / Save PDF'])
     ])

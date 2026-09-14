@@ -3,7 +3,7 @@ import { t } from '../i18n/index.js';
 import { state, getActiveOfficer, notifyStateChange } from '../state.js';
 
 export function navItem(view, label, i) {
-  const b = el('button', { class: `nav-item ${state.view === view ? 'active' : ''}` }, [
+  const b = el('button', { class: `nav-item ${state.view === view ? 'active' : ''}`, 'data-view': view }, [
     el('span', { class: 'nav-icon' }, [icon(i)]),
     el('span', {}, [label])
   ]);
