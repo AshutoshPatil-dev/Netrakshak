@@ -45,7 +45,7 @@ function getActiveCDRRecords() {
   return SAMPLE_PUNE_CYBER_CDR;
 }
 
-export function renderCDRAnalysis() {
+export function renderCDRAnalysis(c) {
   const records = getActiveCDRRecords();
   const histogram = analyze24HourHistogram(records);
   const imeiSwaps = analyzeIMEISwaps(records);
@@ -58,6 +58,11 @@ export function renderCDRAnalysis() {
     renderTabNav(),
     renderActiveTabContent(records, histogram, imeiSwaps, topContacts, towerAnalysis)
   ]);
+
+  if (c) {
+    c.innerHTML = '';
+    c.append(container);
+  }
 
   return container;
 }

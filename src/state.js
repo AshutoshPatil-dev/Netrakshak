@@ -216,7 +216,8 @@ export const state = {
   isIntegrityAuditing: false,
   cdrActiveDataset: 'pune_cyber', // 'pune_cyber', 'swargate_extortion', 'custom'
   cdrActiveTab: 'histogram', // 'histogram', 'imei_matrix', 'top_contacts', 'tower_preservation'
-  cdrFilterTarget: null
+  cdrFilterTarget: null,
+  mobileSidebarOpen: false
 };
 
 export function injectCDRIntoGraph(cdrList = [], focalNumber = null) {

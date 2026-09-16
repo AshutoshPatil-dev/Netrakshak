@@ -9033,4 +9033,396 @@
   line-height: 1.5;
 }
 
+/* ==========================================================================
+   UNIVERSAL MOBILE RESPONSIVENESS OVERRIDES (<= 768px and <= 480px)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Global Touch & Spacing Fixes */
+  button, select, input, .btn-primary-command, .btn-action-sm, .nav-item {
+    touch-action: manipulation;
+  }
+
+  /* Dashboard View Mobile */
+  .dashboard-metrics-grid, .metric-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .case-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .case-progress {
+    width: 100% !important;
+  }
+
+  /* Network Graph & Launchpad Mobile */
+  .network-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .graph-panel {
+    height: 440px !important;
+  }
+
+  .graph-legend {
+    left: 8px !important;
+    bottom: 8px !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    font-size: 9px !important;
+    flex-wrap: wrap !important;
+    max-width: calc(100% - 16px) !important;
+  }
+
+  .graph-controls {
+    right: 8px !important;
+    bottom: 8px !important;
+    gap: 4px !important;
+  }
+
+  .network-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+
+  .filter-select {
+    width: 100% !important;
+  }
+
+  .investigation-launchpad-card {
+    padding: 16px 14px !important;
+  }
+
+  .launchpad-search-box {
+    width: 100% !important;
+  }
+
+  .launchpad-preset-strip {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .launchpad-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Entities & Dossier View Mobile */
+  .entities-view-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .entities-stats-banner {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .entities-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .entity-card-top {
+    gap: 10px !important;
+  }
+
+  .entity-profile-header-card {
+    padding: 16px !important;
+  }
+
+  .entity-profile-main-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 14px !important;
+  }
+
+  .entity-profile-tabs-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .profile-metrics-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* FIR View Mobile */
+  .fir-mode-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px !important;
+  }
+
+  .manual-grid, .draft-grid, .fir-manual-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .evidence-entry {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .upload-box {
+    height: 150px !important;
+    padding: 14px !important;
+  }
+
+  .workflow {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .fir-dossiers-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* AI Analysis View Mobile */
+  .ai-analysis-view {
+    padding: 12px 8px !important;
+    gap: 12px !important;
+  }
+
+  .ai-tab-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+  }
+
+  .ai-tab-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .ai-copilot-workspace {
+    height: calc(100vh - 180px) !important;
+    min-height: 480px !important;
+    max-height: 600px !important;
+  }
+
+  .copilot-messages-scroll {
+    padding: 12px 10px !important;
+  }
+
+  .chat-bubble {
+    max-width: 92% !important;
+    font-size: 13px !important;
+  }
+
+  .copilot-input-bar {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+
+  .copilot-textarea {
+    font-size: 13px !important;
+    padding: 8px 10px !important;
+  }
+
+  .copilot-send-btn {
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+  }
+
+  .tactical-leads-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Telecom CDR / IPDR View Mobile */
+  .cdr-analysis-view {
+    padding: 12px 8px !important;
+    gap: 14px !important;
+  }
+
+  .cdr-header-card {
+    padding: 16px 14px !important;
+  }
+
+  .cdr-header-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .cdr-title {
+    font-size: 18px !important;
+  }
+
+  .cdr-dataset-actions {
+    width: 100% !important;
+  }
+
+  .btn-dataset, .btn-dataset-upload {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    justify-content: center !important;
+    font-size: 11.5px !important;
+    padding: 7px 10px !important;
+  }
+
+  .cdr-metric-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .metric-value {
+    font-size: 20px !important;
+  }
+
+  .cdr-tab-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+  }
+
+  .cdr-tab-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .histogram-chart-container {
+    height: 150px !important;
+  }
+
+  .histogram-bar-wrapper {
+    min-width: 22px !important;
+  }
+
+  .cdr-tower-pane-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .notice-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .cdr-contacts-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .target-filter-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+
+  .cdr-select {
+    width: 100% !important;
+  }
+
+  .btn-primary-command {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Patterns & Anomalies View Mobile */
+  .patterns-header-actions {
+    width: 100% !important;
+  }
+
+  .community-title-line {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .community-members-wrap {
+    gap: 6px !important;
+  }
+
+  .community-member-pill {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Table Responsive Horizontal Scroll */
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+  }
+
+  .cdr-table, .audit-table {
+    min-width: 600px !important;
+    font-size: 11.5px !important;
+  }
+
+  .cdr-table th, .cdr-table td,
+  .audit-table th, .audit-table td {
+    padding: 8px 10px !important;
+  }
+
+  /* Officers & Audit Logs View Mobile */
+  .officers-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .audit-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .audit-filter-group {
+    width: 100% !important;
+  }
+
+  .audit-filter-group select,
+  .audit-filter-group input {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .cdr-metric-grid,
+  .entities-stats-banner,
+  .profile-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .global-search {
+    display: none !important;
+  }
+
+  .topbar {
+    padding: 0 10px !important;
+  }
+
+  .page-heading h1 {
+    font-size: 18px !important;
+  }
+}
+
+
 

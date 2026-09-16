@@ -19,6 +19,7 @@ export function navItem(view, label, i) {
       state.profileEntityId = null;
       state.query = '';
     }
+    state.mobileSidebarOpen = false;
     state.view = view;
     notifyStateChange();
   };

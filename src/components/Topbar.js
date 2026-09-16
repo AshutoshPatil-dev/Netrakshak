@@ -56,6 +56,14 @@ export function renderTopbar() {
   searchInput.onblur = () => setTimeout(() => searchInput.closest('.global-search')?.querySelector('.search-suggestions')?.remove(), 200);
 
   const topbar = el('header', { class: 'topbar' }, [
+    el('button', {
+      class: 'topbar-mobile-menu-btn',
+      title: 'Toggle Navigation',
+      onclick: () => {
+        state.mobileSidebarOpen = !state.mobileSidebarOpen;
+        notifyStateChange();
+      }
+    }, ['☰']),
     el('div', { class: 'topbar-brand' }, [
       el('div', { class: 'topbar-mark' }, [icon('shield')]),
       el('div', {}, [
