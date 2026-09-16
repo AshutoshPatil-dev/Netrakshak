@@ -29,7 +29,7 @@ if (!state.aiAnalysis) {
 I am your specialized tactical intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
 
 **How I can assist your investigation:**
-- **Suspect & Syndicate Profiling**: Type any suspect name, alias, phone number, vehicle plate, or bank account.
+- **Suspect & Syndicate Profiling**: Inquire about any suspect name, alias, phone number, vehicle plate, or bank account.
 - **Procedural Drafting**: Request formal *Section 91 CrPC Bank Freeze Notices* or *ANPR BOLO alerts*.
 - **Interrogation Strategy**: Ask for tactical cross-examination points based on timeline and cell tower discrepancies.
 - **Cross-Case Link Discovery**: Detect overlapping accused across police stations.
@@ -134,16 +134,16 @@ export function renderAIAnalysis(c) {
   const index = buildIntelligenceIndex();
   const leads = generateTacticalLeads();
 
-  // 1. View Header
-  const header = el('div', { class: 'section-header' }, [
+  // 1. Page Heading (Consistent with AppShell & Dashboard style)
+  const header = el('div', { class: 'page-heading' }, [
     el('div', {}, [
       el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE & INVESTIGATION WORKSPACE']),
       el('h1', {}, ['AI Crime Intelligence & Tactical Command']),
-      el('p', { class: 'subtitle' }, [
+      el('p', { class: 'muted' }, [
         'Multi-source intelligence fusion across FIR cases, CDR telecommunication towers, financial layering trails, and tactical CrPC actions.'
       ])
     ]),
-    el('div', { class: 'header-actions' }, [
+    el('div', { class: 'header-actions', style: 'display: flex; gap: 8px;' }, [
       el('button', {
         class: 'btn-secondary',
         onclick: () => {
@@ -161,28 +161,42 @@ export function renderAIAnalysis(c) {
     ])
   ]);
 
-  // 2. Telemetry Bar
-  const telemetryBar = el('div', { class: 'ai-telemetry-bar' }, [
-    el('div', { class: 'telemetry-item active-engine' }, [
-      el('span', { class: 'telemetry-dot dot-live' }),
-      el('span', { class: 'telemetry-label' }, ['AI Engine: ']),
-      el('strong', {}, ['Netrakshak Tactical V2 (Active)'])
+  // 2. Metric Telemetry Cards (Matching Dashboard style)
+  const metricsRow = el('div', { class: 'metric-grid' }, [
+    el('div', { class: 'metric-card' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['AI Engine Status']),
+        el('span', { class: 'ai-live-indicator' }, [
+          el('span', { class: 'dot-live' }),
+          ' Active'
+        ])
+      ]),
+      el('strong', { class: 'metric-value', style: 'font-size: 20px;' }, ['Netrakshak V2']),
+      el('span', { class: 'metric-foot' }, ['Proprietary law enforcement model'])
     ]),
-    el('div', { class: 'telemetry-item' }, [
-      el('span', { class: 'telemetry-label' }, ['Monitored Syndicates: ']),
-      el('strong', {}, [String(index.syndicates.length)])
+    el('div', { class: 'metric-card' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Monitored Syndicates']),
+        el('span', { class: 'metric-spark' }, [icon('shield')])
+      ]),
+      el('strong', { class: 'metric-value' }, [String(index.syndicates.length)]),
+      el('span', { class: 'metric-foot' }, ['ShadowFlow & Swargate rings'])
     ]),
-    el('div', { class: 'telemetry-item' }, [
-      el('span', { class: 'telemetry-label' }, ['Indexed Entities: ']),
-      el('strong', {}, [String(index.entities.length)])
+    el('div', { class: 'metric-card' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Indexed Entities']),
+        el('span', { class: 'metric-spark' }, [icon('user')])
+      ]),
+      el('strong', { class: 'metric-value' }, [String(index.entities.length)]),
+      el('span', { class: 'metric-foot' }, ['Suspects, phones, accounts, vehicles'])
     ]),
-    el('div', { class: 'telemetry-item' }, [
-      el('span', { class: 'telemetry-label' }, ['Active FIRs: ']),
-      el('strong', {}, [String(index.cases.length)])
-    ]),
-    el('div', { class: 'telemetry-item' }, [
-      el('span', { class: 'telemetry-label' }, ['Tactical Leads: ']),
-      el('strong', { class: 'red-text' }, [String(leads.length)])
+    el('div', { class: 'metric-card' }, [
+      el('div', { class: 'metric-top' }, [
+        el('span', { class: 'metric-label' }, ['Tactical Leads']),
+        el('span', { class: 'metric-spark red' }, [icon('alert')])
+      ]),
+      el('strong', { class: 'metric-value', style: 'color: var(--app-high, #DC2626);' }, [String(leads.length)]),
+      el('span', { class: 'metric-foot' }, ['Requires officer procedural action'])
     ])
   ]);
 
@@ -237,7 +251,7 @@ export function renderAIAnalysis(c) {
 
   const mainLayout = el('div', { class: 'ai-analysis-container' }, [
     header,
-    telemetryBar,
+    metricsRow,
     navTabs,
     tabContent
   ]);
@@ -404,7 +418,7 @@ function renderCopilotTab() {
     ])
   ]);
 
-  return el('div', { class: 'copilot-workspace-panel' }, [
+  return el('div', { class: 'panel copilot-workspace-panel' }, [
     chatMessages,
     inputContainer
   ]);
@@ -478,7 +492,7 @@ function renderScannerTab() {
     })
   ]);
 
-  const searchBox = el('div', { class: 'ai-search-card' }, [
+  const searchBox = el('div', { class: 'panel ai-search-card' }, [
     el('div', { class: 'ai-search-top' }, [
       searchInput,
       streamSelect,
@@ -514,7 +528,7 @@ function renderScannerTab() {
       ])
     ]);
 
-    const nodesSection = el('div', { class: 'ai-section-panel' }, [
+    const nodesSection = el('div', { class: 'panel ai-section-panel' }, [
       el('div', { class: 'panel-head' }, [
         el('h3', {}, ['Discovered Co-Conspirators & Multi-Hop Linkages (', String(activeResult.nodes.length), ')']),
         el('span', { class: 'muted' }, ['Correlated across CDR towers, FIRs, bank transfers, and suspect records'])
@@ -543,7 +557,7 @@ function renderScannerTab() {
       }))
     ]);
 
-    const firsSection = activeResult.firs.length > 0 ? el('div', { class: 'ai-section-panel' }, [
+    const firsSection = activeResult.firs.length > 0 ? el('div', { class: 'panel ai-section-panel' }, [
       el('div', { class: 'panel-head' }, [
         el('h3', {}, ['Cross-District FIR Matches & Charge-Sheet Overlaps (', String(activeResult.firs.length), ')']),
         el('span', { class: 'muted' }, ['Common accused, modus operandi, and seized property'])
@@ -566,7 +580,7 @@ function renderScannerTab() {
       ])))
     ]) : null;
 
-    const cdrSection = activeResult.cdrEvidence ? el('div', { class: 'ai-section-panel' }, [
+    const cdrSection = activeResult.cdrEvidence ? el('div', { class: 'panel ai-section-panel' }, [
       el('div', { class: 'panel-head' }, [
         el('h3', {}, ['CDR Telecommunications & Tower Triangulation']),
         el('span', { class: 'muted' }, ['Call frequency, nocturnal activity, and co-location tower matches'])
@@ -590,7 +604,7 @@ function renderScannerTab() {
       ])
     ]) : null;
 
-    const finSection = activeResult.financialTrail.length > 0 ? el('div', { class: 'ai-section-panel' }, [
+    const finSection = activeResult.financialTrail.length > 0 ? el('div', { class: 'panel ai-section-panel' }, [
       el('div', { class: 'panel-head' }, [
         el('h3', {}, ['Financial Layering Trail & Mule Route']),
         el('span', { class: 'muted' }, ['Tracing fraud fund dissipation across intermediary bank accounts and ATM cash-outs'])
@@ -609,7 +623,7 @@ function renderScannerTab() {
       ])))
     ]) : null;
 
-    const actionsSection = el('div', { class: 'ai-section-panel' }, [
+    const actionsSection = el('div', { class: 'panel ai-section-panel' }, [
       el('div', { class: 'panel-head' }, [
         el('h3', {}, ['Recommended Law Enforcement Action Steps']),
         el('span', { class: 'muted' }, ['Standard Operating Procedures (SOP) based on discovered pattern and threat level'])
@@ -639,7 +653,7 @@ function renderScannerTab() {
       actionsSection
     ]);
   } else {
-    resultView = el('div', { class: 'ai-empty-state' }, [
+    resultView = el('div', { class: 'panel ai-empty-state' }, [
       el('div', { class: 'empty-icon-box' }, [icon('sparkle')]),
       el('h3', {}, ['Ready for AI Linkage & Pattern Analysis']),
       el('p', {}, ['Enter any identifier above (phone, vehicle plate, bank account, person name) or click a quick preset to analyze cross-case syndicates.'])
@@ -751,7 +765,7 @@ function renderSummarizerTab(index) {
 
   const summary = generateCaseExecutiveSummary(selectedFir);
 
-  const summaryCard = el('div', { class: 'case-executive-summary-card' }, [
+  const summaryCard = el('div', { class: 'panel case-executive-summary-card' }, [
     el('div', { class: 'summary-header' }, [
       el('div', {}, [
         el('div', { class: 'eyebrow red' }, ['EXECUTIVE INTELLIGENCE DOSSIER']),
@@ -828,7 +842,6 @@ function formatMarkdownToDom(text) {
   lines.forEach(line => {
     if (line.startsWith('```')) {
       if (inCodeBlock) {
-        // Close code block
         const pre = el('pre', { class: 'code-block' }, [
           el('code', {}, [codeBuffer.join('\n')])
         ]);
@@ -877,11 +890,8 @@ function renderInlineFormatting(raw) {
   const span = document.createElement('span');
   let text = raw;
 
-  // Format bold **text**
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Format code `text`
   text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-  // Format italics *text*
   text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
   span.innerHTML = text;
