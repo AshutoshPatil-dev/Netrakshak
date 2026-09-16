@@ -25,8 +25,8 @@ if (!state.aiAnalysis) {
       {
         sender: 'ai',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: `### Netrakshak AI Crime Copilot Active
-I am your specialized tactical intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
+        text: `### Netrakshak AI Crime Intelligence Active
+I am your specialized intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
 
 **How I can assist your investigation:**
 - **Suspect & Syndicate Profiling**: Inquire about any suspect name, alias, phone number, vehicle plate, or bank account.
@@ -135,28 +135,13 @@ export function renderAIAnalysis(c) {
   const leads = generateTacticalLeads();
   const currentTab = state.aiAnalysis.activeTab || 'copilot';
 
-  // 1. Compact Page Header with Integrated Telemetry Pills
-  const header = el('div', { class: 'page-heading compact', style: 'margin-bottom: 12px;' }, [
+  // 1. Clean, Compact Page Header (Without extra telemetry stats)
+  const header = el('div', { class: 'page-heading compact ai-header-row' }, [
     el('div', {}, [
-      el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE & INVESTIGATION WORKSPACE']),
-      el('h1', { style: 'font-size: 22px; margin: 4px 0;' }, ['AI Crime Intelligence & Tactical Command']),
-      el('div', { class: 'ai-compact-telemetry' }, [
-        el('span', { class: 'ai-telemetry-pill' }, [
-          el('span', { class: 'dot-live' }),
-          ' AI Engine: Netrakshak V2'
-        ]),
-        el('span', { class: 'ai-telemetry-pill' }, [
-          icon('shield'),
-          ` ${index.syndicates.length} Monitored Syndicates`
-        ]),
-        el('span', { class: 'ai-telemetry-pill' }, [
-          icon('user'),
-          ` ${index.entities.length} Indexed Entities`
-        ]),
-        el('span', { class: 'ai-telemetry-pill red-pill' }, [
-          icon('alert'),
-          ` ${leads.length} Tactical Leads`
-        ])
+      el('div', { class: 'eyebrow blue' }, ['INVESTIGATION WORKSPACE']),
+      el('h1', { class: 'ai-view-title' }, ['Netrakshak AI Intelligence']),
+      el('p', { class: 'muted ai-view-sub' }, [
+        'Multi-source data fusion across FIR dossiers, CDR towers, financial layering trails, and tactical CrPC actions.'
       ])
     ]),
     el('div', { class: 'header-actions', style: 'display: flex; gap: 8px;' }, [
@@ -185,7 +170,7 @@ export function renderAIAnalysis(c) {
         state.aiAnalysis.activeTab = 'copilot';
         renderAIAnalysis(container);
       }
-    }, [icon('sparkle'), el('span', {}, ['Tactical Copilot (Chat & Q&A)'])]),
+    }, [icon('sparkle'), el('span', {}, ['Netrakshak AI'])]),
     el('button', {
       class: `ai-tab-btn ${currentTab === 'scanner' ? 'active' : ''}`,
       onclick: () => {
@@ -239,8 +224,8 @@ export function renderAIAnalysis(c) {
 }
 
 /**
- * Tab 1: Tactical AI Copilot (Interactive Chat & Q&A)
- * Featuring 2-column tactical layout with sticky, immediate input.
+ * Tab 1: Netrakshak AI (Interactive Chat & Q&A)
+ * 2-column tactical layout fitted strictly to viewport without page scroll.
  */
 function renderCopilotTab(index, leads) {
   const chatMessages = el('div', { class: 'copilot-chat-feed', id: 'copilot-chat-feed' });
@@ -255,7 +240,7 @@ function renderCopilotTab(index, leads) {
         ]),
         el('div', { class: 'msg-content-box' }, [
           el('div', { class: 'msg-header' }, [
-            el('strong', { class: 'msg-author' }, [isUser ? 'Investigating Officer' : 'Netrakshak AI Copilot']),
+            el('strong', { class: 'msg-author' }, [isUser ? 'Investigating Officer' : 'Netrakshak AI']),
             el('span', { class: 'msg-time' }, [msg.time || ''])
           ]),
           el('div', { class: 'msg-body markdown-rendered' }, [formatMarkdownToDom(msg.text)]),
@@ -295,7 +280,7 @@ function renderCopilotTab(index, leads) {
   // Chat Input Box
   const inputEl = el('textarea', {
     class: 'copilot-input-field',
-    placeholder: 'Ask Netrakshak AI Copilot about suspects, phone towers, bank trails, interrogation points, or CrPC legal drafting...',
+    placeholder: 'Ask Netrakshak AI about suspects, phone towers, bank trails, interrogation points, or CrPC drafting...',
     rows: '2'
   });
 
@@ -339,7 +324,7 @@ function renderCopilotTab(index, leads) {
         actions: response.actions
       });
       renderMessages();
-      recordAudit('AI Copilot Inquiry', `Investigator query: "${text}"`, 'info', 'copilot').catch(() => {});
+      recordAudit('AI Inquiry', `Investigator query: "${text}"`, 'info', 'ai').catch(() => {});
     }, 450);
   }
 
@@ -362,7 +347,7 @@ function renderCopilotTab(index, leads) {
         {
           sender: 'ai',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: 'Conversation cleared. Netrakshak AI Copilot ready for fresh investigation inquiries.',
+          text: 'Conversation cleared. Netrakshak AI ready for fresh investigation inquiries.',
           actions: []
         }
       ];
@@ -403,11 +388,11 @@ function renderCopilotTab(index, leads) {
           el('strong', {}, [syn.name]),
           el('span', { class: `threat-tag threat-${syn.threat.toLowerCase()}` }, [syn.threat])
         ]),
-        el('p', { class: 'syn-mini-mo' }, [syn.modusOperandi.slice(0, 100) + '...']),
+        el('p', { class: 'syn-mini-mo' }, [syn.modusOperandi.slice(0, 95) + '...']),
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => handleSend(`Analyze ${syn.name} syndicate`)
-        }, ['Ask Copilot →'])
+        }, ['Ask AI →'])
       ]))
     ])
   ]);

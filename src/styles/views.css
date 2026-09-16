@@ -7234,52 +7234,38 @@
    AI Crime Intelligence & Tactical Workspace Styles (Netrakshak Theme)
    ========================================================================== */
 
+/* Zero-scroll viewport container when on AI view */
+.app-shell[data-active-view="ai_analysis"] .main-area > .content {
+  padding: 14px 24px 14px !important;
+  overflow: hidden !important;
+}
+
 .ai-analysis-container {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding-bottom: 20px;
+  height: 100%;
+  min-height: 0;
 }
 
-.ai-compact-telemetry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+.ai-header-row {
+  margin-bottom: 4px !important;
 }
 
-.ai-telemetry-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--app-text, #1E293B);
-  background: #FFFFFF;
-  border: 1px solid var(--app-border, #CBD5E1);
-  padding: 3px 10px;
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+.ai-view-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  margin: 2px 0 !important;
+  color: var(--app-text, #1A202C) !important;
 }
 
-.ai-telemetry-pill.red-pill {
-  color: #DC2626;
-  background: #FEF2F2;
-  border-color: #FCA5A5;
-  font-weight: 700;
-}
-
-.dot-live {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 6px #10B981;
-  animation: pulseGreen 2s infinite;
+.ai-view-sub {
+  font-size: 12px !important;
+  margin: 0 !important;
+  color: var(--app-text-secondary, #64748B) !important;
 }
 
 /* Sub-Navigation Tabs */
@@ -7287,20 +7273,22 @@
   display: flex;
   gap: 8px;
   border-bottom: 1px solid var(--app-border, #E2E8F0);
-  padding-bottom: 10px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .ai-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: #FFFFFF;
   border: 1.5px solid var(--app-border, #E2E8F0);
   border-radius: 8px;
   color: var(--app-text-secondary, #64748B);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -7312,7 +7300,6 @@
   background: #F8FAFC;
   border-color: #94A3B8;
   color: var(--app-blue, #0B3D91);
-  transform: translateY(-1px);
 }
 
 .ai-tab-btn.active {
@@ -7326,8 +7313,8 @@
 .tab-badge {
   background: var(--app-high, #DC2626);
   color: #FFFFFF;
-  font-size: 11px;
-  padding: 1px 7px;
+  font-size: 10px;
+  padding: 1px 6px;
   border-radius: 10px;
   font-weight: 800;
 }
@@ -7335,7 +7322,7 @@
 /* Copilot 2-Column Tactical Workspace */
 .copilot-workspace-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 0;
   background: #FFFFFF;
   border: 1px solid var(--app-border, #E2E8F0);
@@ -7343,8 +7330,9 @@
   overflow: hidden;
   box-shadow: var(--shadow);
   padding: 0 !important;
-  height: calc(100vh - 200px);
-  min-height: 520px;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 160px);
 }
 
 @media (max-width: 1024px) {
