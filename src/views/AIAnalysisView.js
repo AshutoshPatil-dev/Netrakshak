@@ -34,7 +34,7 @@ I am your specialized tactical intelligence assistant grounded in live FIR dossi
 - **Interrogation Strategy**: Ask for tactical cross-examination points based on timeline and cell tower discrepancies.
 - **Cross-Case Link Discovery**: Detect overlapping accused across police stations.
 
-*Select a quick query below or type your investigation question.*`,
+*Select a quick query or type your investigation question below.*`,
         actions: []
       }
     ],
@@ -133,19 +133,35 @@ export function renderAIAnalysis(c) {
 
   const index = buildIntelligenceIndex();
   const leads = generateTacticalLeads();
+  const currentTab = state.aiAnalysis.activeTab || 'copilot';
 
-  // 1. Page Heading (Consistent with AppShell & Dashboard style)
-  const header = el('div', { class: 'page-heading' }, [
+  // 1. Compact Page Header with Integrated Telemetry Pills
+  const header = el('div', { class: 'page-heading compact', style: 'margin-bottom: 12px;' }, [
     el('div', {}, [
       el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE & INVESTIGATION WORKSPACE']),
-      el('h1', {}, ['AI Crime Intelligence & Tactical Command']),
-      el('p', { class: 'muted' }, [
-        'Multi-source intelligence fusion across FIR cases, CDR telecommunication towers, financial layering trails, and tactical CrPC actions.'
+      el('h1', { style: 'font-size: 22px; margin: 4px 0;' }, ['AI Crime Intelligence & Tactical Command']),
+      el('div', { class: 'ai-compact-telemetry' }, [
+        el('span', { class: 'ai-telemetry-pill' }, [
+          el('span', { class: 'dot-live' }),
+          ' AI Engine: Netrakshak V2'
+        ]),
+        el('span', { class: 'ai-telemetry-pill' }, [
+          icon('shield'),
+          ` ${index.syndicates.length} Monitored Syndicates`
+        ]),
+        el('span', { class: 'ai-telemetry-pill' }, [
+          icon('user'),
+          ` ${index.entities.length} Indexed Entities`
+        ]),
+        el('span', { class: 'ai-telemetry-pill red-pill' }, [
+          icon('alert'),
+          ` ${leads.length} Tactical Leads`
+        ])
       ])
     ]),
     el('div', { class: 'header-actions', style: 'display: flex; gap: 8px;' }, [
       el('button', {
-        class: 'btn-secondary',
+        class: 'btn-secondary btn-sm',
         onclick: () => {
           const exportText = generateFullExportReport(index, leads);
           const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
@@ -157,51 +173,11 @@ export function renderAIAnalysis(c) {
           URL.revokeObjectURL(url);
           showToast('✓ AI Intelligence Dossier exported successfully.');
         }
-      }, [icon('file'), ' Export Intelligence Docket'])
+      }, [icon('file'), ' Export Docket'])
     ])
   ]);
 
-  // 2. Metric Telemetry Cards (Matching Dashboard style)
-  const metricsRow = el('div', { class: 'metric-grid' }, [
-    el('div', { class: 'metric-card' }, [
-      el('div', { class: 'metric-top' }, [
-        el('span', { class: 'metric-label' }, ['AI Engine Status']),
-        el('span', { class: 'ai-live-indicator' }, [
-          el('span', { class: 'dot-live' }),
-          ' Active'
-        ])
-      ]),
-      el('strong', { class: 'metric-value', style: 'font-size: 20px;' }, ['Netrakshak V2']),
-      el('span', { class: 'metric-foot' }, ['Proprietary law enforcement model'])
-    ]),
-    el('div', { class: 'metric-card' }, [
-      el('div', { class: 'metric-top' }, [
-        el('span', { class: 'metric-label' }, ['Monitored Syndicates']),
-        el('span', { class: 'metric-spark' }, [icon('shield')])
-      ]),
-      el('strong', { class: 'metric-value' }, [String(index.syndicates.length)]),
-      el('span', { class: 'metric-foot' }, ['ShadowFlow & Swargate rings'])
-    ]),
-    el('div', { class: 'metric-card' }, [
-      el('div', { class: 'metric-top' }, [
-        el('span', { class: 'metric-label' }, ['Indexed Entities']),
-        el('span', { class: 'metric-spark' }, [icon('user')])
-      ]),
-      el('strong', { class: 'metric-value' }, [String(index.entities.length)]),
-      el('span', { class: 'metric-foot' }, ['Suspects, phones, accounts, vehicles'])
-    ]),
-    el('div', { class: 'metric-card' }, [
-      el('div', { class: 'metric-top' }, [
-        el('span', { class: 'metric-label' }, ['Tactical Leads']),
-        el('span', { class: 'metric-spark red' }, [icon('alert')])
-      ]),
-      el('strong', { class: 'metric-value', style: 'color: var(--app-high, #DC2626);' }, [String(leads.length)]),
-      el('span', { class: 'metric-foot' }, ['Requires officer procedural action'])
-    ])
-  ]);
-
-  // 3. Sub-Navigation Tabs
-  const currentTab = state.aiAnalysis.activeTab || 'copilot';
+  // 2. Sub-Navigation Tabs
   const navTabs = el('div', { class: 'ai-subnav-tabs' }, [
     el('button', {
       class: `ai-tab-btn ${currentTab === 'copilot' ? 'active' : ''}`,
@@ -237,10 +213,10 @@ export function renderAIAnalysis(c) {
     }, [icon('file'), el('span', {}, ['Case & Dossier Summarizer'])])
   ]);
 
-  // 4. Content Area
+  // 3. Content Area
   let tabContent = null;
   if (currentTab === 'copilot') {
-    tabContent = renderCopilotTab();
+    tabContent = renderCopilotTab(index, leads);
   } else if (currentTab === 'scanner') {
     tabContent = renderScannerTab();
   } else if (currentTab === 'leads') {
@@ -251,7 +227,6 @@ export function renderAIAnalysis(c) {
 
   const mainLayout = el('div', { class: 'ai-analysis-container' }, [
     header,
-    metricsRow,
     navTabs,
     tabContent
   ]);
@@ -265,8 +240,9 @@ export function renderAIAnalysis(c) {
 
 /**
  * Tab 1: Tactical AI Copilot (Interactive Chat & Q&A)
+ * Featuring 2-column tactical layout with sticky, immediate input.
  */
-function renderCopilotTab() {
+function renderCopilotTab(index, leads) {
   const chatMessages = el('div', { class: 'copilot-chat-feed', id: 'copilot-chat-feed' });
 
   function renderMessages() {
@@ -323,8 +299,8 @@ function renderCopilotTab() {
     rows: '2'
   });
 
-  function handleSend() {
-    const text = inputEl.value.trim();
+  function handleSend(overrideQuery) {
+    const text = (overrideQuery || inputEl.value).trim();
     if (!text) return;
 
     inputEl.value = '';
@@ -376,7 +352,7 @@ function renderCopilotTab() {
 
   const sendBtn = el('button', {
     class: 'primary-btn copilot-send-btn',
-    onclick: handleSend
+    onclick: () => handleSend()
   }, [icon('sparkle'), ' Send Query']);
 
   const clearBtn = el('button', {
@@ -395,20 +371,7 @@ function renderCopilotTab() {
     }
   }, [icon('reset'), ' Clear Chat']);
 
-  // Quick Suggestion Chips
-  const suggestionsBox = el('div', { class: 'copilot-suggestions-bar' }, [
-    el('span', { class: 'suggestions-label' }, ['Recommended Inquiries:']),
-    ...copilotSuggestions.map(s => el('button', {
-      class: 'copilot-suggest-chip',
-      onclick: () => {
-        inputEl.value = s;
-        handleSend();
-      }
-    }, [s]))
-  ]);
-
   const inputContainer = el('div', { class: 'copilot-input-container' }, [
-    suggestionsBox,
     el('div', { class: 'copilot-input-row' }, [
       inputEl,
       el('div', { class: 'copilot-btn-group' }, [
@@ -418,9 +381,40 @@ function renderCopilotTab() {
     ])
   ]);
 
-  return el('div', { class: 'panel copilot-workspace-panel' }, [
+  // Main chat column
+  const chatColumn = el('div', { class: 'copilot-chat-column' }, [
     chatMessages,
     inputContainer
+  ]);
+
+  // Right-hand Tactical Quick Panel
+  const sidebarColumn = el('div', { class: 'copilot-tactical-sidebar' }, [
+    el('div', { class: 'sidebar-box' }, [
+      el('h4', { class: 'sidebar-box-title' }, [icon('sparkle'), ' Quick Inquiries']),
+      el('div', { class: 'quick-queries-list' }, copilotSuggestions.map(s => el('button', {
+        class: 'quick-query-btn',
+        onclick: () => handleSend(s)
+      }, [icon('arrow'), el('span', {}, [s])])))
+    ]),
+    el('div', { class: 'sidebar-box' }, [
+      el('h4', { class: 'sidebar-box-title' }, [icon('shield'), ' Active Monitored Syndicates']),
+      ...SEED_SYNDICATES.map(syn => el('div', { class: 'syn-mini-card' }, [
+        el('div', { class: 'syn-mini-head' }, [
+          el('strong', {}, [syn.name]),
+          el('span', { class: `threat-tag threat-${syn.threat.toLowerCase()}` }, [syn.threat])
+        ]),
+        el('p', { class: 'syn-mini-mo' }, [syn.modusOperandi.slice(0, 100) + '...']),
+        el('button', {
+          class: 'btn-secondary btn-sm',
+          onclick: () => handleSend(`Analyze ${syn.name} syndicate`)
+        }, ['Ask Copilot →'])
+      ]))
+    ])
+  ]);
+
+  return el('div', { class: 'panel copilot-workspace-panel' }, [
+    chatColumn,
+    sidebarColumn
   ]);
 }
 
