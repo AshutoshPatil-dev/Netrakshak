@@ -268,7 +268,7 @@ function renderCopilotTab() {
             el('strong', { class: 'msg-author' }, [isUser ? 'Investigating Officer' : 'Netrakshak AI Copilot']),
             el('span', { class: 'msg-time' }, [msg.time || ''])
           ]),
-          el('div', { class: 'msg-body markdown-rendered' }, formatMarkdownToDom(msg.text)),
+          el('div', { class: 'msg-body markdown-rendered' }, [formatMarkdownToDom(msg.text)]),
           msg.actions && msg.actions.length > 0 ? el('div', { class: 'msg-actions-tray' }, [
             el('div', { class: 'msg-actions-title' }, ['Recommended Action Triggers:']),
             ...msg.actions.map(act => el('button', {

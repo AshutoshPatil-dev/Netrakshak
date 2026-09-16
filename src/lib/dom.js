@@ -8,7 +8,8 @@ export const el = (tag, attrs = {}, children = []) => {
     else if (k === 'selected' || k === 'checked' || k === 'disabled' || k === 'hidden') node[k] = Boolean(v);
     else node.setAttribute(k, v);
   });
-  children.forEach(c => {
+  const childArray = Array.isArray(children) ? children : (children !== null && children !== undefined ? [children] : []);
+  childArray.forEach(c => {
     if (c !== null && c !== undefined) node.append(c);
   });
   return node;
