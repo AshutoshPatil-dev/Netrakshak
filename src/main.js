@@ -12,9 +12,7 @@ import { renderSources } from './views/DataIntegrityView.js';
 import { renderAIAnalysis } from './views/AIAnalysisView.js';
 import { renderEntityProfile } from './views/EntityProfileView.js';
 import { renderEntities } from './views/EntitiesView.js';
-
-
-
+import { renderCDRAnalysis } from './views/CDRAnalysisView.js';
 
 function getViewRenderer() {
   switch (state.view) {
@@ -24,6 +22,7 @@ function getViewRenderer() {
     case 'patterns':       return renderPatternsAnomalies;
     case 'entity_profile': return renderEntityProfile;
     case 'fir':            return renderFIR;
+    case 'cdr_analysis':   return renderCDRAnalysis;
     case 'ai_analysis':    return renderAIAnalysis;
     case 'officers':       return renderOfficers;
     case 'audit_logs':     return renderAuditLogs;
@@ -60,6 +59,7 @@ window.addEventListener('hashchange', () => {
     'patterns',
     'entity_profile',
     'fir',
+    'cdr_analysis',
     'ai_analysis',
     'officers',
     'audit_logs',

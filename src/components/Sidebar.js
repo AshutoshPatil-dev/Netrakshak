@@ -53,6 +53,7 @@ export function renderSidebar() {
     navItem('network', t('network'), 'network'),
     navItem('patterns', t('patternsAnomalies'), 'alert'),
     navItem('fir', t('fir'), 'file'),
+    navItem('cdr_analysis', t('cdrAnalysis'), 'phone'),
     navItem('ai_analysis', t('aiAnalysis'), 'sparkle'),
     ...(activeOfficer.isAdmin ? [
       navItem('officers', t('officers'), 'users'),

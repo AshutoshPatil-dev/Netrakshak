@@ -11,6 +11,7 @@ export const VALID_VIEWS = [
   'patterns',
   'entity_profile',
   'fir',
+  'cdr_analysis',
   'ai_analysis',
   'officers',
   'audit_logs',
@@ -212,8 +213,116 @@ export const state = {
   cdrRecords: [],
   financialTransactions: [],
   integrityAuditResult: null,
-  isIntegrityAuditing: false
+  isIntegrityAuditing: false,
+  cdrActiveDataset: 'pune_cyber', // 'pune_cyber', 'swargate_extortion', 'custom'
+  cdrActiveTab: 'histogram', // 'histogram', 'imei_matrix', 'top_contacts', 'tower_preservation'
+  cdrFilterTarget: null
 };
+
+export function injectCDRIntoGraph(cdrList = [], focalNumber = null) {
+  if (!cdrList || cdrList.length === 0) return;
+
+  const newEntities = [...entities];
+  const newEdges = [...edges];
+  let primaryFocalId = null;
+
+  // Process unique numbers from CDR
+  const numberMap = new Map();
+  cdrList.forEach(r => {
+    if (r.callingNumber && !numberMap.has(r.callingNumber)) {
+      numberMap.set(r.callingNumber, {
+        name: r.callingName || r.callingNumber,
+        phone: r.callingNumber,
+        category: 'phone',
+        risk: r.isNocturnal ? 'high' : 'medium'
+      });
+    }
+    if (r.calledNumber && !numberMap.has(r.calledNumber)) {
+      numberMap.set(r.calledNumber, {
+        name: r.calledName || r.calledNumber,
+        phone: r.calledNumber,
+        category: 'phone',
+        risk: r.isNocturnal ? 'high' : 'medium'
+      });
+    }
+  });
+
+  numberMap.forEach((info, phone) => {
+    let existing = newEntities.find(e => 
+      e.id === phone || 
+      (e.phone && e.phone.replace(/\s+/g, '') === phone.replace(/\s+/g, '')) || 
+      (e.name && info.name && e.name.toLowerCase() === info.name.toLowerCase())
+    );
+
+    if (!existing) {
+      const newId = `cdr_ent_${phone.replace(/[^0-9a-zA-Z]/g, '')}`;
+      existing = {
+        id: newId,
+        name: info.name,
+        local: info.name,
+        type: 'Phone / SIM',
+        category: 'phone',
+        risk: info.risk,
+        city: 'Pune (Telecom Circle)',
+        phone: phone,
+        imageUrl: getAccusedPhoto(info.name),
+        identifiers: {
+          phone: phone,
+          imageUrl: getAccusedPhoto(info.name)
+        },
+        events: 1,
+        recent: 90,
+        x: 350 + Math.random() * 200 - 100,
+        y: 250 + Math.random() * 200 - 100
+      };
+      newEntities.push(existing);
+    }
+
+    if (focalNumber && (phone === focalNumber || (info.name && info.name.toLowerCase().includes(focalNumber.toLowerCase())))) {
+      primaryFocalId = existing.id;
+    }
+  });
+
+  // Inject CDR call edges
+  cdrList.forEach(r => {
+    if (!r.callingNumber || !r.calledNumber) return;
+    const sourceEnt = newEntities.find(e => 
+      e.id === r.callingNumber || 
+      (e.phone && e.phone.replace(/\s+/g, '') === r.callingNumber.replace(/\s+/g, '')) ||
+      (e.name && r.callingName && e.name.toLowerCase() === r.callingName.toLowerCase())
+    );
+    const targetEnt = newEntities.find(e => 
+      e.id === r.calledNumber || 
+      (e.phone && e.phone.replace(/\s+/g, '') === r.calledNumber.replace(/\s+/g, '')) ||
+      (e.name && r.calledName && e.name.toLowerCase() === r.calledName.toLowerCase())
+    );
+
+    if (sourceEnt && targetEnt && sourceEnt.id !== targetEnt.id) {
+      const edgeExists = newEdges.some(edge => 
+        (edge[0] === sourceEnt.id && edge[1] === targetEnt.id) ||
+        (edge[0] === targetEnt.id && edge[1] === sourceEnt.id)
+      );
+      if (!edgeExists) {
+        newEdges.push([sourceEnt.id, targetEnt.id, `Telecom CDR (${r.durationSec}s)`]);
+      }
+    }
+  });
+
+  setEntities(newEntities);
+  setEdges(newEdges);
+
+  state.view = 'network';
+  state.graphExploration.active = true;
+  state.graphExploration.mode = 'focused';
+  if (primaryFocalId) {
+    state.graphExploration.seedId = primaryFocalId;
+    state.selected = primaryFocalId;
+  } else if (newEntities.length > 0) {
+    state.graphExploration.seedId = newEntities[0].id;
+    state.selected = newEntities[0].id;
+  }
+  notifyStateChange();
+}
 
 export function openEntityProfile(entityId) {
   if (state.view !== 'entity_profile') {

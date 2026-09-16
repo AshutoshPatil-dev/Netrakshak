@@ -19,7 +19,8 @@ export const icon = (name) => ({
   shield: '◈', search: '⌕', grid: '▦', network: '◎', file: '▤',
   database: '◫', settings: '⚙', arrow: '→', check: '✓', lock: '▣',
   upload: '↑', expand: '⤢', close: '×', alert: '!', pulse: '◉',
-  users: '👥', plus: '+', audit: '≡', sparkle: '✦', user: '👤'
+  users: '👥', plus: '+', audit: '≡', sparkle: '✦', user: '👤',
+  phone: '☎', signal: '📶'
 }[name] || '•');
 
 export const escapeHtml = (str) => {
