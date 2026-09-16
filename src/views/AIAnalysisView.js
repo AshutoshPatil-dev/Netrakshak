@@ -1,6 +1,16 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, edges, firCases, recordAudit, notifyStateChange, openEntityProfile } from '../state.js';
+import {
+  state,
+  entities,
+  edges,
+  firCases,
+  recordAudit,
+  notifyStateChange,
+  openEntityProfile,
+  startGraphInvestigation,
+  showFullGraphUniverse
+} from '../state.js';
 import { showToast } from '../components/Toast.js';
 import {
   SEED_SYNDICATES,
@@ -8,14 +18,16 @@ import {
   generateTacticalLeads,
   searchIntelligence,
   processCopilotMessage,
-  generateCaseExecutiveSummary
+  generateCaseExecutiveSummary,
+  getSection91NoticeText,
+  getSection41ASummonsText
 } from '../lib/aiEngine.js';
 
 // Initialize AI analysis state if needed
 if (!state.aiAnalysis) {
   state.aiAnalysis = {
     activeTab: 'copilot', // 'copilot', 'scanner', 'leads', 'summarizer'
-    query: '+91 98811 55421',
+    query: '',
     streamType: 'all',
     activeResult: null,
     leadsFilter: 'all', // 'all', 'urgent', 'high', 'medium'
@@ -26,15 +38,15 @@ if (!state.aiAnalysis) {
         sender: 'ai',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text: `### Netrakshak AI Intelligence Active
-I am your specialized criminal intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
+I am your specialized criminal intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs across all police jurisdictions.
 
 **How I can assist your investigation:**
 - **Suspect & Syndicate Profiling**: Inquire about any suspect name, alias, phone number, vehicle plate, or bank account.
-- **Procedural Drafting**: Request formal *Section 91 CrPC Bank Freeze Notices* or *ANPR BOLO alerts*.
+- **Procedural Drafting**: Request formal *Section 91 CrPC Bank Freeze Notices* or *Section 41A Summons*.
 - **Interrogation Strategy**: Ask for tactical cross-examination points based on timeline and cell tower discrepancies.
 - **Cross-Case Link Discovery**: Detect overlapping accused across police stations.
 
-*Type your question below or click a quick inquiry from the right panel.*`,
+*Type your inquiry below or click a quick suggestion from the right panel.*`,
         actions: []
       }
     ],
@@ -46,14 +58,114 @@ if (!state.aiAnalysis.activeTab) state.aiAnalysis.activeTab = 'copilot';
 if (!state.aiAnalysis.copilotMessages) state.aiAnalysis.copilotMessages = [];
 if (!state.aiAnalysis.actionedLeadIds) state.aiAnalysis.actionedLeadIds = new Set();
 
-export const copilotSuggestions = [
-  'Analyze Sameer Khan & ShadowFlow syndicate',
-  'Draft Section 91 CrPC notice for HDFC mule account',
-  'Give me interrogation strategy for Sameer Khan',
-  'Show all high-risk bank accounts and money trails',
-  'Summarize Swargate extortion and hawala ring',
-  'Show all active syndicates and threat levels'
-];
+/**
+ * Dynamically computes investigative suggestions based on live data
+ */
+export function getDynamicSuggestions(entityList = [], caseList = []) {
+  const list = [
+    'Draft Section 91 CrPC notice for bank debit freeze',
+    'Show all high-risk suspects and bridge nodes in network',
+    'Analyze cross-case FIR overlaps across police stations',
+    'Generate Section 41A CrPC interrogation summons',
+    'ANPR vehicle tracking and highway BOLO protocol',
+    'Show telecommunication CDR tower dump analysis'
+  ];
+
+  if (entityList.length > 0) {
+    const topPerson = entityList.find(e => e.category === 'person') || entityList[0];
+    if (topPerson && (topPerson.name || topPerson.label)) {
+      list.unshift(`Analyze ${topPerson.name || topPerson.label} criminal profile and linkages`);
+    }
+  }
+
+  if (caseList.length > 0) {
+    const topFir = caseList[0];
+    const firNo = topFir.firNumber || topFir.fir_number;
+    if (firNo) {
+      list.push(`Summarize case ${firNo} (${topFir.sections || 'IPC 420'})`);
+    }
+  }
+
+  return list.slice(0, 6);
+}
+
+/**
+ * Universal Action Executor for AI Analysis
+ */
+export function executeAIAction(act, context = {}) {
+  if (!act) return;
+
+  const title = act.title || 'Action';
+  const actionType = act.actionType || '';
+  const payload = act.payload || {};
+
+  if (actionType === 'copy_text' && payload.text) {
+    navigator.clipboard.writeText(payload.text).then(() => {
+      showToast(`✓ Copied formal legal document to clipboard!`);
+    }).catch(() => {
+      showToast(`Document prepared.`);
+    });
+    recordAudit('Document Drafted', `Officer copied: ${title}`, 'info', 'legal').catch(() => {});
+    return;
+  }
+
+  if (actionType === 'draft_notice' || title.toLowerCase().includes('notice') || title.toLowerCase().includes('freeze') || title.toLowerCase().includes('summons')) {
+    let noticeText = '';
+    if (payload.noticeType === 'summons_41a' || title.toLowerCase().includes('41a') || title.toLowerCase().includes('summons')) {
+      noticeText = getSection41ASummonsText({
+        accusedName: payload.subject || context.subjectName || 'Accused Person',
+        firNumber: payload.firNo || context.firNo || 'FIR-MH-2026-4821',
+        policeStation: context.policeStation || 'Cyber Crime Police Station, Shivajinagar'
+      });
+      navigator.clipboard.writeText(noticeText).then(() => {
+        showToast(`✓ Formal Section 41A Summons copied to clipboard!`);
+      }).catch(() => {
+        showToast(`Summons drafted.`);
+      });
+    } else {
+      noticeText = getSection91NoticeText({
+        bankName: payload.bank || 'Bank of Maharashtra / HDFC Bank / ICICI Bank',
+        accountNo: payload.account || '50100492817291',
+        firNumber: payload.firNo || context.firNo || 'FIR-MH-2026-4821',
+        sections: context.sections || 'IPC 420, 468, 471 & IT Act 66D',
+        policeStation: context.policeStation || 'Cyber Crime Police Station, Pune City'
+      });
+      navigator.clipboard.writeText(noticeText).then(() => {
+        showToast(`✓ Formal Section 91 CrPC Notice copied to clipboard!`);
+      }).catch(() => {
+        showToast(`Notice drafted.`);
+      });
+    }
+
+    recordAudit('CrPC Notice Issued', `Procedural draft prepared for ${payload.subject || 'target account'}`, 'info', 'legal').catch(() => {});
+    return;
+  }
+
+  if (actionType === 'bolo_alert' || act.category === 'mobility' || title.toLowerCase().includes('anpr') || title.toLowerCase().includes('bolo')) {
+    const veh = payload.vehicle || context.vehicle || 'Target Vehicle';
+    showToast(`✓ ANPR BOLO Broadcast deployed across Maharashtra traffic grid for ${veh}.`);
+    recordAudit('ANPR BOLO Broadcast', `Traffic alert broadcasted for ${veh}`, 'warn', 'mobility').catch(() => {});
+    return;
+  }
+
+  if (actionType === 'inspect_entity' && payload.entityId) {
+    openEntityProfile(payload.entityId);
+    showToast(`✓ Opened suspect dossier.`);
+    return;
+  }
+
+  if (actionType === 'navigate_fir' || title.toLowerCase().includes('fir') || title.toLowerCase().includes('docket')) {
+    state.firActiveTab = 'dossiers';
+    state.view = 'fir';
+    notifyStateChange();
+    showToast(`✓ Navigated to registered FIR dossiers repository.`);
+    return;
+  }
+
+  // Fallback execution
+  showToast(`✓ Action executed: ${title}`);
+  recordAudit('Tactical Action Executed', `Officer executed: ${title}`, 'info', 'action').catch(() => {});
+}
 
 /**
  * Executes scanner query directly against live database
@@ -197,20 +309,7 @@ function renderCopilotTab(index, leads) {
             el('div', { class: 'msg-actions-title' }, ['Recommended Action Triggers:']),
             ...msg.actions.map(act => el('button', {
               class: 'btn-action-trigger',
-              onclick: () => {
-                if (act.title.toLowerCase().includes('notice') || act.title.toLowerCase().includes('freeze')) {
-                  const noticeText = getSection91NoticeText();
-                  navigator.clipboard.writeText(noticeText).then(() => {
-                    showToast('✓ Formal Section 91 CrPC Notice copied to clipboard!');
-                  }).catch(() => {
-                    showToast('Notice drafted in console.');
-                  });
-                } else if (act.category === 'mobility' || act.title.toLowerCase().includes('anpr')) {
-                  showToast('✓ ANPR BOLO Broadcast issued across Maharashtra traffic grid.');
-                } else {
-                  showToast(`✓ Action initiated: ${act.title}`);
-                }
-              }
+              onclick: () => executeAIAction(act)
             }, [icon('check'), ` ${act.title}`]))
           ]) : null
         ])
@@ -274,7 +373,7 @@ function renderCopilotTab(index, leads) {
       });
       renderMessages();
       recordAudit('AI Inquiry', `Investigator query: "${text}"`, 'info', 'ai').catch(() => {});
-    }, 350);
+    }, 280);
   }
 
   inputEl.onkeydown = (e) => {
@@ -319,27 +418,30 @@ function renderCopilotTab(index, leads) {
     inputContainer
   ]);
 
+  // Dynamic quick suggestions
+  const dynamicSuggestions = getDynamicSuggestions(index.entities, index.cases);
+
   // Right-hand Tactical Quick Panel
   const sidebarColumn = el('div', { class: 'copilot-tactical-sidebar' }, [
     el('div', { class: 'sidebar-box' }, [
       el('h4', { class: 'sidebar-box-title' }, [icon('sparkle'), ' Quick Inquiries']),
-      el('div', { class: 'quick-queries-list' }, copilotSuggestions.map(s => el('button', {
+      el('div', { class: 'quick-queries-list' }, dynamicSuggestions.map(s => el('button', {
         class: 'quick-query-btn',
         onclick: () => handleSend(s)
       }, [icon('arrow'), el('span', {}, [s])])))
     ]),
     el('div', { class: 'sidebar-box' }, [
-      el('h4', { class: 'sidebar-box-title' }, [icon('shield'), ' Active Syndicates']),
-      ...SEED_SYNDICATES.map(syn => el('div', { class: 'syn-mini-card' }, [
+      el('h4', { class: 'sidebar-box-title' }, [icon('shield'), ' Active Crime Clusters']),
+      ...index.syndicates.slice(0, 3).map(syn => el('div', { class: 'syn-mini-card' }, [
         el('div', { class: 'syn-mini-head' }, [
           el('strong', {}, [syn.name]),
-          el('span', { class: `threat-tag threat-${syn.threat.toLowerCase()}` }, [syn.threat])
+          el('span', { class: `threat-tag threat-${(syn.threat || 'high').toLowerCase()}` }, [syn.threat || 'HIGH'])
         ]),
-        el('p', { class: 'syn-mini-mo' }, [syn.modusOperandi.slice(0, 95) + '...']),
+        el('p', { class: 'syn-mini-mo' }, [(syn.modusOperandi || 'Active criminal group.').slice(0, 95) + '...']),
         el('button', {
           class: 'btn-secondary btn-sm',
-          onclick: () => handleSend(`Analyze ${syn.name} syndicate`)
-        }, ['Ask AI →'])
+          onclick: () => handleSend(`Analyze ${syn.name} criminal profile and linkages`)
+        }, ['Analyze →'])
       ]))
     ])
   ]);
@@ -404,17 +506,18 @@ function renderScannerTab(index) {
   let resultsContainer = null;
 
   if (activeResult && activeResult.found) {
-    const syn = activeResult.syndicate;
+    const syn = activeResult.syndicate || {};
     const liveEntities = activeResult.liveEntities || [];
     const liveCases = activeResult.liveCases || [];
+    const targetNodes = syn.nodes && syn.nodes.length > 0 ? syn.nodes : liveEntities;
 
     // 1. Matched Suspects & Entities Table/Grid
     const entitiesSection = el('div', { class: 'panel scanner-results-section' }, [
       el('div', { class: 'scanner-section-head' }, [
-        el('h3', {}, [icon('user'), ` Correlated Suspects & Associated Nodes (${syn.nodes ? syn.nodes.length : liveEntities.length})`]),
+        el('h3', {}, [icon('user'), ` Correlated Suspects & Associated Nodes (${targetNodes.length})`]),
         el('span', { class: 'muted' }, ['Directly linked in criminal network command graph'])
       ]),
-      el('div', { class: 'scanner-entities-grid' }, (syn.nodes || liveEntities).map(n => el('div', { class: 'scanner-entity-card' }, [
+      el('div', { class: 'scanner-entities-grid' }, targetNodes.map(n => el('div', { class: 'scanner-entity-card' }, [
         el('div', { class: 'scanner-entity-top' }, [
           el('strong', { class: 'scanner-entity-name' }, [n.name || n.label]),
           el('span', { class: `threat-tag threat-${(n.risk || 'medium').toLowerCase()}` }, [(n.risk || 'MED').toUpperCase()])
@@ -425,18 +528,28 @@ function renderScannerTab(index) {
           el('button', {
             class: 'btn-secondary btn-sm',
             onclick: () => {
-              if (n.id) openEntityProfile(n.id);
-              else {
-                state.view = 'entities';
-                notifyStateChange();
+              if (n.id) {
+                openEntityProfile(n.id);
+              } else {
+                const found = entities.find(e => (e.name || e.label || '').toLowerCase() === (n.name || '').toLowerCase());
+                if (found) openEntityProfile(found.id);
+                else {
+                  state.view = 'entities';
+                  notifyStateChange();
+                }
               }
             }
           }, ['Inspect Dossier →']),
           el('button', {
             class: 'btn-secondary btn-sm',
             onclick: () => {
-              state.view = 'network';
-              notifyStateChange();
+              if (n.id) {
+                startGraphInvestigation(n.id);
+              } else {
+                const found = entities.find(e => (e.name || e.label || '').toLowerCase() === (n.name || '').toLowerCase());
+                if (found) startGraphInvestigation(found.id);
+                else showFullGraphUniverse();
+              }
             }
           }, ['View in Graph'])
         ])
@@ -444,7 +557,7 @@ function renderScannerTab(index) {
     ]);
 
     // 2. Correlated FIR Police Cases
-    const firList = (syn.firs || liveCases);
+    const firList = (syn.firs && syn.firs.length > 0) ? syn.firs : liveCases;
     const firSection = firList.length > 0 ? el('div', { class: 'panel scanner-results-section' }, [
       el('div', { class: 'scanner-section-head' }, [
         el('h3', {}, [icon('file'), ` Registered Police FIR Overlaps (${firList.length})`]),
@@ -462,40 +575,32 @@ function renderScannerTab(index) {
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => {
+            state.firActiveTab = 'dossiers';
             state.view = 'fir';
             notifyStateChange();
+            showToast('✓ Opened registered FIR dossiers repository.');
           }
         }, ['Open FIR Dossier →'])
       ])))
     ]) : null;
 
     // 3. Modus Operandi & Procedural Actions
-    const actionSection = syn.actions && syn.actions.length > 0 ? el('div', { class: 'panel scanner-results-section' }, [
+    const actionsList = syn.actions && syn.actions.length > 0 ? syn.actions : [];
+    const actionSection = actionsList.length > 0 ? el('div', { class: 'panel scanner-results-section' }, [
       el('div', { class: 'scanner-section-head' }, [
         el('h3', {}, [icon('shield'), ' Syndicate Modus Operandi & Recommended CrPC Actions']),
         el('span', { class: 'muted' }, [`Syndicate: ${syn.name} (${syn.threat || 'HIGH'} Risk)`])
       ]),
       el('p', { class: 'scanner-mo-text' }, [syn.modusOperandi]),
-      el('div', { class: 'scanner-actions-grid' }, syn.actions.map(act => el('div', { class: `scanner-action-card priority-${act.priority}` }, [
+      el('div', { class: 'scanner-actions-grid' }, actionsList.map(act => el('div', { class: `scanner-action-card priority-${act.priority || 'high'}` }, [
         el('div', { class: 'scanner-action-header' }, [
-          el('span', { class: `lead-urgency-tag ${act.priority}` }, [act.priority.toUpperCase()]),
+          el('span', { class: `lead-urgency-tag ${act.priority || 'high'}` }, [(act.priority || 'HIGH').toUpperCase()]),
           el('strong', {}, [act.title])
         ]),
         el('p', {}, [act.desc]),
         el('button', {
           class: 'primary-btn small',
-          onclick: () => {
-            if (act.title.toLowerCase().includes('notice') || act.title.toLowerCase().includes('freeze')) {
-              const noticeText = getSection91NoticeText();
-              navigator.clipboard.writeText(noticeText).then(() => {
-                showToast('✓ Formal Section 91 CrPC Notice copied to clipboard!');
-              }).catch(() => {
-                showToast('Notice drafted in console.');
-              });
-            } else {
-              showToast(`✓ Action initiated: ${act.title}`);
-            }
-          }
+          onclick: () => executeAIAction(act, { subjectName: syn.name, firNo: firList[0]?.firNo || firList[0]?.firNumber })
         }, [icon('check'), ' Execute Action'])
       ])))
     ]) : null;
@@ -504,7 +609,7 @@ function renderScannerTab(index) {
       entitiesSection,
       firSection,
       actionSection
-    ]);
+    ].filter(Boolean));
   } else if (activeResult && !activeResult.found) {
     resultsContainer = el('div', { class: 'panel scanner-empty-card' }, [
       el('div', { class: 'scanner-empty-icon' }, [icon('search')]),
@@ -569,18 +674,7 @@ function renderLeadsTab(leads) {
         el('button', {
           class: 'primary-btn small',
           onclick: () => {
-            if (lead.category === 'banking' || lead.title.toLowerCase().includes('notice')) {
-              const noticeText = getSection91NoticeText();
-              navigator.clipboard.writeText(noticeText).then(() => {
-                showToast('✓ Formal Section 91 CrPC Notice copied to clipboard!');
-              }).catch(() => {
-                showToast('Notice prepared.');
-              });
-            } else if (lead.category === 'mobility') {
-              showToast('✓ ANPR Camera Watchlist updated with BOLO alert.');
-            } else {
-              showToast(`✓ Procedural action executed: ${lead.title}`);
-            }
+            executeAIAction(lead, { subjectName: lead.title, firNo: lead.firList?.[0] });
             state.aiAnalysis.actionedLeadIds.add(lead.id);
             renderAIAnalysis();
           }
@@ -588,9 +682,12 @@ function renderLeadsTab(leads) {
         el('button', {
           class: 'btn-secondary small',
           onclick: () => {
-            state.view = 'network';
-            notifyStateChange();
-            showToast('Navigated to Tactical Network Graph.');
+            if (lead.payload?.entityId) {
+              startGraphInvestigation(lead.payload.entityId);
+            } else {
+              showFullGraphUniverse();
+            }
+            showToast('✓ Navigated to Tactical Network Graph.');
           }
         }, [icon('grid'), ' View in Graph'])
       ])
@@ -636,7 +733,7 @@ function renderSummarizerTab(index) {
         ])
       ]),
       el('div', { class: 'summary-badge-box' }, [
-        el('span', { class: 'threat-tag threat-high' }, [`THREAT: ${summary.threatLevel}`])
+        el('span', { class: `threat-tag threat-${(summary.threatLevel || 'high').toLowerCase()}` }, [`THREAT: ${summary.threatLevel}`])
       ])
     ]),
     el('div', { class: 'summary-body-section' }, [
@@ -672,8 +769,10 @@ function renderSummarizerTab(index) {
       el('button', {
         class: 'btn-secondary small',
         onclick: () => {
+          state.firActiveTab = 'dossiers';
           state.view = 'fir';
           notifyStateChange();
+          showToast('✓ Opened registered FIR dossiers repository.');
         }
       }, ['Open FIR Management →'])
     ])
@@ -757,29 +856,6 @@ function renderInlineFormatting(raw) {
   return span;
 }
 
-function getSection91NoticeText() {
-  return `OFFICE OF THE INVESTIGATING OFFICER
-CYBER CRIME POLICE STATION, PUNE CITY
-NOTICE UNDER SECTION 91 CODE OF CRIMINAL PROCEDURE (CrPC) / BNS EQUIVALENT
-
-To:
-The Nodal Officer / Fraud Risk Management (FRM)
-HDFC Bank Ltd. / ICICI Bank Ltd. / Bank of Maharashtra
-
-Subject: Immediate Lien / Freeze on Fraudulent Account No: 50100492817291 & BOM-60129948102
-Ref: Investigation in FIR No. FIR-MH-2026-4821 u/s 420, 468, 471 IPC & Sec 66D IT Act
-
-Whereas it has been made to appear to me that an offense of Cyber Fraud / Financial Extortion has been committed, you are hereby directed to:
-1. Immediately place total debit-freeze / lien on the aforementioned account(s).
-2. Furnish complete Account Opening Forms (AOF), KYC documents, IP login logs, and statement of accounts from 01-01-2026 to date within 24 hours.
-3. Reversal of fraudulent proceeds of INR 14,50,000 to the cyber escrow holding account.
-
-Failure to comply shall attract penal action under Section 175/176 IPC.
-
-(Investigating Officer)
-Cyber Crime Police Station, Pune`;
-}
-
 function generateFullExportReport(index, leads) {
   return `=====================================================
 NETRAKSHAK · CRIMINAL NETWORK COMMAND
@@ -795,19 +871,19 @@ Generated: ${new Date().toLocaleString()}
 
 2. MONITORED SYNDICATES & THREAT RATINGS
 ${index.syndicates.map(s => `
-[${s.threat}] ${s.name} (Confidence: ${s.confidence}%)
+[${s.threat || 'HIGH'}] ${s.name} (Confidence: ${s.confidence || 90}%)
 - Type: ${s.type}
 - Lead Officer: ${s.leadOfficer}
 - Modus Operandi: ${s.modusOperandi}
-- Linked FIRs: ${s.firs.map(f => f.firNo).join(', ')}
+- Linked FIRs: ${s.firs ? s.firs.map(f => f.firNo || f.firNumber).join(', ') : 'None'}
 `).join('\n')}
 
 3. PRIORITY TACTICAL LEADS & CrPC ACTION ORDERS
 ${leads.map((l, idx) => `
-[Lead #${idx + 1}] ${l.title} (${l.priority.toUpperCase()} - ${l.category.toUpperCase()})
+[Lead #${idx + 1}] ${l.title} (${(l.priority || 'HIGH').toUpperCase()} - ${(l.category || 'LEGAL').toUpperCase()})
 - Syndicate: ${l.syndicateName}
 - Description: ${l.desc}
-- Linked FIRs: ${l.firList ? l.firList.join(', ') : 'None'}
+- Linked FIRs: ${l.firList && l.firList.length > 0 ? l.firList.join(', ') : 'None'}
 `).join('\n')}
 
 4. EVIDENCE INTEGRITY & CHAIN OF CUSTODY
@@ -817,3 +893,4 @@ ${leads.map((l, idx) => `
 CONFIDENTIAL · FOR LAW ENFORCEMENT USE ONLY
 `;
 }
+
