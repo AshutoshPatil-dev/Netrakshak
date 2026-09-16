@@ -1,6 +1,6 @@
 import { el, icon } from '../lib/dom.js';
 import { t } from '../i18n/index.js';
-import { state, entities, firCases, recordAudit, notifyStateChange, openEntityProfile } from '../state.js';
+import { state, entities, edges, firCases, recordAudit, notifyStateChange, openEntityProfile } from '../state.js';
 import { showToast } from '../components/Toast.js';
 import {
   SEED_SYNDICATES,
@@ -25,8 +25,8 @@ if (!state.aiAnalysis) {
       {
         sender: 'ai',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: `### Netrakshak AI Crime Intelligence Active
-I am your specialized intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
+        text: `### Netrakshak AI Intelligence Active
+I am your specialized criminal intelligence assistant grounded in live FIR dossiers, CDR records, financial transaction trails, and syndicate linkage graphs.
 
 **How I can assist your investigation:**
 - **Suspect & Syndicate Profiling**: Inquire about any suspect name, alias, phone number, vehicle plate, or bank account.
@@ -34,7 +34,7 @@ I am your specialized intelligence assistant grounded in live FIR dossiers, CDR 
 - **Interrogation Strategy**: Ask for tactical cross-examination points based on timeline and cell tower discrepancies.
 - **Cross-Case Link Discovery**: Detect overlapping accused across police stations.
 
-*Select a quick query or type your investigation question below.*`,
+*Type your question below or click a quick inquiry from the right panel.*`,
         actions: []
       }
     ],
@@ -46,14 +46,6 @@ if (!state.aiAnalysis.activeTab) state.aiAnalysis.activeTab = 'copilot';
 if (!state.aiAnalysis.copilotMessages) state.aiAnalysis.copilotMessages = [];
 if (!state.aiAnalysis.actionedLeadIds) state.aiAnalysis.actionedLeadIds = new Set();
 
-export const sampleQueries = [
-  { label: 'Phone: +91 98811 55421', query: '+91 98811 55421', type: 'phone', desc: 'Active suspect phone linked to cyber syndicate' },
-  { label: 'Vehicle: MH-12-PQ-9081', query: 'MH-12-PQ-9081', type: 'vehicle', desc: 'White Swift linked to FC Road FIR' },
-  { label: 'Bank: HDFC-50100492817291', query: 'HDFC-50100492817291', type: 'bank', desc: 'Layering mule account diverting INR 14.5L' },
-  { label: 'Person: Sameer Khan', query: 'Sameer Khan', type: 'person', desc: 'Known syndicate operator with 3 aliases' },
-  { label: 'Clean Test: +91 99999 00000', query: '+91 99999 00000', type: 'clean', desc: 'Unregistered clean number (no syndicate)' }
-];
-
 export const copilotSuggestions = [
   'Analyze Sameer Khan & ShadowFlow syndicate',
   'Draft Section 91 CrPC notice for HDFC mule account',
@@ -64,7 +56,7 @@ export const copilotSuggestions = [
 ];
 
 /**
- * Executes scanner query
+ * Executes scanner query directly against live database
  */
 export function performAIAnalysis(queryText, streamType = 'all') {
   const q = (queryText || '').trim();
@@ -76,52 +68,10 @@ export function performAIAnalysis(queryText, streamType = 'all') {
   const result = searchIntelligence(q, streamType);
   if (!result) return null;
 
-  let formattedResult = null;
-  if (result.found) {
-    const syn = result.syndicate;
-    formattedResult = {
-      query: q,
-      streamType,
-      status: 'syndicate_detected',
-      verdictTitle: `Intelligence Match: ${syn.name}`,
-      threatLevel: syn.threat || 'HIGH',
-      confidence: syn.confidence || 85,
-      racketType: syn.type || 'Organized Syndicate',
-      modusOperandi: syn.modusOperandi || '',
-      nodes: syn.nodes || [],
-      firs: syn.firs || [],
-      cdrEvidence: syn.cdrEvidence || null,
-      financialTrail: syn.financialTrail || [],
-      actions: syn.actions || [],
-      timestamp: new Date().toLocaleString()
-    };
-  } else {
-    formattedResult = {
-      query: q,
-      streamType,
-      status: 'clean',
-      verdictTitle: 'No Active Organized Syndicates or Overlaps Found',
-      threatLevel: 'CLEAN',
-      confidence: 10,
-      racketType: 'Isolated Identifier / No Cross-Case Overlap',
-      modusOperandi: result.message,
-      nodes: [
-        { name: q, role: 'Queried Subject / Identifier', category: 'unknown', risk: 'low', link: 'Zero co-conspirator or cross-case linkages detected.' }
-      ],
-      firs: [],
-      cdrEvidence: null,
-      financialTrail: [],
-      actions: [
-        { id: 'act_clean1', title: 'Continuous Watchlist Monitoring', desc: 'No coercive action required. Identifier logged for passive anomaly monitoring.', priority: 'medium', category: 'legal' }
-      ],
-      timestamp: new Date().toLocaleString()
-    };
-  }
+  state.aiAnalysis.activeResult = result;
+  recordAudit('AI Intelligence Search', `Cross-record query executed for "${q}"`, 'info', 'analysis').catch(() => {});
 
-  state.aiAnalysis.activeResult = formattedResult;
-  recordAudit('AI Linkage Analysis', `AI pattern scan executed for query "${q}" (Verdict: ${formattedResult.threatLevel} - ${formattedResult.racketType}).`, formattedResult.threatLevel === 'CRITICAL' ? 'critical' : 'info', 'analysis').catch(() => {});
-
-  return formattedResult;
+  return result;
 }
 
 /**
@@ -135,13 +85,13 @@ export function renderAIAnalysis(c) {
   const leads = generateTacticalLeads();
   const currentTab = state.aiAnalysis.activeTab || 'copilot';
 
-  // 1. Clean, Compact Page Header (Without extra telemetry stats)
+  // 1. Clean, Minimalist Header
   const header = el('div', { class: 'page-heading compact ai-header-row' }, [
     el('div', {}, [
-      el('div', { class: 'eyebrow blue' }, ['INVESTIGATION WORKSPACE']),
+      el('div', { class: 'eyebrow blue' }, ['INTELLIGENCE & INVESTIGATION WORKSPACE']),
       el('h1', { class: 'ai-view-title' }, ['Netrakshak AI Intelligence']),
       el('p', { class: 'muted ai-view-sub' }, [
-        'Multi-source data fusion across FIR dossiers, CDR towers, financial layering trails, and tactical CrPC actions.'
+        'Multi-source data fusion across FIR dossiers, CDR telecommunications, financial layering, and tactical CrPC actions.'
       ])
     ]),
     el('div', { class: 'header-actions', style: 'display: flex; gap: 8px;' }, [
@@ -158,7 +108,7 @@ export function renderAIAnalysis(c) {
           URL.revokeObjectURL(url);
           showToast('✓ AI Intelligence Dossier exported successfully.');
         }
-      }, [icon('file'), ' Export Docket'])
+      }, [icon('file'), ' Export Intelligence Docket'])
     ])
   ]);
 
@@ -177,7 +127,7 @@ export function renderAIAnalysis(c) {
         state.aiAnalysis.activeTab = 'scanner';
         renderAIAnalysis(container);
       }
-    }, [icon('pulse'), el('span', {}, ['Linkage Scanner (Deep-Dive)'])]),
+    }, [icon('search'), el('span', {}, ['Cross-Record Intelligence Search'])]),
     el('button', {
       class: `ai-tab-btn ${currentTab === 'leads' ? 'active' : ''}`,
       onclick: () => {
@@ -203,7 +153,7 @@ export function renderAIAnalysis(c) {
   if (currentTab === 'copilot') {
     tabContent = renderCopilotTab(index, leads);
   } else if (currentTab === 'scanner') {
-    tabContent = renderScannerTab();
+    tabContent = renderScannerTab(index);
   } else if (currentTab === 'leads') {
     tabContent = renderLeadsTab(leads);
   } else if (currentTab === 'summarizer') {
@@ -224,8 +174,7 @@ export function renderAIAnalysis(c) {
 }
 
 /**
- * Tab 1: Netrakshak AI (Interactive Chat & Q&A)
- * 2-column tactical layout fitted strictly to viewport without page scroll.
+ * Tab 1: Netrakshak AI (Zero-Scroll 2-Column Chat)
  */
 function renderCopilotTab(index, leads) {
   const chatMessages = el('div', { class: 'copilot-chat-feed', id: 'copilot-chat-feed' });
@@ -272,7 +221,7 @@ function renderCopilotTab(index, leads) {
     // Auto-scroll to bottom
     setTimeout(() => {
       chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 50);
+    }, 40);
   }
 
   renderMessages();
@@ -281,7 +230,7 @@ function renderCopilotTab(index, leads) {
   const inputEl = el('textarea', {
     class: 'copilot-input-field',
     placeholder: 'Ask Netrakshak AI about suspects, phone towers, bank trails, interrogation points, or CrPC drafting...',
-    rows: '2'
+    rows: '1'
   });
 
   function handleSend(overrideQuery) {
@@ -308,7 +257,7 @@ function renderCopilotTab(index, leads) {
           el('span', {}),
           el('span', {}),
           el('span', {}),
-          el('em', {}, [' Synthesizing criminal intelligence records...'])
+          el('em', {}, [' Analyzing criminal records...'])
         ])
       ])
     ]);
@@ -325,7 +274,7 @@ function renderCopilotTab(index, leads) {
       });
       renderMessages();
       recordAudit('AI Inquiry', `Investigator query: "${text}"`, 'info', 'ai').catch(() => {});
-    }, 450);
+    }, 350);
   }
 
   inputEl.onkeydown = (e) => {
@@ -338,7 +287,7 @@ function renderCopilotTab(index, leads) {
   const sendBtn = el('button', {
     class: 'primary-btn copilot-send-btn',
     onclick: () => handleSend()
-  }, [icon('sparkle'), ' Send Query']);
+  }, [icon('sparkle'), ' Send']);
 
   const clearBtn = el('button', {
     class: 'btn-secondary btn-sm',
@@ -354,15 +303,13 @@ function renderCopilotTab(index, leads) {
       renderMessages();
       showToast('Conversation history reset.');
     }
-  }, [icon('reset'), ' Clear Chat']);
+  }, [icon('reset'), ' Clear']);
 
   const inputContainer = el('div', { class: 'copilot-input-container' }, [
     el('div', { class: 'copilot-input-row' }, [
       inputEl,
-      el('div', { class: 'copilot-btn-group' }, [
-        sendBtn,
-        clearBtn
-      ])
+      sendBtn,
+      clearBtn
     ])
   ]);
 
@@ -382,7 +329,7 @@ function renderCopilotTab(index, leads) {
       }, [icon('arrow'), el('span', {}, [s])])))
     ]),
     el('div', { class: 'sidebar-box' }, [
-      el('h4', { class: 'sidebar-box-title' }, [icon('shield'), ' Active Monitored Syndicates']),
+      el('h4', { class: 'sidebar-box-title' }, [icon('shield'), ' Active Syndicates']),
       ...SEED_SYNDICATES.map(syn => el('div', { class: 'syn-mini-card' }, [
         el('div', { class: 'syn-mini-head' }, [
           el('strong', {}, [syn.name]),
@@ -404,9 +351,9 @@ function renderCopilotTab(index, leads) {
 }
 
 /**
- * Tab 2: Linkage Scanner (Deep-Dive Search)
+ * Tab 2: Cross-Record Intelligence Search (Authoritative live DB cross-matcher)
  */
-function renderScannerTab() {
+function renderScannerTab(index) {
   if (!state.aiAnalysis.activeResult && state.aiAnalysis.query) {
     performAIAnalysis(state.aiAnalysis.query, state.aiAnalysis.streamType);
   }
@@ -415,21 +362,20 @@ function renderScannerTab() {
   const searchInput = el('input', {
     type: 'text',
     class: 'ai-search-input',
-    placeholder: t('aiSearchPlaceholder'),
+    placeholder: 'Search across all suspect names, phone numbers, vehicles, bank accounts, or FIR numbers...',
     value: state.aiAnalysis.query || ''
   });
 
   const streamSelect = el('select', { class: 'ai-stream-select' }, [
-    el('option', { value: 'all', selected: state.aiAnalysis.streamType === 'all' }, [t('allIntelligenceStreams')]),
-    el('option', { value: 'phone', selected: state.aiAnalysis.streamType === 'phone' }, [t('phoneCDRTriangulation')]),
-    el('option', { value: 'vehicle', selected: state.aiAnalysis.streamType === 'vehicle' }, [t('vehicleMobility')]),
-    el('option', { value: 'bank', selected: state.aiAnalysis.streamType === 'bank' }, [t('bankMuleAccounts')]),
-    el('option', { value: 'person', selected: state.aiAnalysis.streamType === 'person' }, [t('personSuspectAliases')]),
-    el('option', { value: 'narrative', selected: state.aiAnalysis.streamType === 'narrative' }, [t('unstructuredLeadNarrative')])
+    el('option', { value: 'all', selected: state.aiAnalysis.streamType === 'all' }, ['All Intelligence Categories']),
+    el('option', { value: 'person', selected: state.aiAnalysis.streamType === 'person' }, ['Suspects & Persons']),
+    el('option', { value: 'phone', selected: state.aiAnalysis.streamType === 'phone' }, ['Phone Numbers & Burner SIMs']),
+    el('option', { value: 'vehicle', selected: state.aiAnalysis.streamType === 'vehicle' }, ['Vehicles & ANPR']),
+    el('option', { value: 'bank', selected: state.aiAnalysis.streamType === 'bank' }, ['Bank & Mule Accounts'])
   ]);
 
   const searchBtn = el('button', {
-    class: 'primary-btn ai-analyze-btn',
+    class: 'primary-btn',
     onclick: () => {
       const q = searchInput.value.trim();
       state.aiAnalysis.query = q;
@@ -438,210 +384,144 @@ function renderScannerTab() {
       notifyStateChange();
     }
   }, [
-    icon('sparkle'),
-    el('span', {}, [t('runAILinkageScan')])
+    icon('search'),
+    el('span', {}, ['Search Intelligence'])
   ]);
 
   searchInput.onkeydown = (e) => {
     if (e.key === 'Enter') searchBtn.click();
   };
 
-  const sampleChips = el('div', { class: 'ai-sample-chips' }, [
-    el('span', { class: 'chips-label' }, [t('quickScanPresets')]),
-    ...sampleQueries.map(sq => {
-      let iconName = 'sparkle';
-      if (sq.type === 'phone') iconName = 'pulse';
-      if (sq.type === 'vehicle') iconName = 'grid';
-      if (sq.type === 'bank') iconName = 'database';
-      if (sq.type === 'person') iconName = 'user';
-      if (sq.type === 'clean') iconName = 'check';
-
-      return el('button', {
-        class: `ai-sample-chip ${state.aiAnalysis.query === sq.query ? 'active' : ''}`,
-        title: sq.desc,
-        onclick: () => {
-          searchInput.value = sq.query;
-          state.aiAnalysis.query = sq.query;
-          state.aiAnalysis.streamType = 'all';
-          streamSelect.value = 'all';
-          performAIAnalysis(sq.query, 'all');
-          notifyStateChange();
-        }
-      }, [icon(iconName), el('span', {}, [sq.label])]);
-    })
-  ]);
-
-  const searchBox = el('div', { class: 'panel ai-search-card' }, [
+  const searchBox = el('div', { class: 'panel ai-clean-search-card' }, [
     el('div', { class: 'ai-search-top' }, [
       searchInput,
       streamSelect,
       searchBtn
-    ]),
-    sampleChips
+    ])
   ]);
 
-  let resultView = null;
-  if (activeResult) {
-    const isCritical = activeResult.threatLevel === 'CRITICAL';
-    const isHigh = activeResult.threatLevel === 'HIGH' || activeResult.threatLevel === 'ELEVATED';
-    const bannerClass = isCritical ? 'verdict-critical' : (isHigh ? 'verdict-elevated' : 'verdict-clean');
+  // Render authoritative matched results
+  let resultsContainer = null;
 
-    const verdictCard = el('div', { class: `ai-verdict-card ${bannerClass}` }, [
-      el('div', { class: 'verdict-header' }, [
-        el('div', { class: 'verdict-title-box' }, [
-          el('div', { class: 'verdict-badge-row' }, [
-            el('span', { class: `threat-tag threat-${activeResult.threatLevel.toLowerCase()}` }, [`RISK RATING: ${activeResult.threatLevel}`]),
-            el('span', { class: 'confidence-tag' }, [`Match Confidence: ${activeResult.confidence}%`]),
-            el('span', { class: 'racket-tag' }, [activeResult.racketType])
-          ]),
-          el('h2', { class: 'verdict-title' }, [activeResult.verdictTitle])
+  if (activeResult && activeResult.found) {
+    const syn = activeResult.syndicate;
+    const liveEntities = activeResult.liveEntities || [];
+    const liveCases = activeResult.liveCases || [];
+
+    // 1. Matched Suspects & Entities Table/Grid
+    const entitiesSection = el('div', { class: 'panel scanner-results-section' }, [
+      el('div', { class: 'scanner-section-head' }, [
+        el('h3', {}, [icon('user'), ` Correlated Suspects & Associated Nodes (${syn.nodes ? syn.nodes.length : liveEntities.length})`]),
+        el('span', { class: 'muted' }, ['Directly linked in criminal network command graph'])
+      ]),
+      el('div', { class: 'scanner-entities-grid' }, (syn.nodes || liveEntities).map(n => el('div', { class: 'scanner-entity-card' }, [
+        el('div', { class: 'scanner-entity-top' }, [
+          el('strong', { class: 'scanner-entity-name' }, [n.name || n.label]),
+          el('span', { class: `threat-tag threat-${(n.risk || 'medium').toLowerCase()}` }, [(n.risk || 'MED').toUpperCase()])
         ]),
-        el('div', { class: 'verdict-gauge' }, [
-          el('div', { class: 'gauge-val' }, [`${activeResult.confidence}%`]),
-          el('div', { class: 'gauge-label' }, ['Pattern Probability'])
+        el('div', { class: 'scanner-entity-role' }, [n.role || n.type || 'Associated Entity']),
+        el('div', { class: 'scanner-entity-link' }, [n.link || `Linked in database records`]),
+        el('div', { class: 'scanner-entity-actions' }, [
+          el('button', {
+            class: 'btn-secondary btn-sm',
+            onclick: () => {
+              if (n.id) openEntityProfile(n.id);
+              else {
+                state.view = 'entities';
+                notifyStateChange();
+              }
+            }
+          }, ['Inspect Dossier →']),
+          el('button', {
+            class: 'btn-secondary btn-sm',
+            onclick: () => {
+              state.view = 'network';
+              notifyStateChange();
+            }
+          }, ['View in Graph'])
         ])
-      ]),
-      el('div', { class: 'verdict-narrative' }, [
-        el('strong', {}, ['Modus Operandi & Syndicate Pattern: ']),
-        el('span', {}, [activeResult.modusOperandi])
-      ])
+      ])))
     ]);
 
-    const nodesSection = el('div', { class: 'panel ai-section-panel' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h3', {}, ['Discovered Co-Conspirators & Multi-Hop Linkages (', String(activeResult.nodes.length), ')']),
-        el('span', { class: 'muted' }, ['Correlated across CDR towers, FIRs, bank transfers, and suspect records'])
+    // 2. Correlated FIR Police Cases
+    const firList = (syn.firs || liveCases);
+    const firSection = firList.length > 0 ? el('div', { class: 'panel scanner-results-section' }, [
+      el('div', { class: 'scanner-section-head' }, [
+        el('h3', {}, [icon('file'), ` Registered Police FIR Overlaps (${firList.length})`]),
+        el('span', { class: 'muted' }, ['Cross-district registered police station records'])
       ]),
-      el('div', { class: 'ai-nodes-grid' }, activeResult.nodes.map(n => {
-        let catIcon = 'user';
-        if (n.category === 'phone') catIcon = 'pulse';
-        if (n.category === 'vehicle') catIcon = 'grid';
-        if (n.category === 'bank') catIcon = 'database';
-        if (n.category === 'fir') catIcon = 'file';
-
-        return el('div', { class: `ai-node-card risk-${n.risk || 'low'}` }, [
-          el('div', { class: 'node-card-top' }, [
-            el('div', { class: 'node-icon-box' }, [icon(catIcon)]),
-            el('div', { class: 'node-info' }, [
-              el('strong', { class: 'node-name' }, [n.name]),
-              el('span', { class: 'node-role' }, [n.role])
-            ]),
-            el('span', { class: `node-risk-pill ${n.risk || 'low'}` }, [(n.risk || 'LOW').toUpperCase()])
-          ]),
-          el('div', { class: 'node-link-desc' }, [
-            el('span', { class: 'link-arrow' }, ['↳ ']),
-            el('span', {}, [n.link])
-          ])
-        ]);
-      }))
-    ]);
-
-    const firsSection = activeResult.firs.length > 0 ? el('div', { class: 'panel ai-section-panel' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h3', {}, ['Cross-District FIR Matches & Charge-Sheet Overlaps (', String(activeResult.firs.length), ')']),
-        el('span', { class: 'muted' }, ['Common accused, modus operandi, and seized property'])
-      ]),
-      el('div', { class: 'ai-firs-list' }, activeResult.firs.map(f => el('div', { class: 'ai-fir-item' }, [
-        el('div', { class: 'fir-badge' }, [icon('file'), el('strong', {}, [f.firNo])]),
-        el('div', { class: 'fir-details' }, [
-          el('div', { class: 'fir-ps' }, [f.station]),
-          el('div', { class: 'fir-sections' }, [f.sections]),
-          el('div', { class: 'fir-meta' }, [`Date: ${f.date} · Status: ${f.status}`])
+      el('div', { class: 'scanner-firs-table' }, firList.map(f => el('div', { class: 'scanner-fir-row' }, [
+        el('div', { class: 'scanner-fir-code' }, [
+          el('strong', {}, [f.firNo || f.firNumber || f.fir_number || 'FIR']),
+          el('span', { class: 'scanner-fir-date' }, [f.date || f.incidentDate || '2026'])
+        ]),
+        el('div', { class: 'scanner-fir-main' }, [
+          el('div', { class: 'scanner-fir-station' }, [f.station || f.policeStation || f.police_station || 'Cyber Crime Police Station']),
+          el('div', { class: 'scanner-fir-sections' }, [`Sections: ${f.sections || 'IPC 420'}`])
         ]),
         el('button', {
           class: 'btn-secondary btn-sm',
           onclick: () => {
             state.view = 'fir';
             notifyStateChange();
-            showToast(`Opened FIR View for case ${f.firNo}`);
           }
-        }, ['View Case Dossier →'])
+        }, ['Open FIR Dossier →'])
       ])))
     ]) : null;
 
-    const cdrSection = activeResult.cdrEvidence ? el('div', { class: 'panel ai-section-panel' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h3', {}, ['CDR Telecommunications & Tower Triangulation']),
-        el('span', { class: 'muted' }, ['Call frequency, nocturnal activity, and co-location tower matches'])
+    // 3. Modus Operandi & Procedural Actions
+    const actionSection = syn.actions && syn.actions.length > 0 ? el('div', { class: 'panel scanner-results-section' }, [
+      el('div', { class: 'scanner-section-head' }, [
+        el('h3', {}, [icon('shield'), ' Syndicate Modus Operandi & Recommended CrPC Actions']),
+        el('span', { class: 'muted' }, [`Syndicate: ${syn.name} (${syn.threat || 'HIGH'} Risk)`])
       ]),
-      el('div', { class: 'cdr-stats-grid' }, [
-        el('div', { class: 'cdr-stat-box' }, [
-          el('span', { class: 'stat-label' }, ['Total Correlated Calls']),
-          el('strong', { class: 'stat-val' }, [String(activeResult.cdrEvidence.totalCalls)]),
-          el('span', { class: 'stat-sub' }, ['Across identified burner cluster'])
+      el('p', { class: 'scanner-mo-text' }, [syn.modusOperandi]),
+      el('div', { class: 'scanner-actions-grid' }, syn.actions.map(act => el('div', { class: `scanner-action-card priority-${act.priority}` }, [
+        el('div', { class: 'scanner-action-header' }, [
+          el('span', { class: `lead-urgency-tag ${act.priority}` }, [act.priority.toUpperCase()]),
+          el('strong', {}, [act.title])
         ]),
-        el('div', { class: 'cdr-stat-box' }, [
-          el('span', { class: 'stat-label' }, ['Nocturnal / Suspicious Calls']),
-          el('strong', { class: 'stat-val red' }, [String(activeResult.cdrEvidence.suspiciousNightCalls)]),
-          el('span', { class: 'stat-sub' }, ['Between 23:00 and 04:30 IST'])
-        ]),
-        el('div', { class: 'cdr-stat-box wide' }, [
-          el('span', { class: 'stat-label' }, ['Dominant Cell Tower Sector']),
-          el('strong', { class: 'stat-val blue' }, [activeResult.cdrEvidence.commonTower]),
-          el('span', { class: 'stat-sub' }, [`IMEI Overlap: ${activeResult.cdrEvidence.imeiOverlap}`])
-        ])
-      ])
-    ]) : null;
-
-    const finSection = activeResult.financialTrail.length > 0 ? el('div', { class: 'panel ai-section-panel' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h3', {}, ['Financial Layering Trail & Mule Route']),
-        el('span', { class: 'muted' }, ['Tracing fraud fund dissipation across intermediary bank accounts and ATM cash-outs'])
-      ]),
-      el('div', { class: 'financial-trail-chain' }, activeResult.financialTrail.map((ft) => el('div', { class: 'fin-step-card' }, [
-        el('div', { class: 'fin-step-num' }, [`0${ft.step}`]),
-        el('div', { class: 'fin-step-body' }, [
-          el('div', { class: 'fin-flow' }, [
-            el('span', { class: 'fin-from' }, [ft.flow]),
-            el('span', { class: 'fin-arrow' }, [' → ']),
-            el('span', { class: 'fin-to' }, [ft.target])
-          ]),
-          el('div', { class: 'fin-note' }, [ft.note])
-        ]),
-        el('div', { class: 'fin-amount' }, [ft.amount])
-      ])))
-    ]) : null;
-
-    const actionsSection = el('div', { class: 'panel ai-section-panel' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h3', {}, ['Recommended Law Enforcement Action Steps']),
-        el('span', { class: 'muted' }, ['Standard Operating Procedures (SOP) based on discovered pattern and threat level'])
-      ]),
-      el('div', { class: 'actions-list' }, activeResult.actions.map(act => el('div', { class: `action-item priority-${act.priority}` }, [
-        el('div', { class: 'action-priority-badge' }, [act.priority.toUpperCase()]),
-        el('div', { class: 'action-main' }, [
-          el('strong', { class: 'action-title' }, [act.title]),
-          el('p', { class: 'action-desc' }, [act.desc])
-        ]),
+        el('p', {}, [act.desc]),
         el('button', {
-          class: 'btn-secondary btn-sm',
+          class: 'primary-btn small',
           onclick: () => {
-            showToast(`✓ Action initiated: ${act.title}`);
-            recordAudit('Investigative Action Initiated', `Officer initiated: ${act.title} for query ${activeResult.query}`, 'info', 'action').catch(() => {});
+            if (act.title.toLowerCase().includes('notice') || act.title.toLowerCase().includes('freeze')) {
+              const noticeText = getSection91NoticeText();
+              navigator.clipboard.writeText(noticeText).then(() => {
+                showToast('✓ Formal Section 91 CrPC Notice copied to clipboard!');
+              }).catch(() => {
+                showToast('Notice drafted in console.');
+              });
+            } else {
+              showToast(`✓ Action initiated: ${act.title}`);
+            }
           }
-        }, ['Initiate SOP →'])
+        }, [icon('check'), ' Execute Action'])
       ])))
-    ]);
+    ]) : null;
 
-    resultView = el('div', { class: 'ai-results-wrapper' }, [
-      verdictCard,
-      nodesSection,
-      cdrSection,
-      finSection,
-      firsSection,
-      actionsSection
+    resultsContainer = el('div', { class: 'scanner-results-container' }, [
+      entitiesSection,
+      firSection,
+      actionSection
+    ]);
+  } else if (activeResult && !activeResult.found) {
+    resultsContainer = el('div', { class: 'panel scanner-empty-card' }, [
+      el('div', { class: 'scanner-empty-icon' }, [icon('search')]),
+      el('h3', {}, [`No Prior Criminal Records Found for "${state.aiAnalysis.query}"`]),
+      el('p', { class: 'muted' }, ['The queried identifier is clean or unregistered in the current police intelligence database.'])
     ]);
   } else {
-    resultView = el('div', { class: 'panel ai-empty-state' }, [
-      el('div', { class: 'empty-icon-box' }, [icon('sparkle')]),
-      el('h3', {}, ['Ready for AI Linkage & Pattern Analysis']),
-      el('p', {}, ['Enter any identifier above (phone, vehicle plate, bank account, person name) or click a quick preset to analyze cross-case syndicates.'])
+    resultsContainer = el('div', { class: 'panel scanner-empty-card' }, [
+      el('div', { class: 'scanner-empty-icon' }, [icon('search')]),
+      el('h3', {}, ['Cross-Record Intelligence Search']),
+      el('p', { class: 'muted' }, ['Enter any suspect name, mobile number, vehicle registration number, mule bank account, or FIR number to view correlated cross-case records.'])
     ]);
   }
 
-  return el('div', { class: 'scanner-workspace-panel' }, [
+  return el('div', { class: 'scanner-tab-wrapper' }, [
     searchBox,
-    resultView
+    resultsContainer
   ]);
 }
 
