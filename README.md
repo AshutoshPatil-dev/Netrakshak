@@ -120,10 +120,7 @@ crime-network-command/
    ```
 
 3. Configure environment variables (optional if default fallback is active):
-   ```bash
-   cp .env.example .env.local
-   ```
-   Add your Supabase credentials to `.env.local`:
+   Create `.env.local`:
    ```env
    VITE_SUPABASE_URL=https://your-project-id.supabase.co
    VITE_SUPABASE_ANON_KEY=your-publishable-anon-key

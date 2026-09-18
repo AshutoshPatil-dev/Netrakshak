@@ -3,7 +3,7 @@ dist/
 .wrangler/
 .env
 .env.*
-!.env.example
+.env.local
 
 # OS and Editor
 .DS_Store
