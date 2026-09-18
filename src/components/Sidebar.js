@@ -32,7 +32,7 @@ export function renderSidebar() {
   const sidebarHeader = el('div', { class: 'sidebar-header' }, [
     el('div', { class: 'sidebar-header-left' }, [
       el('span', { class: 'sidebar-header-badge' }, [icon('shield')]),
-      el('span', { class: 'sidebar-header-text' }, ['WORKSPACE'])
+      el('span', { class: 'sidebar-header-text' }, ['NETRAKSHAK'])
     ]),
     el('button', {
       class: 'sidebar-toggle-btn',

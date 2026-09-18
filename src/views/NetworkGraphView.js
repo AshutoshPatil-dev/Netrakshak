@@ -396,21 +396,21 @@ export function renderSatelliteMapPins(visibleNodes) {
 
     const isAnyMemberSelected = members.some(m => m.id === state.selected);
     const isGroupLocked = members.every(m => isPinLocked(m.id)) || !!state.graphMapConfig?.pinsLockedAll;
-    const headsWidth = (members.length - 1) * 18 + 28;
-    const iconWidth = Math.max(headsWidth + 16, 150);
-    const iconHeight = 44 + members.length * 20;
+    const headsWidth = (members.length - 1) * 16 + 28;
+    const iconWidth = Math.max(headsWidth + 12, 44);
+    const iconHeight = 44;
     const anchorX = iconWidth / 2;
-    const anchorY = 32;
+    const anchorY = 20;
 
     const groupHtml = `
-      <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}">
+      <div class="map-tactical-pin-group ${isAnyMemberSelected ? 'selected' : ''} ${isGroupLocked ? 'locked' : 'draggable'}" title="Grouped cluster (${members.length} entities: ${members.map(m => m.name).join(', ')})">
         <div class="pin-group-heads-container" style="width: ${headsWidth}px;">
           ${members.map((m, idx) => {
             const mColor = objectTypeColors[m.type] || '#1E293B';
             const mIcon = objectTypeIcons[m.type] || 'shield';
             const isSel = state.selected === m.id;
             return `
-              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 18}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag to move group)">
+              <div class="pin-group-head-item ${isSel ? 'selected' : ''}" style="left: ${idx * 16}px; z-index: ${idx + 1}; background: ${mColor};" data-node-id="${m.id}" title="${m.type}: ${m.name} (Click to inspect / Drag group)">
                 <span class="pin-icon">${icon(mIcon)}</span>
                 <span class="pin-risk-dot ${m.risk || 'low'}"></span>
               </div>
@@ -419,27 +419,9 @@ export function renderSatelliteMapPins(visibleNodes) {
         </div>
         <div class="pin-needle group-needle"></div>
         <div class="pin-shadow group-shadow"></div>
-        <div class="pin-group-combined-pill">
-          <div class="pin-group-pill-header">
-            <span class="pin-group-count-badge">👥 ${members.length} Grouped</span>
-            <button class="pin-ungroup-btn" data-group-id="${group.id}" title="Ungroup these pins">✕ Ungroup</button>
-          </div>
-          <div class="pin-group-members-list">
-            ${members.map(m => {
-              const mColor = objectTypeColors[m.type] || '#38BDF8';
-              const isSel = state.selected === m.id;
-              const mLocked = isPinLocked(m.id);
-              const safeName = escapeHtml(m.name);
-              const safeType = escapeHtml(m.type);
-              return `
-                <div class="pin-group-member-row ${isSel ? 'active-selected' : ''}" data-node-id="${m.id}" title="Click to inspect ${safeName}">
-                  <span class="pin-member-type-tag" style="color: ${mColor};">${safeType}</span>
-                  <span class="pin-member-name-text">${safeName}</span>
-                  <button class="pin-lock-badge-btn" data-node-id="${m.id}" title="${mLocked ? 'Pin locked' : 'Pin draggable'}">${mLocked ? '🔒' : '🔓'}</button>
-                </div>
-              `;
-            }).join('')}
-          </div>
+        <div class="pin-group-compact-pill" title="Grouped cluster: ${members.map(m => m.name).join(', ')}">
+          <span class="pin-group-count-badge">👥 ${members.length}</span>
+          <button class="pin-ungroup-btn" data-group-id="${group.id}" title="Ungroup these pins">✕</button>
         </div>
       </div>
     `;
@@ -449,7 +431,7 @@ export function renderSatelliteMapPins(visibleNodes) {
       html: groupHtml,
       iconSize: [iconWidth, iconHeight],
       iconAnchor: [anchorX, anchorY],
-      popupAnchor: [0, -36]
+      popupAnchor: [0, -24]
     });
 
     let isDraggingGroup = false;
@@ -2132,28 +2114,14 @@ export function renderActiveNetworkWorkspace(c) {
         }
       }, [icon('grid'), ' 👥 Group']);
     } else {
-      groupControlBtn = el('div', { style: 'display:flex;align-items:center;gap:4px;' }, [
-        el('button', {
-          class: 'strip-btn strip-group-active-btn',
-          title: selectedGroupCount >= 2 ? 'Merge selected pins into stacked cluster' : 'Click at least 2 pins on map to select them',
-          onclick: () => {
-            if (selectedGroupCount >= 2) {
-              const grp = createMarkerGroup(mapConfig.selectedForGrouping);
-              showToast(`Grouped ${grp.nodeIds.length} pins into stacked cluster`);
-            } else {
-              showToast('Please click on at least 2 pins to select them for grouping');
-            }
-          }
-        }, [icon('check'), selectedGroupCount >= 2 ? ` Merge (${selectedGroupCount})` : ` Select Pins (${selectedGroupCount})`]),
-        el('button', {
-          class: 'strip-btn strip-group-cancel-btn',
-          title: 'Cancel grouping mode',
-          onclick: () => {
-            setMapGroupingMode(false);
-            showToast('Grouping cancelled');
-          }
-        }, ['✕'])
-      ]);
+      groupControlBtn = el('button', {
+        class: 'strip-btn strip-group-active-btn',
+        title: 'Grouping mode active. Click to cancel grouping.',
+        onclick: () => {
+          setMapGroupingMode(false);
+          showToast('Grouping cancelled');
+        }
+      }, [icon('close'), ` Grouping (${selectedGroupCount}) ✕`]);
     }
 
     satControls = [
@@ -2230,6 +2198,38 @@ export function renderActiveNetworkWorkspace(c) {
         class: `graph-leaflet-map ${isLocked ? 'map-locked' : 'map-interactive'}`
       }) : null,
       graphContainer(visibleNodes),
+      isSat && mapConfig.groupingMode ? el('div', { class: 'canvas-grouping-banner' }, [
+        el('div', { class: 'grouping-banner-info' }, [
+          el('span', { class: 'grouping-banner-indicator' }, ['● PIN GROUPING MODE']),
+          el('span', { class: 'grouping-banner-hint' }, [
+            (mapConfig.selectedForGrouping || []).length === 0
+              ? 'Click pins on map to select them for grouping'
+              : `${(mapConfig.selectedForGrouping || []).length} pins selected`
+          ])
+        ]),
+        el('div', { class: 'grouping-banner-actions' }, [
+          el('button', {
+            class: `btn-grouping-merge ${(mapConfig.selectedForGrouping || []).length >= 2 ? 'ready' : ''}`,
+            disabled: (mapConfig.selectedForGrouping || []).length < 2,
+            onclick: () => {
+              if ((mapConfig.selectedForGrouping || []).length >= 2) {
+                const grp = createMarkerGroup(mapConfig.selectedForGrouping);
+                showToast(`Grouped ${grp.nodeIds.length} pins into stacked cluster`);
+              } else {
+                showToast('Please click at least 2 pins to select them for grouping');
+              }
+            }
+          }, [icon('check'), ` Merge (${(mapConfig.selectedForGrouping || []).length})`]),
+          el('button', {
+            class: 'btn-grouping-cancel',
+            title: 'Cancel grouping mode',
+            onclick: () => {
+              setMapGroupingMode(false);
+              showToast('Grouping cancelled');
+            }
+          }, ['✕ Cancel'])
+        ])
+      ]) : null,
       visibleNodes.length > 0 ? el('div', { class: `graph-legend ${isSat ? 'sat-legend' : ''}` }, [
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
