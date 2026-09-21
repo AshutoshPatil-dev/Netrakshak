@@ -879,24 +879,26 @@ export function renderFIRIntakeForm() {
       el('span', { class: `evidence-type ${item.type || 'document'}` }, [
         evidenceTypeLabels[item.type] || item.type.toUpperCase()
       ]),
-      el('span', { style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;' }, [
+      el('span', { class: 'evidence-item-desc' }, [
         item.file ? `${item.description} (${(item.file.size / 1024).toFixed(1)} KB)` : item.description
       ]),
-      item.file ? el('button', {
-        class: 'preview-inline-btn',
-        type: 'button',
-        title: 'Preview attached file',
-        onclick: () => openFilePreview(item.file)
-      }, [icon('search'), ' Preview']) : null,
-      el('button', {
-        class: 'evidence-remove',
-        title: 'Remove evidence item',
-        type: 'button',
-        onclick: () => {
-          state.manualEvidence.splice(index, 1);
-          notifyStateChange();
-        }
-      }, ['x'])
+      el('div', { class: 'evidence-actions' }, [
+        item.file ? el('button', {
+          class: 'preview-inline-btn',
+          type: 'button',
+          title: 'Preview attached file',
+          onclick: () => openFilePreview(item.file)
+        }, [icon('search'), ' Preview']) : null,
+        el('button', {
+          class: 'evidence-remove',
+          title: 'Remove evidence item',
+          type: 'button',
+          onclick: () => {
+            state.manualEvidence.splice(index, 1);
+            notifyStateChange();
+          }
+        }, ['✕'])
+      ])
     ]);
   }));
 
