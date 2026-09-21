@@ -271,43 +271,35 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
+  gap: 6px !important;
   background: #FFFFFF !important;
   border: 1px solid var(--app-border) !important;
   border-radius: var(--radius) !important;
-  padding: 6px 10px !important;
+  padding: 4px 8px !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
   flex-shrink: 0 !important;
-  min-height: 42px !important;
+  min-height: 38px !important;
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
   position: relative !important;
   z-index: 20 !important;
+  flex-wrap: wrap !important;
 }
 
-.network-strip-left {
+.network-strip-left,
+.network-strip-sat-tools {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  padding: 2px 0 !important;
-}
-
-.network-strip-left::-webkit-scrollbar {
-  display: none !important;
+  gap: 5px !important;
+  flex-wrap: wrap !important;
 }
 
 .network-strip-right {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   flex-shrink: 0 !important;
   margin-left: auto !important;
   flex-wrap: nowrap !important;
@@ -315,17 +307,17 @@
 
 .strip-divider {
   width: 1px;
-  height: 20px;
+  height: 18px;
   background: var(--app-border);
-  margin: 0 3px;
+  margin: 0 2px;
   flex-shrink: 0;
 }
 
 .strip-label {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--app-text-secondary);
   white-space: nowrap;
@@ -334,7 +326,7 @@
 .strip-select-wrap {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -346,16 +338,24 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border);
   border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 11.5px;
+  padding: 4px 6px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--app-text);
   cursor: pointer;
   outline: none;
-  max-width: 140px;
+  max-width: 125px;
   white-space: nowrap;
   text-overflow: ellipsis;
   transition: all 0.15s ease;
+}
+
+.map-preset-select {
+  max-width: 110px !important;
+}
+
+.map-layer-select {
+  max-width: 82px !important;
 }
 
 .strip-select-wrap select:hover,
@@ -368,10 +368,10 @@
 .strip-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   background: var(--app-surface);
   border: 1px solid var(--app-border);

@@ -2043,8 +2043,8 @@ export function renderActiveNetworkWorkspace(c) {
   let satControls = [];
   if (isSat) {
     const presetSelect = el('select', { class: 'strip-select map-preset-select', title: 'Center satellite map on predefined sector preset or search any worldwide location' }, [
-      el('option', { value: '' }, ['📍 Preset Sector...']),
-      el('option', { value: '__search_worldwide__' }, ['🔍 Search Any Place (World)...']),
+      el('option', { value: '' }, ['📍 Sector...']),
+      el('option', { value: '__search_worldwide__' }, ['🔍 Search World...']),
       ...GEO_PRESETS.map(p => el('option', { value: JSON.stringify(p) }, [p.name]))
     ]);
     presetSelect.onchange = (e) => {
@@ -2066,9 +2066,9 @@ export function renderActiveNetworkWorkspace(c) {
     };
 
     const layerSelect = el('select', { class: 'strip-select map-layer-select', title: 'Switch satellite tile imagery layer' }, [
-      el('option', { value: 'satellite' }, ['🛰 Satellite']),
+      el('option', { value: 'satellite' }, ['🛰 Sat']),
       el('option', { value: 'hybrid' }, ['🗺 Hybrid']),
-      el('option', { value: 'streets' }, ['🏙 Streets'])
+      el('option', { value: 'streets' }, ['🏙 Street'])
     ]);
     layerSelect.value = mapConfig.layerType || 'satellite';
     layerSelect.onchange = (e) => {
@@ -2086,7 +2086,7 @@ export function renderActiveNetworkWorkspace(c) {
         toggleLockAllPins();
         showToast(state.graphMapConfig.pinsLockedAll ? '🔒 All Pins Locked in Place' : '📍 Pins Draggable');
       }
-    }, [isAllPinsLocked ? `🔒 ${t('pinsLocked')}` : `📍 ${t('pinsMoveable')}`]);
+    }, [isAllPinsLocked ? '🔒 Pins' : '📍 Pins']);
 
     const mapLockBtn = el('button', {
       class: `strip-btn ${isMapLocked ? 'strip-btn-locked' : 'strip-btn-unlocked'}`,
@@ -2098,7 +2098,7 @@ export function renderActiveNetworkWorkspace(c) {
         applyMapLockState();
         showToast(state.graphMapConfig.locked ? '🔒 Map Viewport Locked' : '🗺 Pan Map (Interactive)');
       }
-    }, [isMapLocked ? `🔒 ${t('mapLockedText')}` : `🗺 ${t('panMapText')}`]);
+    }, [isMapLocked ? '🔒 Map' : '🗺 Pan']);
 
     const isGroupingMode = !!mapConfig.groupingMode;
     const selectedGroupCount = (mapConfig.selectedForGrouping || []).length;
@@ -2137,12 +2137,14 @@ export function renderActiveNetworkWorkspace(c) {
     }
 
     satControls = [
-      el('div', { class: 'strip-divider' }),
-      presetSelect,
-      layerSelect,
-      pinLockBtn,
-      mapLockBtn,
-      groupControlBtn
+      el('div', { class: 'network-strip-sat-tools' }, [
+        el('div', { class: 'strip-divider' }),
+        presetSelect,
+        layerSelect,
+        pinLockBtn,
+        mapLockBtn,
+        groupControlBtn
+      ])
     ];
   }
 
@@ -2161,12 +2163,10 @@ export function renderActiveNetworkWorkspace(c) {
         el('span', { class: 'strip-label' }, [`${t('filter')}:`]),
         typeSelect
       ]),
-      ...satControls
-    ]),
-    el('div', { class: 'network-strip-right' }, [
+      el('div', { class: 'strip-divider' }),
       el('button', {
         class: 'strip-btn',
-        title: 'Reset graph to starting investigation entity',
+        title: 'Reset graph exploration to starting investigation entity',
         onclick: () => { resetGraphExploration(); showToast('Reset exploration to start node'); }
       }, [icon('undo'), ` ${t('reset')}`]),
       selectedEntity ? el('button', {
@@ -2176,8 +2176,10 @@ export function renderActiveNetworkWorkspace(c) {
           expandGraphNode(selectedEntity.id);
           showToast(`Expanded network around ${selectedEntity.name}`);
         }
-      }, [icon('plus'), ` ${t('expand')}`]) : null,
-      el('div', { class: 'strip-divider' }),
+      }, [icon('plus'), ` ${t('expand')}`]) : null
+    ].filter(Boolean)),
+    ...satControls,
+    el('div', { class: 'network-strip-right' }, [
       el('button', {
         class: `strip-btn strip-sat-btn ${isSat ? 'active' : ''}`,
         title: isSat ? 'Disable satellite map background and return to clean canvas' : 'Enable interactive satellite map background for geographic reference',
@@ -2185,7 +2187,7 @@ export function renderActiveNetworkWorkspace(c) {
           toggleGraphSatelliteMode();
           showToast(state.graphSatelliteMode ? '🛰 Satellite Map Background Enabled' : 'Standard Clean Graph Canvas Enabled');
         }
-      }, [icon('network'), isSat ? ` 🛰 ${t('satelliteView')}: ON` : ` 🗺 ${t('satelliteView')}: OFF`]),
+      }, [icon('network'), isSat ? ` 🛰 Sat: ON` : ` 🗺 Sat: OFF`]),
       el('span', { class: 'strip-count' }, [
         `${visibleNodes.length}/${entities.length} ${t('nodes')}`
       ]),
