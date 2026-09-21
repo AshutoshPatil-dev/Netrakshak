@@ -2110,18 +2110,30 @@ export function renderActiveNetworkWorkspace(c) {
         title: 'Group pins together into a stacked cluster on the map',
         onclick: () => {
           setMapGroupingMode(true);
-          showToast('Click markers to select pins for grouping, then click Merge.');
+          showToast('Click 2 or more pins on the map to select them, then click Merge.');
         }
       }, [icon('grid'), ' 👥 Group']);
     } else {
-      groupControlBtn = el('button', {
-        class: 'strip-btn strip-group-active-btn',
-        title: 'Grouping mode active. Click to cancel grouping.',
+      const topMergeBtn = selectedGroupCount >= 2 ? el('button', {
+        class: 'strip-btn strip-merge-top-btn',
+        title: `Merge ${selectedGroupCount} selected pins into cluster`,
         onclick: () => {
-          setMapGroupingMode(false);
-          showToast('Grouping cancelled');
+          const grp = createMarkerGroup(mapConfig.selectedForGrouping);
+          showToast(`Grouped ${grp ? grp.nodeIds.length : selectedGroupCount} pins into a cluster`);
         }
-      }, [icon('close'), ` Grouping (${selectedGroupCount}) ✕`]);
+      }, [icon('check'), ` Merge (${selectedGroupCount})`]) : null;
+
+      groupControlBtn = el('div', { class: 'strip-grouping-controls-wrap' }, [
+        el('button', {
+          class: `strip-btn strip-group-active-btn ${selectedGroupCount >= 2 ? 'has-selection' : ''}`,
+          title: 'Grouping mode active. Click to cancel.',
+          onclick: () => {
+            setMapGroupingMode(false);
+            showToast('Grouping cancelled');
+          }
+        }, [icon('close'), ` Grouping (${selectedGroupCount}) ✕`]),
+        topMergeBtn
+      ].filter(Boolean));
     }
 
     satControls = [
@@ -2191,45 +2203,80 @@ export function renderActiveNetworkWorkspace(c) {
   const groupSelectKey = (mapConfig.selectedForGrouping || []).sort().join(',');
   const graphSignature = `${visibleNodes.map(n => n.id).sort().join(',')}|${state.selected}|${seedId}|${state.type}|${isFocusedMode ? '1' : '0'}|${isSat ? 'sat' : 'std'}|${mapConfig.layerType}|${isLocked ? '1' : '0'}|${isPinsLocked ? '1' : '0'}|${mapConfig.pinsLockedAll ? '1' : '0'}|${lockedPinsKey}|${mapConfig.groupingMode ? '1' : '0'}|${groupSelectKey}|${groupsKey}|${mapConfig.lat}|${mapConfig.lng}|${mapConfig.zoom}`;
 
+  const syncCanvasGroupingBanner = (graphPanel) => {
+    if (!graphPanel) return;
+    const isSatMode = !!state.graphSatelliteMode;
+    const curMapConfig = state.graphMapConfig || {};
+    const isGrouping = isSatMode && !!curMapConfig.groupingMode;
+    const selectedNodes = curMapConfig.selectedForGrouping || [];
+    const selectedCount = selectedNodes.length;
+
+    const existingBanner = graphPanel.querySelector('.canvas-grouping-banner');
+    if (!isGrouping) {
+      if (existingBanner) existingBanner.remove();
+      return;
+    }
+
+    const banner = el('div', { class: 'canvas-grouping-banner' }, [
+      el('div', { class: 'grouping-banner-info' }, [
+        el('span', { class: 'grouping-banner-indicator' }, ['● PIN GROUPING MODE']),
+        el('span', { class: 'grouping-banner-hint' }, [
+          selectedCount === 0
+            ? 'Click pins on map to select at least 2 entities to merge'
+            : `${selectedCount} pin${selectedCount > 1 ? 's' : ''} selected for cluster`
+        ])
+      ]),
+      el('div', { class: 'grouping-banner-actions' }, [
+        el('button', {
+          class: `btn-grouping-merge ${selectedCount >= 2 ? 'ready' : ''}`,
+          disabled: selectedCount < 2,
+          title: selectedCount >= 2 ? `Merge ${selectedCount} selected pins into a stacked cluster` : 'Select at least 2 pins to merge',
+          onclick: (e) => {
+            e.stopPropagation();
+            if (selectedCount >= 2) {
+              const grp = createMarkerGroup(selectedNodes);
+              showToast(`✓ Grouped ${grp ? grp.nodeIds.length : selectedCount} pins into stacked cluster`);
+            } else {
+              showToast('Click at least 2 pins on the map to select them for grouping');
+            }
+          }
+        }, [icon('grid'), ` Merge Cluster (${selectedCount})`]),
+        selectedCount > 0 ? el('button', {
+          class: 'btn-grouping-clear',
+          title: 'Clear selection',
+          onclick: (e) => {
+            e.stopPropagation();
+            state.graphMapConfig.selectedForGrouping = [];
+            saveMapConfig(state.graphMapConfig);
+            notifyStateChange();
+          }
+        }, ['Clear']) : null,
+        el('button', {
+          class: 'btn-grouping-cancel',
+          title: 'Exit grouping mode',
+          onclick: (e) => {
+            e.stopPropagation();
+            setMapGroupingMode(false);
+            showToast('Grouping mode closed');
+          }
+        }, ['✕ Exit'])
+      ].filter(Boolean))
+    ]);
+
+    if (existingBanner) {
+      existingBanner.replaceWith(banner);
+    } else {
+      graphPanel.appendChild(banner);
+    }
+  };
+
   const renderGraphPanel = () => {
-    return el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
+    const panel = el('section', { class: `graph-panel ${isSat ? 'satellite-view-active' : ''}` }, [
       isSat ? el('div', {
         id: 'graph-leaflet-map',
         class: `graph-leaflet-map ${isLocked ? 'map-locked' : 'map-interactive'}`
       }) : null,
       graphContainer(visibleNodes),
-      isSat && mapConfig.groupingMode ? el('div', { class: 'canvas-grouping-banner' }, [
-        el('div', { class: 'grouping-banner-info' }, [
-          el('span', { class: 'grouping-banner-indicator' }, ['● PIN GROUPING MODE']),
-          el('span', { class: 'grouping-banner-hint' }, [
-            (mapConfig.selectedForGrouping || []).length === 0
-              ? 'Click pins on map to select them for grouping'
-              : `${(mapConfig.selectedForGrouping || []).length} pins selected`
-          ])
-        ]),
-        el('div', { class: 'grouping-banner-actions' }, [
-          el('button', {
-            class: `btn-grouping-merge ${(mapConfig.selectedForGrouping || []).length >= 2 ? 'ready' : ''}`,
-            disabled: (mapConfig.selectedForGrouping || []).length < 2,
-            onclick: () => {
-              if ((mapConfig.selectedForGrouping || []).length >= 2) {
-                const grp = createMarkerGroup(mapConfig.selectedForGrouping);
-                showToast(`Grouped ${grp.nodeIds.length} pins into stacked cluster`);
-              } else {
-                showToast('Please click at least 2 pins to select them for grouping');
-              }
-            }
-          }, [icon('check'), ` Merge (${(mapConfig.selectedForGrouping || []).length})`]),
-          el('button', {
-            class: 'btn-grouping-cancel',
-            title: 'Cancel grouping mode',
-            onclick: () => {
-              setMapGroupingMode(false);
-              showToast('Grouping cancelled');
-            }
-          }, ['✕ Cancel'])
-        ])
-      ]) : null,
       visibleNodes.length > 0 ? el('div', { class: `graph-legend ${isSat ? 'sat-legend' : ''}` }, [
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Person}` }), 'Person']),
         el('span', {}, [el('i', { style: `background:${objectTypeColors.Phone}` }), 'Phone']),
@@ -2256,6 +2303,11 @@ export function renderActiveNetworkWorkspace(c) {
         }, ['⌖'])
       ]) : null
     ].filter(Boolean));
+
+    if (isSat && mapConfig.groupingMode) {
+      syncCanvasGroupingBanner(panel);
+    }
+    return panel;
   };
 
   const existingWorkspace = c.querySelector('.network-workspace');
@@ -2278,9 +2330,14 @@ export function renderActiveNetworkWorkspace(c) {
       oldGraphPanel.replaceWith(newGraphPanel);
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
-    } else if (isSat && visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
-      lastRenderedGraphSignature = graphSignature;
-      renderSatelliteMapPins(visibleNodes);
+    } else if (isSat && visibleNodes.length > 0) {
+      if (graphSignature !== lastRenderedGraphSignature) {
+        lastRenderedGraphSignature = graphSignature;
+        renderSatelliteMapPins(visibleNodes);
+      }
+      if (oldGraphPanel) {
+        syncCanvasGroupingBanner(oldGraphPanel);
+      }
     } else if (visibleNodes.length > 0 && graphSignature !== lastRenderedGraphSignature) {
       lastRenderedGraphSignature = graphSignature;
       mountSigma(visibleNodes);
