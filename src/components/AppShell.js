@@ -1,5 +1,5 @@
 import { el } from '../lib/dom.js';
-import { state } from '../state.js';
+import { state, notifyStateChange } from '../state.js';
 import { renderTopbar } from './Topbar.js';
 import { renderSidebar } from './Sidebar.js';
 

@@ -200,43 +200,37 @@
 .sidebar > .brand { padding: 18px 16px 20px; }
 .sidebar > .brand .brand-mark { background: var(--app-blue); border-radius: 6px; box-shadow: none; }
 
-.sidebar-header {
+.sidebar-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
-  padding: 0 12px 0 16px;
+  padding: 12px 12px 8px 16px;
+  min-height: 42px;
   border-bottom: 1px solid var(--app-border);
   background: #FFFFFF;
 }
 
-.sidebar-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--app-text-secondary);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.sidebar-header-badge {
-  font-size: 13px;
+.sidebar-section-header .nav-section-label {
+  margin: 0;
   color: var(--app-blue);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .sidebar-toggle-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   border: 1px solid var(--app-border);
   background: var(--app-surface);
   color: var(--app-text-secondary);
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 10px;
   padding: 0;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -251,25 +245,78 @@
 .nav-section-label {
   margin: 17px 16px 8px;
   color: var(--app-blue);
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .12em;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
+
 .nav-item {
   width: 100%;
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px;
-  border: 0; border-right: 3px solid transparent; border-radius: 0;
-  background: #fff; color: var(--app-text-secondary);
-  font-size: 14px; font-weight: 500; text-align: left;
-  transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 0;
+  border-right: 3px solid transparent;
+  border-radius: 0;
+  background: #fff;
+  color: var(--app-text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease, border-color 0.18s ease;
 }
-.nav-item:hover { background: var(--app-surface); color: var(--app-text); }
+
+.nav-item:hover {
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+.nav-item:hover .nav-icon {
+  color: var(--app-text);
+}
+
 .nav-item.active {
-  background: rgba(11,61,145,.1);
+  background: rgba(11, 61, 145, 0.08);
   border-right-color: var(--app-blue);
   color: var(--app-blue);
+  font-weight: 600;
 }
-.nav-icon { width: 20px; font-size: 18px; text-align: center; }
+
+.nav-item.active .nav-icon {
+  color: var(--app-blue);
+}
+
+.nav-item.active .nav-icon svg.app-icon {
+  stroke-width: 2.2;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #64748B;
+  transition: color 0.18s ease;
+}
+
+svg.app-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.nav-icon svg.app-icon {
+  width: 17px;
+  height: 17px;
+}
 
 .sidebar-bottom { margin-top: auto; border-top: 1px solid var(--line); padding-top: 16px; }
 .profile-mini { display: flex; align-items: center; gap: 9px; padding: 5px 8px 16px; }
@@ -288,9 +335,10 @@
 .sidebar-collapsed .sidebar > .brand > div:last-child,
 .sidebar-collapsed .sidebar-header-left,
 .sidebar-collapsed .nav-section-label,
+.sidebar-collapsed .sidebar-section-header .nav-section-label,
 .sidebar-collapsed .nav-item > span:last-child,
 .sidebar-collapsed .profile-mini > div:last-child { display: none; }
-.sidebar-collapsed .sidebar-header { justify-content: center; padding: 0 8px; }
+.sidebar-collapsed .sidebar-section-header { justify-content: center; padding: 10px 8px; }
 .sidebar-collapsed .nav-item { justify-content: center; padding-left: 8px; padding-right: 8px; }
 .sidebar-collapsed .nav-item.active { border-right-width: 3px; }
 .sidebar-collapsed .topbar-brand { min-width: 0; }

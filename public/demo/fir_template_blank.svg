@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 1200" width="850" height="1200" style="background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#000000;">
+  <!-- White Paper Page -->
+  <rect width="850" height="1200" fill="#ffffff"/>
+  
+  <!-- Outer Border -->
+  <rect x="25" y="25" width="800" height="1150" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- Top Header -->
+  <g text-anchor="middle">
+    <text x="425" y="60" font-size="12" font-weight="bold" letter-spacing="0.5">MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)</text>
+    <text x="425" y="85" font-size="18" font-weight="900" letter-spacing="1">FIRST INFORMATION REPORT</text>
+    <text x="425" y="103" font-size="10" font-style="italic">(Crime &amp; Criminal Intelligence MIS · Under Section 154 Cr.P.C. / BNSS 173)</text>
+  </g>
+
+  <!-- Police Station & District Line -->
+  <g transform="translate(45, 125)" font-size="11">
+    <text x="0" y="15" font-weight="bold">Police Station:</text>
+    <line x1="90" y1="18" x2="430" y2="18" stroke="#000000" stroke-width="1"/>
+
+    <text x="450" y="15" font-weight="bold">District:</text>
+    <line x1="500" y1="18" x2="760" y2="18" stroke="#000000" stroke-width="1"/>
+  </g>
+
+  <line x1="45" y1="152" x2="805" y2="152" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- FIR No, Date, Time Row -->
+  <g transform="translate(45, 165)" font-size="10">
+    <text x="0" y="14" font-weight="bold">FIR NUMBER / CASE REF</text>
+    <line x1="0" y1="36" x2="230" y2="36" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="260" y="14" font-weight="bold">DATE OF OCCURRENCE</text>
+    <text x="260" y="32" font-size="10" fill="#94a3b8">DD / MM / YYYY</text>
+    <line x1="260" y1="36" x2="490" y2="36" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="520" y="14" font-weight="bold">TIME OF INCIDENT</text>
+    <text x="520" y="32" font-size="10" fill="#94a3b8">___:___ HRS</text>
+    <line x1="520" y1="36" x2="760" y2="36" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Acts & Sections -->
+  <g transform="translate(45, 218)" font-size="10">
+    <text x="0" y="14" font-weight="bold">STATUTORY ACTS &amp; SECTIONS</text>
+    <line x1="0" y1="36" x2="760" y2="36" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Section 1 Header -->
+  <g transform="translate(45, 275)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold">1 - COMPLAINANT / INFORMANT DETAILS</text>
+  </g>
+
+  <!-- Section 1 Fields -->
+  <g transform="translate(45, 305)" font-size="10">
+    <text x="0" y="14" font-weight="bold">NAME OF COMPLAINANT</text>
+    <line x1="0" y1="34" x2="240" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="260" y="14" font-weight="bold">AGE</text>
+    <line x1="260" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="370" y="14" font-weight="bold">FATHER'S / RELATIVE NAME</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="0" y="58" font-weight="bold">CONTACT MOBILE / PHONE</text>
+    <line x1="0" y1="78" x2="240" y2="78" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="260" y="58" font-weight="bold">PERMANENT / RESIDENTIAL ADDRESS</text>
+    <line x1="260" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Section 2 Header -->
+  <g transform="translate(45, 405)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold">2 - ACCUSED / SUSPECT SUBJECT DETAILS</text>
+  </g>
+
+  <!-- Section 2 Fields -->
+  <g transform="translate(45, 435)" font-size="10">
+    <text x="0" y="14" font-weight="bold">PRIMARY ACCUSED NAME</text>
+    <line x1="0" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="370" y="14" font-weight="bold">KNOWN ALIASES / CYBER HANDLES</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="0" y="58" font-weight="bold">CO-ACCUSED &amp; CONSPIRATORS (COMMA SEPARATED)</text>
+    <line x1="0" y1="78" x2="350" y2="78" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="370" y="58" font-weight="bold">INCIDENT LOCATION / PLACE OF OCCURRENCE</text>
+    <line x1="370" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Section 3 Header -->
+  <g transform="translate(45, 535)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold">3 - MULTI-OBJECT INTELLIGENCE LINKAGES &amp; ASSETS</text>
+  </g>
+
+  <!-- Section 3 Fields -->
+  <g transform="translate(45, 565)" font-size="10">
+    <text x="0" y="14" font-weight="bold">ASSOCIATED PHONE / BURNER SIM</text>
+    <line x1="0" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="370" y="14" font-weight="bold">LOGISTICS / VEHICLE ASSET</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="0" y="58" font-weight="bold">MULE ACCOUNT / FINANCIAL ROUTE</text>
+    <line x1="0" y1="78" x2="350" y2="78" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="370" y="58" font-weight="bold">CELL TOWER / TRIANGULATION SECTOR</text>
+    <line x1="370" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Section 4 Header -->
+  <g transform="translate(45, 665)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold">4 - FACTUAL INCIDENT NARRATIVE &amp; MODUS OPERANDI</text>
+  </g>
+
+  <!-- Narrative Lined Box -->
+  <g transform="translate(45, 695)" font-size="10">
+    <text x="0" y="14" font-weight="bold">DESCRIPTION OF CRIME &amp; FACTUAL SEQUENCE</text>
+    
+    <rect x="0" y="22" width="760" height="95" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="46" x2="760" y2="46" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="70" x2="760" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="94" x2="760" y2="94" stroke="#f1f5f9" stroke-width="1"/>
+  </g>
+
+  <!-- Property Defrauded Lined Box -->
+  <g transform="translate(45, 835)" font-size="10">
+    <text x="0" y="14" font-weight="bold">PROPERTY DEFRAUDED / STOLEN / SEIZED VALUABLES</text>
+    
+    <rect x="0" y="22" width="760" height="70" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="46" x2="760" y2="46" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="70" x2="760" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+  </g>
+
+  <!-- Bottom Meta & Signature -->
+  <g transform="translate(45, 950)" font-size="10">
+    <text x="0" y="15" font-weight="bold">ACTION TAKEN</text>
+    <line x1="100" y1="18" x2="760" y2="18" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="0" y="45" font-weight="bold">INVESTIGATING OFFICER</text>
+    <line x1="150" y1="48" x2="760" y2="48" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="0" y="75" font-weight="bold">UNIT:</text>
+    <line x1="40" y1="78" x2="430" y2="78" stroke="#64748b" stroke-width="0.8"/>
+
+    <text x="460" y="75" font-weight="bold">Signature of IO · Date:</text>
+    <text x="635" y="75" font-size="10" fill="#94a3b8">___/___/20__</text>
+    <line x1="595" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+  </g>
+
+  <!-- Footer -->
+  <text x="425" y="1165" font-size="8" fill="#64748b" text-anchor="middle">Netrakshak Criminal Intelligence MIS · Standard Form II Template · Crime &amp; Criminal Network Command</text>
+</svg>

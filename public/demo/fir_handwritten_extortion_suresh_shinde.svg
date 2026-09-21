@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 1200" width="850" height="1200" style="background:#ffffff;">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&amp;family=Kalam:wght@700&amp;display=swap');
+      .template-label { font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; fill: #000000; }
+      .template-title { font-family: Arial, Helvetica, sans-serif; fill: #000000; }
+      .handwritten { font-family: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-size: 17px; font-weight: 700; fill: #1e3a8a; }
+      .handwritten-dark { font-family: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-size: 17px; font-weight: 700; fill: #0f172a; }
+      .handwritten-sm { font-family: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-size: 15px; font-weight: 700; fill: #1e3a8a; }
+    </style>
+  </defs>
+
+  <!-- White Paper Page -->
+  <rect width="850" height="1200" fill="#fcfbf9"/>
+  <rect x="25" y="25" width="800" height="1150" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- Top Printed Template Header -->
+  <g text-anchor="middle" class="template-title">
+    <text x="425" y="60" font-size="12" font-weight="bold" letter-spacing="0.5">MAHARASHTRA POLICE DEPARTMENT · CRIMINAL INVESTIGATION DEPARTMENT (CID)</text>
+    <text x="425" y="85" font-size="18" font-weight="900" letter-spacing="1">FIRST INFORMATION REPORT</text>
+    <text x="425" y="103" font-size="10" font-style="italic">(Crime &amp; Criminal Intelligence MIS · Under Section 154 Cr.P.C. / BNSS 173)</text>
+  </g>
+
+  <!-- Police Station & District Line -->
+  <g transform="translate(45, 125)">
+    <text x="0" y="15" class="template-label" font-size="11">Police Station:</text>
+    <line x1="90" y1="18" x2="430" y2="18" stroke="#000000" stroke-width="1"/>
+    <!-- Handwritten PS -->
+    <text x="100" y="14" class="handwritten" transform="rotate(-0.5 100 14)">Swargate Police Station, Pune City</text>
+
+    <text x="450" y="15" class="template-label" font-size="11">District:</text>
+    <line x1="500" y1="18" x2="760" y2="18" stroke="#000000" stroke-width="1"/>
+    <!-- Handwritten District -->
+    <text x="515" y="14" class="handwritten">Pune City</text>
+  </g>
+
+  <line x1="45" y1="152" x2="805" y2="152" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- FIR No, Date, Time Row -->
+  <g transform="translate(45, 165)">
+    <!-- FIR Number -->
+    <text x="0" y="14" class="template-label">FIR NUMBER / CASE REF</text>
+    <line x1="0" y1="36" x2="230" y2="36" stroke="#64748b" stroke-width="0.8"/>
+    <!-- Handwritten FIR No -->
+    <text x="5" y="32" class="handwritten" fill="#b91c1c" font-size="18">FIR-MH-2026-1184</text>
+
+    <!-- Date of Occurrence -->
+    <text x="260" y="14" class="template-label">DATE OF OCCURRENCE</text>
+    <line x1="260" y1="36" x2="490" y2="36" stroke="#64748b" stroke-width="0.8"/>
+    <!-- Handwritten Date -->
+    <text x="265" y="32" class="handwritten">11 / 08 / 2026</text>
+
+    <!-- Time of Incident -->
+    <text x="520" y="14" class="template-label">TIME OF INCIDENT</text>
+    <line x1="520" y1="36" x2="760" y2="36" stroke="#64748b" stroke-width="0.8"/>
+    <!-- Handwritten Time -->
+    <text x="525" y="32" class="handwritten">19:45 HRS</text>
+  </g>
+
+  <!-- Acts & Sections -->
+  <g transform="translate(45, 218)">
+    <text x="0" y="14" class="template-label">STATUTORY ACTS &amp; SECTIONS</text>
+    <line x1="0" y1="36" x2="760" y2="36" stroke="#64748b" stroke-width="0.8"/>
+    <!-- Handwritten Sections -->
+    <text x="5" y="32" class="handwritten" transform="rotate(-0.3 5 32)">IPC 384 (Extortion), IPC 386, IPC 120B, Arms Act 25</text>
+  </g>
+
+  <!-- Section 1 Header -->
+  <g transform="translate(45, 275)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold" font-family="Arial,sans-serif">1 - COMPLAINANT / INFORMANT DETAILS</text>
+  </g>
+
+  <!-- Section 1 Fields -->
+  <g transform="translate(45, 305)">
+    <!-- Row 1 -->
+    <text x="0" y="14" class="template-label">NAME OF COMPLAINANT</text>
+    <line x1="0" y1="34" x2="240" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="30" class="handwritten">Sunil Jagtap</text>
+
+    <text x="260" y="14" class="template-label">AGE</text>
+    <line x1="260" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="265" y="30" class="handwritten">38 Yrs</text>
+
+    <text x="370" y="14" class="template-label">FATHER'S / RELATIVE NAME</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="375" y="30" class="handwritten">Anandrao Jagtap</text>
+
+    <!-- Row 2 -->
+    <text x="0" y="58" class="template-label">CONTACT MOBILE / PHONE</text>
+    <line x1="0" y1="78" x2="240" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="74" class="handwritten">+91 94220 33190</text>
+
+    <text x="260" y="58" class="template-label">PERMANENT / RESIDENTIAL ADDRESS</text>
+    <line x1="260" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="265" y="74" class="handwritten-sm">Ganesh Peth, Near Timber Market, Swargate, Pune - 411002</text>
+  </g>
+
+  <!-- Section 2 Header -->
+  <g transform="translate(45, 405)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold" font-family="Arial,sans-serif">2 - ACCUSED / SUSPECT SUBJECT DETAILS</text>
+  </g>
+
+  <!-- Section 2 Fields -->
+  <g transform="translate(45, 435)">
+    <!-- Row 1 -->
+    <text x="0" y="14" class="template-label">PRIMARY ACCUSED NAME</text>
+    <line x1="0" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="30" class="handwritten" font-size="18" fill="#991b1b">Suresh Shinde</text>
+
+    <text x="370" y="14" class="template-label">KNOWN ALIASES / CYBER HANDLES</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="375" y="30" class="handwritten">Surya, Anna</text>
+
+    <!-- Row 2 -->
+    <text x="0" y="58" class="template-label">CO-ACCUSED &amp; CONSPIRATORS (COMMA SEPARATED)</text>
+    <line x1="0" y1="78" x2="350" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="74" class="handwritten">Arjun Pawar, Pappu More</text>
+
+    <text x="370" y="58" class="template-label">INCIDENT LOCATION / PLACE OF OCCURRENCE</text>
+    <line x1="370" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="375" y="74" class="handwritten">Timber Market Road, Swargate, Pune</text>
+  </g>
+
+  <!-- Section 3 Header -->
+  <g transform="translate(45, 535)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold" font-family="Arial,sans-serif">3 - MULTI-OBJECT INTELLIGENCE LINKAGES &amp; ASSETS</text>
+  </g>
+
+  <!-- Section 3 Fields -->
+  <g transform="translate(45, 565)">
+    <!-- Row 1 -->
+    <text x="0" y="14" class="template-label">ASSOCIATED PHONE / BURNER SIM</text>
+    <line x1="0" y1="34" x2="350" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="30" class="handwritten" fill="#0b3d91">+91 99230 44102</text>
+
+    <text x="370" y="14" class="template-label">LOGISTICS / VEHICLE ASSET</text>
+    <line x1="370" y1="34" x2="760" y2="34" stroke="#64748b" stroke-width="0.8"/>
+    <text x="375" y="30" class="handwritten">MH-14-EA-7712 (Black Pulsar)</text>
+
+    <!-- Row 2 -->
+    <text x="0" y="58" class="template-label">MULE ACCOUNT / FINANCIAL ROUTE</text>
+    <line x1="0" y1="78" x2="350" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="5" y="74" class="handwritten-sm" fill="#0284c7">Bank of Maharashtra · A/C 60129948102 (Swargate Branch)</text>
+
+    <text x="370" y="58" class="template-label">CELL TOWER / TRIANGULATION SECTOR</text>
+    <line x1="370" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="375" y="74" class="handwritten">TOW-MH-PN-022 (Swargate Bus Station Pune)</text>
+  </g>
+
+  <!-- Section 4 Header -->
+  <g transform="translate(45, 665)">
+    <line x1="0" y1="0" x2="760" y2="0" stroke="#000000" stroke-width="1.5"/>
+    <text x="0" y="16" font-size="11" font-weight="bold" font-family="Arial,sans-serif">4 - FACTUAL INCIDENT NARRATIVE &amp; MODUS OPERANDI</text>
+  </g>
+
+  <!-- Narrative Lined Box -->
+  <g transform="translate(45, 695)">
+    <text x="0" y="14" class="template-label">DESCRIPTION OF CRIME &amp; FACTUAL SEQUENCE</text>
+    
+    <rect x="0" y="22" width="760" height="95" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="46" x2="760" y2="46" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="70" x2="760" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="94" x2="760" y2="94" stroke="#f1f5f9" stroke-width="1"/>
+
+    <!-- Handwritten Multi-line Narrative -->
+    <text x="8" y="42" class="handwritten-sm">Complainant (timber merchant) received multiple extortion demand notes and threatening VoIP calls</text>
+    <text x="8" y="66" class="handwritten-sm">demanding monthly protection hafta of INR 5,00,000/-. Threat note handwritten on ruled paper delivered</text>
+    <text x="8" y="90" class="handwritten-sm">by two bike-borne youth on black motorcycle (MH-14-EA-7712) who fled towards Seven Loves Chowk.</text>
+    <text x="8" y="112" class="handwritten-sm">Accused threatened severe physical harm if police reporting was attempted.</text>
+  </g>
+
+  <!-- Property Defrauded Lined Box -->
+  <g transform="translate(45, 835)">
+    <text x="0" y="14" class="template-label">PROPERTY DEFRAUDED / STOLEN / SEIZED VALUABLES</text>
+    
+    <rect x="0" y="22" width="760" height="70" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="46" x2="760" y2="46" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="0" y1="70" x2="760" y2="70" stroke="#f1f5f9" stroke-width="1"/>
+
+    <text x="8" y="42" class="handwritten-sm">1x Original handwritten extortion demand note (5 Lakh demand signed 'Anna').</text>
+    <text x="8" y="66" class="handwritten-sm">1x SIM packaging wrapper card (+91 99230 44102), and CCTV traffic snapshot of Black Pulsar.</text>
+  </g>
+
+  <!-- Bottom Meta & Signature -->
+  <g transform="translate(45, 950)">
+    <text x="0" y="15" class="template-label">ACTION TAKEN</text>
+    <line x1="100" y1="18" x2="760" y2="18" stroke="#64748b" stroke-width="0.8"/>
+    <text x="105" y="14" class="handwritten-sm">Offence registered under Sec 384/386 IPC &amp; Arms Act; ANPR vehicle alert issued.</text>
+
+    <text x="0" y="45" class="template-label">INVESTIGATING OFFICER</text>
+    <line x1="150" y1="48" x2="760" y2="48" stroke="#64748b" stroke-width="0.8"/>
+    <text x="155" y="44" class="handwritten">PSI S. V. Kadam (Badge #MH-PN-4412)</text>
+
+    <text x="0" y="75" class="template-label">UNIT:</text>
+    <line x1="40" y1="78" x2="430" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <text x="45" y="74" class="handwritten">Detection Branch, Swargate Police Station</text>
+
+    <text x="460" y="75" class="template-label">Signature of IO · Date:</text>
+    <line x1="595" y1="78" x2="760" y2="78" stroke="#64748b" stroke-width="0.8"/>
+    <!-- Cursive Signature -->
+    <path d="M 605 72 Q 625 55, 645 68 T 685 60 T 715 72" fill="none" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+    <text x="718" y="74" class="handwritten">11/08/26</text>
+  </g>
+
+  <!-- Official Police Seal Stamp in Violet -->
+  <g transform="translate(620, 1030) rotate(-6)">
+    <rect x="0" y="0" width="130" height="50" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="5 2" opacity="0.85"/>
+    <text x="65" y="18" font-size="7" font-weight="bold" fill="#7c3aed" text-anchor="middle" font-family="sans-serif">SWARGATE POLICE STATION</text>
+    <text x="65" y="32" font-size="8" font-weight="900" fill="#7c3aed" text-anchor="middle" font-family="sans-serif">REG NO: 1184/2026</text>
+    <text x="65" y="44" font-size="6.5" font-weight="bold" fill="#7c3aed" text-anchor="middle" font-family="sans-serif">11 AUG 2026</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="425" y="1165" font-size="8" fill="#64748b" text-anchor="middle" font-family="Arial,sans-serif">Netrakshak Criminal Intelligence MIS · Standard Form II Template · Crime &amp; Criminal Network Command</text>
+</svg>

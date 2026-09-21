@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 480" width="700" height="480" style="background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+  <rect width="700" height="480" fill="#f8fafc"/>
+  <rect x="20" y="20" width="660" height="440" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Bank Header -->
+  <rect x="20" y="20" width="660" height="60" rx="8" fill="#004c8f"/>
+  <text x="50" y="58" font-size="20" font-weight="bold" fill="#ffffff" font-family="sans-serif">HDFC BANK</text>
+  <text x="200" y="55" font-size="12" fill="#93c5fd" font-family="sans-serif">· IMPS INTERBANK DIGITAL TRANSFER RECEIPT</text>
+  <text x="650" y="55" font-size="11" fill="#ffffff" text-anchor="end" font-family="sans-serif">REF: HDFC-IMPS-20260814-9982</text>
+
+  <!-- Status Pill -->
+  <g transform="translate(50, 100)">
+    <rect x="0" y="0" width="130" height="26" rx="13" fill="#dcfce7" stroke="#86efac"/>
+    <text x="65" y="17" font-size="11" font-weight="bold" fill="#166534" text-anchor="middle">✓ SUCCESSFUL</text>
+  </g>
+
+  <!-- Transfer Details -->
+  <g transform="translate(50, 145)" font-size="12" fill="#334155">
+    <text x="0" y="20" font-weight="bold" fill="#64748b">TRANSACTION AMOUNT:</text>
+    <text x="220" y="20" font-size="18" font-weight="bold" fill="#b91c1c">INR 14,50,000.00</text>
+    <text x="220" y="38" font-size="10" fill="#64748b">(Rupees Fourteen Lakh Fifty Thousand Only)</text>
+
+    <line x1="0" y1="55" x2="600" y2="55" stroke="#e2e8f0" stroke-width="1"/>
+
+    <text x="0" y="80" font-weight="bold" fill="#64748b">Remitter Name:</text>
+    <text x="220" y="80" font-weight="bold">Rajesh Madhavrao Kulkarni</text>
+
+    <text x="0" y="105" font-weight="bold" fill="#64748b">Remitter Account:</text>
+    <text x="220" y="105">SBI A/C ······4912 (IFSC: SBIN0001352)</text>
+
+    <line x1="0" y1="120" x2="600" y2="120" stroke="#e2e8f0" stroke-width="1"/>
+
+    <text x="0" y="145" font-weight="bold" fill="#64748b">Beneficiary Account Name:</text>
+    <text x="220" y="145" font-weight="bold" fill="#0f172a">Sameer Khan / Synthetic Securities</text>
+
+    <text x="0" y="170" font-weight="bold" fill="#64748b">Beneficiary Mule Account:</text>
+    <text x="220" y="170" font-weight="bold" fill="#0369a1">50100492817291 (IFSC: HDFC0000039)</text>
+
+    <text x="0" y="195" font-weight="bold" fill="#64748b">Branch / Location:</text>
+    <text x="220" y="195">FC Road Shivajinagar Branch, Pune</text>
+
+    <text x="0" y="220" font-weight="bold" fill="#64748b">Date &amp; Timestamp:</text>
+    <text x="220" y="220">14-Aug-2026 13:42:18 IST</text>
+
+    <text x="0" y="245" font-weight="bold" fill="#64748b">RRN / UTR Reference:</text>
+    <text x="220" y="245" font-family="monospace">6228190341829012</text>
+  </g>
+
+  <!-- Seized Evidence Stamp -->
+  <g transform="translate(480, 310) rotate(-8)">
+    <rect x="0" y="0" width="170" height="60" rx="4" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+    <text x="85" y="22" font-size="9" font-weight="bold" fill="#dc2626" text-anchor="middle">POLICE EVIDENCE EXHIBIT</text>
+    <text x="85" y="38" font-size="10" font-weight="900" fill="#dc2626" text-anchor="middle">FIR-MH-2026-4821</text>
+    <text x="85" y="52" font-size="8" fill="#dc2626" text-anchor="middle">EXHIBIT NO: EX-BANK-01</text>
+  </g>
+
+  <rect x="20" y="430" width="660" height="30" rx="0" fill="#f1f5f9"/>
+  <text x="350" y="450" font-size="9" fill="#94a3b8" text-anchor="middle">Seized in connection with Cyber Crime Police Station Pune Case Docket · Netrakshak Vault Record</text>
+</svg>

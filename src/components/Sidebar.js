@@ -29,11 +29,8 @@ export function navItem(view, label, i) {
 export function renderSidebar() {
   const activeOfficer = getActiveOfficer();
 
-  const sidebarHeader = el('div', { class: 'sidebar-header' }, [
-    el('div', { class: 'sidebar-header-left' }, [
-      el('span', { class: 'sidebar-header-badge' }, [icon('shield')]),
-      el('span', { class: 'sidebar-header-text' }, ['NETRAKSHAK'])
-    ]),
+  const workspaceHeader = el('div', { class: 'sidebar-section-header' }, [
+    el('span', { class: 'nav-section-label' }, [t('workspace')]),
     el('button', {
       class: 'sidebar-toggle-btn',
       title: state.sidebarCollapsed ? t('expandSidebar') : t('collapseSidebar'),
@@ -47,8 +44,7 @@ export function renderSidebar() {
   ]);
 
   const sidebar = el('aside', { class: 'sidebar' }, [
-    sidebarHeader,
-    el('div', { class: 'nav-section-label' }, [t('workspace')]),
+    workspaceHeader,
     navItem('overview', t('command'), 'grid'),
     navItem('entities', t('entitiesNav'), 'user'),
     navItem('network', t('network'), 'network'),
@@ -73,7 +69,6 @@ export function renderSidebar() {
       ])
     ])
   ]);
-
 
   return sidebar;
 }
