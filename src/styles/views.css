@@ -4404,12 +4404,35 @@
   background: #EFF6FF;
   padding: 4px 8px;
   border-radius: 5px;
+  white-space: nowrap;
+}
+
+.card-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .launch-btn {
-  font-weight: 700;
-  padding: 6px 12px;
-  font-size: 11px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-weight: 700 !important;
+  padding: 6px 12px !important;
+  font-size: 11.5px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.launch-btn-graph {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-weight: 600 !important;
+  padding: 6px 10px !important;
+  font-size: 11.5px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
 }
 
 .launchpad-empty-state {

@@ -1908,7 +1908,7 @@ export function renderInvestigationLaunchpad(c) {
               startGraphInvestigation(graphTargetId);
               showToast(`Generated network around ${item.name}`);
             }
-          }, [icon('network'), ' Launch Graph →']),
+          }, [icon('network'), ' Launch Graph']),
           el('button', {
             class: 'outline-btn small launch-btn-graph',
             title: 'Inspect detailed entity profile record',
