@@ -149,19 +149,31 @@ export function renderAuditLogs(c) {
       const matchAction = (log.action || '').toLowerCase().includes(q);
       const matchSummary = (log.summary || '').toLowerCase().includes(q);
       const matchTime = (log.time || '').toLowerCase().includes(q);
-      if (!matchActor && !matchAction && !matchSummary && !matchTime) return false;
+      const matchLevel = (log.level || '').toLowerCase().includes(q);
+      if (!matchActor && !matchAction && !matchSummary && !matchTime && !matchLevel) return false;
     }
     return true;
   });
 
   const tableBody = filteredLogs.length > 0 ? filteredLogs.map(log => {
     const actionClass = log.actionType || 'system';
+    const level = (log.level || 'info').toLowerCase();
+    const isSystemAction = log.actionType === 'integrity' || log.action === 'Integrity alert' || log.actor === 'System (Vault Engine)';
+    const displayActor = isSystemAction ? 'System (Vault Engine)' : (log.actor || 'System');
+    const displayInitials = isSystemAction ? 'SYS' : (log.actorInitials || (displayActor ? displayActor.slice(0, 2).toUpperCase() : 'OF'));
+
     return el('tr', {}, [
       el('td', { class: 'audit-time-cell' }, [log.time]),
       el('td', {}, [
+        el('span', { class: `audit-level-badge ${level}` }, [
+          icon(level === 'critical' ? 'alert' : (level === 'warning' ? 'alert' : 'check')),
+          level.toUpperCase()
+        ])
+      ]),
+      el('td', {}, [
         el('div', { class: 'audit-actor-cell' }, [
-          el('div', { class: 'audit-actor-avatar' }, [log.actorInitials || 'S']),
-          el('strong', {}, [log.actor || 'System'])
+          el('div', { class: 'audit-actor-avatar', style: isSystemAction ? 'background: #475569;' : '' }, [displayInitials]),
+          el('strong', {}, [displayActor])
         ])
       ]),
       el('td', {}, [
@@ -171,16 +183,17 @@ export function renderAuditLogs(c) {
     ]);
   }) : [
     el('tr', {}, [
-      el('td', { colspan: '4', style: 'text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px;' }, ['No audit log events match the current filter criteria.'])
+      el('td', { colspan: '5', style: 'text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px;' }, ['No audit log events match the current filter criteria.'])
     ])
   ];
 
   const table = el('table', { class: 'audit-table' }, [
     el('thead', {}, [
       el('tr', {}, [
-        el('th', { style: 'width: 140px;' }, [t('time')]),
+        el('th', { style: 'width: 130px;' }, [t('time')]),
+        el('th', { style: 'width: 105px;' }, ['Level']),
         el('th', { style: 'width: 170px;' }, [t('actor')]),
-        el('th', { style: 'width: 140px;' }, [t('action')]),
+        el('th', { style: 'width: 150px;' }, [t('action')]),
         el('th', {}, [t('summary')])
       ])
     ]),

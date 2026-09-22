@@ -136,15 +136,22 @@ export async function runCryptographicAudit() {
 
     // 4. Calculate metrics
     const totalFiles = evidenceResults.length;
-    const verifiedFiles = evidenceResults.filter(r => r.status === 'VERIFIED').length;
-    const missingFiles = evidenceResults.filter(r => r.status === 'DELETED').length;
-    const tamperedFiles = evidenceResults.filter(r => r.status === 'TAMPERED').length;
+    const vaultFiles = evidenceResults.filter(r => r.storagePath);
+    const vaultFilesCount = vaultFiles.length;
+    const localMetadataCount = evidenceResults.filter(r => !r.storagePath).length;
+
+    const verifiedFiles = vaultFiles.filter(r => r.status === 'VERIFIED').length;
+    const missingFiles = vaultFiles.filter(r => r.status === 'DELETED').length;
+    const tamperedFiles = vaultFiles.filter(r => r.status === 'TAMPERED').length;
 
     const totalTables = tableResults.length;
     const operationalTables = tableResults.filter(t => t.healthy).length;
     const compromisedTables = tableResults.filter(t => !t.healthy).length;
 
-    const totalAudited = totalFiles + totalTables;
+    const auditTable = tableResults.find(t => t.tableName.includes('audit_events'));
+    const totalAuditEvents = auditTable?.count || state.auditLogs?.length || 0;
+
+    const totalAudited = vaultFilesCount + totalTables;
     const totalPassed = verifiedFiles + operationalTables;
     const integrityPercentage = totalAudited > 0 ? Math.round((totalPassed / totalAudited) * 100) : 100;
     const hasBreaches = missingFiles > 0 || tamperedFiles > 0 || compromisedTables > 0;
@@ -155,12 +162,15 @@ export async function runCryptographicAudit() {
       integrityPercentage,
       hasBreaches,
       totalFiles,
+      vaultFilesCount,
+      localMetadataCount,
       verifiedFiles,
       missingFiles,
       tamperedFiles,
       totalTables,
       operationalTables,
       compromisedTables,
+      totalAuditEvents,
       evidenceResults,
       tableResults
     };

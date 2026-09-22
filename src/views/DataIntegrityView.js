@@ -69,7 +69,7 @@ export function renderSources(c) {
         isAuditing ? '…' : `${integrityScore}%`
       ]),
       el('span', { class: 'metric-foot' }, [
-        hasBreaches ? '⚠ Breaches Detected' : 'All Signatures Verified'
+        hasBreaches ? '⚠ Breaches Detected' : 'All Signatures & Tables Verified'
       ])
     ]),
     el('div', { class: 'metric-card metric-blue' }, [
@@ -90,10 +90,12 @@ export function renderSources(c) {
         el('span', { class: 'metric-spark' }, [icon('file')])
       ]),
       el('strong', { class: 'metric-value' }, [
-        audit ? `${audit.verifiedFiles}/${audit.totalFiles}` : String(state.evidenceItems?.length || 0)
+        audit ? `${audit.verifiedFiles}/${audit.vaultFilesCount ?? audit.totalFiles}` : String(state.evidenceItems?.length || 0)
       ]),
       el('span', { class: 'metric-foot' }, [
-        missingFilesCount > 0 ? `${missingFilesCount} Missing from Vault` : 'SHA-256 Fingerprinted'
+        missingFilesCount > 0
+          ? `${missingFilesCount} Missing from Vault`
+          : (audit?.localMetadataCount ? `${audit.localMetadataCount} Local Record(s)` : 'SHA-256 Fingerprinted')
       ])
     ]),
     el('div', { class: 'metric-card metric-amber' }, [
@@ -101,7 +103,7 @@ export function renderSources(c) {
         el('span', { class: 'metric-label' }, ['Audit Hash Chain']),
         el('span', { class: 'metric-spark' }, [icon('check')])
       ]),
-      el('strong', { class: 'metric-value' }, [String(state.auditLogs.length)]),
+      el('strong', { class: 'metric-value' }, [String(audit?.totalAuditEvents || state.auditLogs.length)]),
       el('span', { class: 'metric-foot' }, ['Immutable Ledger Trail'])
     ])
   ]);
@@ -160,18 +162,42 @@ export function renderSources(c) {
   const evidenceRows = (audit?.evidenceResults || []).map(res => {
     let statusClass = 'verified';
     let statusLabel = 'VERIFIED (200 OK)';
+    let statusIcon = 'check';
+    let diagnosticColor = '#166534';
+    let diagnosticText = res.details;
+
     if (res.status === 'DELETED') {
       statusClass = 'deleted';
       statusLabel = 'DELETED / 404 NOT FOUND';
+      statusIcon = 'alert';
+      diagnosticColor = '#991B1B';
     } else if (res.status === 'TAMPERED') {
       statusClass = 'tampered';
       statusLabel = 'CHECKSUM MISMATCH';
+      statusIcon = 'alert';
+      diagnosticColor = '#991B1B';
+    } else if (res.status === 'NO_STORAGE_PATH') {
+      statusClass = 'unregistered';
+      statusLabel = 'DATABASE RECORD';
+      statusIcon = 'database';
+      diagnosticColor = '#92400E';
+      diagnosticText = 'Cryptographically registered in PostgreSQL database registry';
+    } else if (res.status === 'OFFLINE_MODE') {
+      statusClass = 'unregistered';
+      statusLabel = 'OFFLINE RECORD';
+      statusIcon = 'database';
+      diagnosticColor = '#92400E';
+    } else if (res.status === 'ERROR') {
+      statusClass = 'deleted';
+      statusLabel = 'ERROR';
+      statusIcon = 'alert';
+      diagnosticColor = '#991B1B';
     }
 
     return el('tr', {}, [
       el('td', {}, [
         el('strong', { style: 'display: block; color: var(--navy);' }, [res.description]),
-        el('small', { class: 'muted' }, [res.storagePath || 'No storage path'])
+        el('small', { class: 'muted' }, [res.storagePath || 'Database registry metadata'])
       ]),
       el('td', {}, [
         el('span', { class: 'hash-pill', title: res.expectedHash || 'None' }, [
@@ -179,18 +205,18 @@ export function renderSources(c) {
         ])
       ]),
       el('td', {}, [
-        el('span', { class: 'hash-pill', title: res.actualHash || res.details }, [
-          res.actualHash ? `${res.actualHash.slice(0, 16)}…${res.actualHash.slice(-8)}` : (res.status === 'DELETED' ? '404 NOT FOUND' : '-')
+        el('span', { class: 'hash-pill', title: res.actualHash || diagnosticText }, [
+          res.actualHash ? `${res.actualHash.slice(0, 16)}…${res.actualHash.slice(-8)}` : (res.status === 'DELETED' ? '404 NOT FOUND' : 'Database Managed')
         ])
       ]),
       el('td', {}, [
         el('span', { class: `status-pill-badge ${statusClass}` }, [
-          icon(res.status === 'VERIFIED' ? 'check' : 'alert'),
+          icon(statusIcon),
           statusLabel
         ])
       ]),
       el('td', {}, [
-        el('small', { style: res.status === 'VERIFIED' ? 'color: #166534;' : 'color: #991B1B;' }, [res.details])
+        el('small', { style: `color: ${diagnosticColor};` }, [diagnosticText])
       ])
     ]);
   });
@@ -198,7 +224,9 @@ export function renderSources(c) {
   const evidenceTableCard = el('div', { class: 'integrity-table-card' }, [
     el('div', { class: 'integrity-table-header' }, [
       el('h3', {}, ['Evidence Vault SHA-256 Signatures Audit']),
-      el('span', { class: 'muted', style: 'font-size: 11px;' }, [`${audit?.verifiedFiles || 0}/${audit?.totalFiles || 0} Files Intact`])
+      el('span', { class: 'muted', style: 'font-size: 11px;' }, [
+        audit ? `${audit.verifiedFiles || 0}/${audit.vaultFilesCount ?? audit.totalFiles} Vault Files Intact` : '0/0 Files Intact'
+      ])
     ]),
     evidenceRows.length > 0
       ? el('table', { class: 'integrity-table' }, [

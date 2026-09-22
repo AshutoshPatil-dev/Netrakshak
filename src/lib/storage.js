@@ -3,8 +3,8 @@ export async function uploadPrivateEvidence({ supabase, file, userId, sha256 }) 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = `${userId}/${sha256}-${safeName}`;
   const { error } = await supabase.storage.from('fir-evidence').upload(path, file, {
-    upsert: false,
+    upsert: true,
     contentType: file.type || 'application/octet-stream',
   });
-  return { path: error ? null : path, error };
+  return { path, error };
 }

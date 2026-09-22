@@ -48,23 +48,26 @@ export function computeDynamicCommunities() {
     }
   });
 
+  // Deterministic node ordering: highest degree first, then by ID
+  const orderedEntities = [...entities].sort((a, b) => {
+    const degA = degreeMap.get(a.id) || 0;
+    const degB = degreeMap.get(b.id) || 0;
+    if (degB !== degA) return degB - degA;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
   // Label Propagation Algorithm (LPA) for community modularity
   const labels = new Map();
-  
-  // Seed key suspects as distinct community anchors if available
-  const keySuspects = entities.filter(e => e.risk === 'high' && e.category === 'person');
-  entities.forEach((ent, idx) => {
+  entities.forEach(ent => {
     labels.set(ent.id, ent.id);
   });
 
-  // Run LPA iterations
+  // Run LPA iterations deterministically
   const maxIterations = 15;
   for (let iter = 0; iter < maxIterations; iter++) {
     let changed = false;
-    // Shuffle nodes for unbiased propagation
-    const shuffled = [...entities].sort(() => Math.random() - 0.5);
 
-    shuffled.forEach(ent => {
+    orderedEntities.forEach(ent => {
       const neighbors = adj.get(ent.id);
       if (!neighbors || neighbors.size === 0) return;
 
@@ -74,17 +77,25 @@ export function computeDynamicCommunities() {
         labelWeights.set(nbrLabel, (labelWeights.get(nbrLabel) || 0) + weight);
       });
 
-      // Find label with highest accumulated weight
-      let bestLabel = labels.get(ent.id);
-      let maxWeight = -1;
+      // Find label with highest accumulated weight (deterministic tie breaking)
+      let currentLabel = labels.get(ent.id);
+      let bestLabel = currentLabel;
+      let maxWeight = labelWeights.get(currentLabel) || 0;
+
       labelWeights.forEach((w, lbl) => {
         if (w > maxWeight) {
           maxWeight = w;
           bestLabel = lbl;
+        } else if (w === maxWeight && maxWeight > 0) {
+          if (lbl === currentLabel) {
+            bestLabel = lbl;
+          } else if (bestLabel !== currentLabel && String(lbl).localeCompare(String(bestLabel)) < 0) {
+            bestLabel = lbl;
+          }
         }
       });
 
-      if (bestLabel !== labels.get(ent.id)) {
+      if (bestLabel !== currentLabel) {
         labels.set(ent.id, bestLabel);
         changed = true;
       }
@@ -109,8 +120,11 @@ export function computeDynamicCommunities() {
     const egoClusters = [];
     const assigned = new Set();
 
-    // Priority 1: Key persons
-    const seedLeaders = entities.filter(e => e.category === 'person');
+    // Priority 1: Key persons in deterministic order
+    const seedLeaders = [...entities]
+      .filter(e => e.category === 'person')
+      .sort((a, b) => (degreeMap.get(b.id) || 0) - (degreeMap.get(a.id) || 0));
+
     seedLeaders.forEach(leader => {
       if (assigned.has(leader.id)) return;
       const cluster = [leader];
@@ -118,7 +132,8 @@ export function computeDynamicCommunities() {
 
       const nbrs = adj.get(leader.id);
       if (nbrs) {
-        nbrs.forEach((_, nbrId) => {
+        const sortedNbrs = Array.from(nbrs.keys()).sort((a, b) => String(a).localeCompare(String(b)));
+        sortedNbrs.forEach(nbrId => {
           if (!assigned.has(nbrId)) {
             const nbrNode = entities.find(e => e.id === nbrId);
             if (nbrNode) {
@@ -149,8 +164,19 @@ export function computeDynamicCommunities() {
     if (meaningful.length > 0) rawClusters = meaningful;
   }
 
-  // Sort clusters by member count descending
-  rawClusters.sort((a, b) => b.length - a.length);
+  // Sort clusters deterministically:
+  // 1. Cluster size descending
+  // 2. High-risk member count descending
+  // 3. Primary leader / first member name alphabetically
+  rawClusters.sort((a, b) => {
+    if (b.length !== a.length) return b.length - a.length;
+    const aHigh = a.filter(m => m.risk === 'high').length;
+    const bHigh = b.filter(m => m.risk === 'high').length;
+    if (bHigh !== aHigh) return bHigh - aHigh;
+    const aName = a[0]?.name || a[0]?.id || '';
+    const bName = b[0]?.name || b[0]?.id || '';
+    return aName.localeCompare(bName);
+  });
 
   return rawClusters.map((group, idx) => {
     const communityNum = idx + 1; // 1-indexed (Community #1, #2, etc.)
@@ -351,25 +377,23 @@ export function renderPatternsAnomalies(parent) {
   const dynamicAnomalies = computeDynamicAnomalies();
 
   // Top header matching Netrakshak style
-  const header = el('div', { class: 'patterns-view-header' }, [
-    el('div', { class: 'patterns-title-group' }, [
-      el('h1', { class: 'patterns-main-title' }, ['Patterns & Anomalies']),
-      el('p', { class: 'patterns-subtitle' }, [
+  // Top header matching Netrakshak style
+  const header = el('div', { class: 'page-heading' }, [
+    el('div', {}, [
+      el('h1', {}, ['Patterns & Anomalies']),
+      el('p', { class: 'muted' }, [
         'Automated community clustering exposing segregated criminal groups and high-confidence behavioral anomalies directly from live database records.'
       ])
     ]),
-    el('div', { class: 'patterns-header-actions' }, [
+    el('div', { style: 'display: flex; gap: 10px; align-items: center;' }, [
       el('button', {
-        class: 'btn btn-outline',
+        class: 'outline-btn',
         onclick: () => {
           showToast(`Scanning database network matrix: ${dynamicCommunities.length} dynamic sub-groups computed.`);
         }
-      }, [
-        el('span', {}, [icon('pulse')]),
-        el('span', {}, ['Re-run Clustering'])
-      ]),
+      }, [icon('refresh'), 'Re-run Clustering']),
       el('button', {
-        class: 'btn btn-primary',
+        class: 'primary-btn',
         onclick: () => {
           state.graphExploration.active = true;
           state.graphExploration.mode = 'all';
@@ -377,10 +401,7 @@ export function renderPatternsAnomalies(parent) {
           notifyStateChange();
           showToast('Viewing Complete Master Network Graph');
         }
-      }, [
-        el('span', {}, [icon('network')]),
-        el('span', {}, ['View Master Graph'])
-      ])
+      }, [icon('network'), 'View Master Graph'])
     ])
   ]);
 

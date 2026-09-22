@@ -33,7 +33,7 @@ function getViewRenderer() {
 }
 
 function render() {
-  if (state.authChecking) {
+  if (state.authChecking && !state.loggedIn) {
     renderLoadingSplash();
   } else if (state.loggedIn) {
     renderAppShell(getViewRenderer());

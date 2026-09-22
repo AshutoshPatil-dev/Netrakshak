@@ -444,6 +444,21 @@ async function commitFIRSave(data) {
         firId = fir.id;
       }
 
+      // If a source scanned file was uploaded, attach it as an evidence item
+      if (state.file && (state.filePath || state.fileHash)) {
+        const alreadyInManual = state.manualEvidence.some(e => e.description && e.description.includes(state.file.name));
+        if (!alreadyInManual) {
+          await supabase.from('evidence_items').insert({
+            fir_id: firId,
+            evidence_type: 'document',
+            description: `Scanned FIR Document (${state.file.name})`,
+            storage_path: state.filePath || null,
+            sha256: state.fileHash || null,
+            created_by: user.id
+          });
+        }
+      }
+
       // Attach evidence items
       for (const item of state.manualEvidence) {
         let storagePath = null;

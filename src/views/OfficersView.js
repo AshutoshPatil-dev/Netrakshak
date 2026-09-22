@@ -15,17 +15,19 @@ export function renderOfficers(c) {
 
   const editingOfficer = state.editingOfficerId ? state.officers.find(o => o.id === state.editingOfficerId) : null;
 
-  const headerActions = [
+  const isDrawerOpen = !!(state.isOfficerDrawerOpen || state.editingOfficerId);
+
+  const headerActions = isAdmin ? [
     el('button', {
       class: 'primary-btn',
       onclick: () => {
+        state.isOfficerDrawerOpen = true;
         state.editingOfficerId = null;
         state.officerFormRole = 'case-officer';
         notifyStateChange();
-        document.querySelector('.officer-form-panel input[name="fullName"]')?.focus();
       }
     }, [icon('plus'), t('addOfficer')])
-  ];
+  ] : [];
 
   const header = el('div', { class: 'page-heading' }, [
     el('div', {}, [
@@ -34,7 +36,6 @@ export function renderOfficers(c) {
     ]),
     ...headerActions
   ]);
-
 
   let listArea;
   if (state.officers.length === 0) {
@@ -64,6 +65,7 @@ export function renderOfficers(c) {
             actions.push(el('button', {
               class: 'officer-btn',
               onclick: () => {
+                state.isOfficerDrawerOpen = true;
                 state.editingOfficerId = officer.id;
                 state.officerFormRole = officer.role || 'case-officer';
                 notifyStateChange();
@@ -122,7 +124,9 @@ export function renderOfficers(c) {
     }));
   }
 
-  const form = el('form', { class: 'officer-form' }, [
+  let drawerElement = null;
+  if (isAdmin && isDrawerOpen) {
+    const form = el('form', { class: 'officer-form' }, [
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('fullName') + ' *']),
         el('input', { name: 'fullName', required: true, placeholder: 'e.g. Officer Name', value: editingOfficer ? editingOfficer.name : '' })
@@ -173,7 +177,6 @@ export function renderOfficers(c) {
       ]),
       el('div', { class: 'form-group' }, [
         el('label', {}, [t('rolePermissions')]),
-        // Editing your own profile: role is locked to prevent accidental self-demotion
         editingOfficer && editingOfficer.isYou
           ? el('div', { class: 'role-pill-group' }, [
               el('div', { class: 'admin-notice-box', style: 'margin:0;padding:8px 10px;' }, [
@@ -188,7 +191,6 @@ export function renderOfficers(c) {
                 class: `role-pill-btn ${active ? 'active' : ''}`,
                 onclick: (e) => {
                   state.officerFormRole = role;
-                  // Update pill UI in-place instead of full re-render to preserve form values
                   const group = e.target.closest('.role-pill-group');
                   if (group) {
                     group.querySelectorAll('.role-pill-btn').forEach(b => b.classList.remove('active'));
@@ -208,11 +210,12 @@ export function renderOfficers(c) {
           class: 'outline-btn',
           type: 'button',
           onclick: () => {
+            state.isOfficerDrawerOpen = false;
             state.editingOfficerId = null;
             state.officerFormRole = 'case-officer';
             notifyStateChange();
           }
-        }, [t('clear')])
+        }, ['Cancel'])
       ])
     ]);
 
@@ -246,7 +249,6 @@ export function renderOfficers(c) {
           if (password && password !== '********') {
             editingOfficer.password = password;
           }
-          // Never allow changing your own role
           if (!editingOfficer.isYou) editingOfficer.role = role;
           saveOfficers();
           recordAudit('Officer updated', `Officer profile updated: ${name} (${rank}, ${district}).`, 'info', 'officer');
@@ -265,6 +267,7 @@ export function renderOfficers(c) {
           }
           showToast(t('officerUpdated'));
           state.editingOfficerId = null;
+          state.isOfficerDrawerOpen = false;
         } else {
           let newId = 'off_' + Date.now();
           if (supabaseConfigured) {
@@ -308,6 +311,7 @@ export function renderOfficers(c) {
           recordAudit('Officer added', `New officer profile created: ${name} (${rank}, ${district}).`, 'info', 'officer');
           showToast(t('officerAdded'));
           form.reset();
+          state.isOfficerDrawerOpen = false;
         }
       } catch (err) {
         console.error('Officer save error:', err);
@@ -321,13 +325,40 @@ export function renderOfficers(c) {
       }
     };
 
-    const formPanel = el('div', { class: 'officer-form-panel' }, [
-      el('h3', {}, [editingOfficer ? t('editOfficer') : t('addOfficer')]),
-      el('p', {}, [t('officersSubtitle')]),
-      form
+    drawerElement = el('div', {
+      class: 'officer-drawer-overlay',
+      onclick: (e) => {
+        if (e.target.classList.contains('officer-drawer-overlay')) {
+          state.isOfficerDrawerOpen = false;
+          state.editingOfficerId = null;
+          notifyStateChange();
+        }
+      }
+    }, [
+      el('div', { class: 'officer-drawer-panel' }, [
+        el('div', { class: 'officer-drawer-header' }, [
+          el('div', {}, [
+            el('h3', {}, [editingOfficer ? t('editOfficer') : t('addOfficer')]),
+            el('p', {}, [t('officersSubtitle')])
+          ]),
+          el('button', {
+            class: 'officer-drawer-close',
+            onclick: () => {
+              state.isOfficerDrawerOpen = false;
+              state.editingOfficerId = null;
+              notifyStateChange();
+            }
+          }, ['✕'])
+        ]),
+        el('div', { class: 'officer-drawer-body' }, [form])
+      ])
     ]);
+  }
 
-  const layout = el('div', { class: 'officers-layout' }, [listArea, formPanel]);
+  const layout = el('div', { class: 'officers-layout' }, [listArea]);
   c.append(header, layout);
+  if (drawerElement) {
+    c.append(drawerElement);
+  }
 }
 

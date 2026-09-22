@@ -169,10 +169,13 @@ export function saveMapConfig(cfg) {
 
 export const riskColor = { high: '#DC2626', medium: '#F59E0B', low: '#16A34A' };
 
+const savedOfficerEmail = localStorage.getItem('activeOfficerEmail');
+const hasCachedSession = Boolean(savedOfficerEmail);
+
 export const state = {
-  authChecking: true,
+  authChecking: !hasCachedSession,
   locale: localStorage.getItem('locale') || 'en',
-  loggedIn: false,
+  loggedIn: hasCachedSession,
   view: getInitialView(),
   query: '',
   sort: 'risk',
@@ -693,9 +696,10 @@ export function saveOfficers() {
 export async function recordAudit(action, summary, level = 'info', actionType = 'system', customActor = null) {
   const now = new Date();
   const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const isSystem = actionType === 'integrity' || action === 'Integrity alert' || customActor === 'System (Vault Engine)';
   const selfOfficer = state.officers.find(o => o.isYou);
-  const actorName = customActor || selfOfficer?.name || 'Officer';
-  const actorInitials = selfOfficer ? selfOfficer.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'OF';
+  const actorName = isSystem ? 'System (Vault Engine)' : (customActor || selfOfficer?.name || 'Officer');
+  const actorInitials = isSystem ? 'SYS' : (selfOfficer ? selfOfficer.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'OF');
   const entry = {
     id: 'log_' + Date.now(),
     time: timeStr,
@@ -766,9 +770,14 @@ export async function loadSupabaseData() {
       state.auditLogs = events.map(e => {
         const d = new Date(e.created_at);
         const timeStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        const isSystemEvent = e.resource_type === 'integrity' || e.action === 'Integrity alert';
         const isSelf = user ? e.actor_id === user.id : false;
-        const actorName = isSelf ? (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Officer') : 'Officer';
-        const actorInitials = isSelf ? (actorName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()) : 'OF';
+        let actorName = isSelf ? (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Officer') : 'Officer';
+        let actorInitials = isSelf ? (actorName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()) : 'OF';
+        if (isSystemEvent) {
+          actorName = 'System (Vault Engine)';
+          actorInitials = 'SYS';
+        }
         return {
           id: e.id,
           time: timeStr,
